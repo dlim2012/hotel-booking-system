@@ -1,0 +1,25 @@
+server:
+  port:
+    9001
+
+spring:
+  zipkin:
+    base-url: http://192.168.1.20:9201
+  kafka:
+    bootstrap-servers: 192.168.1.20:9092
+
+
+eureka:
+  instance:
+    hostname: 192.168.1.20
+    port: 9202
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+custom:
+  elasticsearch:
+    server: 192.168.1.20:9101
+

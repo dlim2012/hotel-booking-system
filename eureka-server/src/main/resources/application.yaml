@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: eureka-server
+  zipkin:
+    base-url: http://localhost:9201
+
+server:
+  port: 9200
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
