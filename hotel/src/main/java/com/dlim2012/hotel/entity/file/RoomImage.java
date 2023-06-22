@@ -4,11 +4,10 @@ import com.dlim2012.hotel.entity.Room;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "room_image")
 public class RoomImage {
@@ -18,7 +17,7 @@ public class RoomImage {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 

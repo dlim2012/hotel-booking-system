@@ -9,7 +9,10 @@ import java.util.Optional;
 
 @Repository
 public interface StateRepository extends JpaRepository<State, Integer> {
+    boolean existsByCountryId(Integer countryId);
+    boolean existsByCountryIdAndId(Integer countryId, Integer id);
     boolean existsByNameAndCountryId(String name, Integer countryId);
+    boolean existsByIdAndName(Integer id, String name);
 
     Optional<State> findByNameAndCountryId(String name, Integer countryId);
     List<State> findByCountryId(Integer countryId);

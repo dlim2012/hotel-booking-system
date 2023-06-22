@@ -18,10 +18,15 @@
     <modules>
         <module>hotel</module>
         <module>eureka-server</module>
-        <module>clients</module>
         <module>search-consumer</module>
-        <module>client-kafka1</module>
-        <module>client-elasticsearch1</module>
+        <module>search</module>
+        <module>user</module>
+        <module>booking</module>
+        <module>booking-management</module>
+        <module>payment</module>
+        <module>archival</module>
+        <module>clients</module>
+        <module>client_cassandra</module>
     </modules>
 
     <properties>
@@ -32,7 +37,7 @@
         <spring.boot.maven.plugin.version>3.1.0</spring.boot.maven.plugin.version>
         <spring.boot.dependencies.version>3.1.0</spring.boot.dependencies.version>
         <spring.cloud-version>2022.0.1</spring.cloud-version>
-        <imageRepository>dlim2012/hotel-booking.${project.artifactId}:${project.version}</imageRepository>
+        <imageRepository>dlim2012/hotel-bookingArchive.${project.artifactId}:${project.version}</imageRepository>
     </properties>
 
 

@@ -8,5 +8,8 @@ import java.util.List;
 
 @Repository
 public interface HotelFacilityRepository extends JpaRepository<HotelFacility, Integer> {
+    boolean existsByFacilityId(Integer facilityId);
     List<HotelFacility> findByHotelId(Integer hotelId);
+
+    void deleteByHotelId(Integer hotelId);
 }

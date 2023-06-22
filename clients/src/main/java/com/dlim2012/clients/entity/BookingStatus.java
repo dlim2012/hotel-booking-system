@@ -1,0 +1,13 @@
+package com.dlim2012.clients.entity;
+
+
+public enum BookingStatus {
+    RESERVED,
+    BOOKED,
+    CANCELLED_PAYMENT_FAIL,
+    CANCELLED_PAYMENT_TIME_EXPIRED,
+    CANCELLED_BY_APP_USER,
+    CANCELLED_BY_HOTEL_MANAGER,
+    CANCELLED_BY_ADMIN,
+    COMPLETED
+}

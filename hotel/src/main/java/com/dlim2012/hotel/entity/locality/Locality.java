@@ -6,11 +6,10 @@ import lombok.*;
 
 import java.util.List;
 
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "locality")
 public class Locality {

@@ -1,14 +1,14 @@
 package com.dlim2012.search.controller;
 
-import com.dlim2012.dto.HotelFullAddressItem;
-import com.dlim2012.dto.IdItem;
-import com.dlim2012.dto.RoomItem;
+import com.dlim2012.clients.dto.IdItem;
+import com.dlim2012.clients.dto.hotel.HotelItem;
+import com.dlim2012.clients.dto.hotel.RoomItem;
+import com.dlim2012.clients.elasticsearch.document.Hotel;
 import com.dlim2012.search.dto.HotelSearchRequest;
 import com.dlim2012.search.dto.RoomSearchRequest;
 import com.dlim2012.search.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class SearchController {
     private final SearchService searchService;
 
     @PostMapping(path = "/hotel")
-    List<HotelFullAddressItem> searchHotel(@RequestBody HotelSearchRequest hotelSearchRequest){
+    List<HotelItem> searchHotel(@RequestBody HotelSearchRequest hotelSearchRequest){
         return searchService.searchHotel(hotelSearchRequest);
     }
 

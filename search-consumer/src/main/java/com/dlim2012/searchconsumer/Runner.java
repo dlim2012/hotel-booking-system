@@ -1,7 +1,7 @@
 package com.dlim2012.searchconsumer;
 
-import com.dlim2012.ElasticSearchQuery;
-import com.dlim2012.document.Product;
+import com.dlim2012.clients.elasticsearch.document.Product;
+import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

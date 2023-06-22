@@ -1,6 +1,6 @@
 server:
   port:
-    9002
+    9007
 
 spring:
   zipkin:
@@ -16,3 +16,13 @@ eureka:
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
 
+
+custom:
+  elasticsearch:
+    server: 192.168.1.20:9103
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - APP_USER

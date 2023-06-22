@@ -1,0 +1,47 @@
+docker exec -it hotel-bookingArchive-cassandra bash
+cqlsh -u cassandra -p cassandra
+
+CREATE KEYSPACE mykeyspace WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1} AND DURABLE_WRITES = true;
+// describe keyspaces;
+use mykeyspace;
+
+CREATE TABLE bookingArchive(
+  booking_id BIGINT,
+  end_date TIMESTAMP,
+  hotelname TEXT,
+  roomname TEXT,
+  startdate TIMESTAMP,
+  quantity INT,
+  priceincents BIGINT,
+  invoiceid TEXT,
+  invoiceconfirmtime TIMESTAMP,
+  paymentmethod TEXT,
+  PRIMARY KEY ((booking_id), end_date)
+) WITH CLUSTERING ORDER BY (end_date DESC);
+
+CREATE TABLE bookingbyuser (
+  user_id INT,
+  booking_id BIGINT,
+  PRIMARY KEY ((user_id))
+);
+
+CREATE TABLE bookingbyhotel (
+  hotel_id INT,
+  room_id INT,
+  booking_id BIGINT,
+  PRIMARY KEY ((hotel_id), room_id)
+) WITH CLUSTERING ORDER BY (room_id ASC);
+
+
+
+/*
+ref: https://www.codingame.com/playgrounds/13642/getting-started-with-spring-data-cassandra
+CREATE TABLE people_by_first_name(
+  first_name TEXT,
+  date_of_birth TIMESTAMP,
+  person_id INT,
+  last_name TEXT,
+  salary DOUBLE,
+  PRIMARY KEY ((first_name), date_of_birth, person_id)
+) WITH CLUSTERING ORDER BY (date_of_birth ASC, person_id DESC);
+*/

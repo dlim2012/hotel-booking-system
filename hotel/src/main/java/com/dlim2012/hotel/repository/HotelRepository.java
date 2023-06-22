@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, Integer> {
+    boolean existsByLocalityId(Integer localityId);
 
     boolean existsByNameAndDescriptionAndLocalityId (String name, String description, Integer localityId);
 

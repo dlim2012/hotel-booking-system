@@ -5,15 +5,16 @@ import com.dlim2012.hotel.entity.file.RoomImage;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-@Entity
+@NoArgsConstructor
+@Entity(name = "room")
 @Table(name = "room")
 public class Room {
 
@@ -29,34 +30,50 @@ public class Room {
     @Column(name = "display_name", nullable = false)
     private String displayName;
 
+    @Column(name = "description", nullable = false)
+    private String description;
+
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
-    // todo: add description, maximum number of adult, and maximum number of child
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "max_adult")
+    @Column(name = "max_adult", nullable = false)
     private Integer maxAdult;
 
-    @Column(name = "max_child")
+    @Column(name = "max_child", nullable = false)
     private Integer maxChild;
 
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "price_min")
+    @Column(name = "price_min", nullable = false)
     private Double priceMin;
 
-    @Column(name = "price_max")
+    @Column(name = "price_max", nullable = false)
     private Double priceMax;
+
+    @Column(name = "check_in_time", nullable = false)
+    private Integer checkInTime;
+
+    @Column(name = "check_out_time", nullable = false)
+    private Integer checkOutTime;
+
+    @Column(name = "available_from")
+    private LocalDate availableFrom;
+
+    @Column(name = "available_until")
+    private LocalDate availableUntil;
+
+    @Column(name = "updated_time", nullable = false)
+    private LocalDateTime updatedTime;
+
 
     // Images
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY)
     private List<RoomImage> roomImages = new ArrayList<>();
 
     // Facilities
-    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<RoomFacility> roomFacilities = new ArrayList<>();
+
 
 }

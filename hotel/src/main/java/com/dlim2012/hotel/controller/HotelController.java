@@ -1,19 +1,23 @@
 package com.dlim2012.hotel.controller;
 
-import com.dlim2012.hotel.DeleteRequest;
+import com.dlim2012.clients.dto.IdItem;
+import com.dlim2012.clients.dto.hotel.facility.HotelFacilityItem;
+import com.dlim2012.clients.dto.hotel.facility.RoomFacilityItem;
+import com.dlim2012.clients.security.service.JwtService;
+import com.dlim2012.clients.dto.hotel.HotelItem;
+import com.dlim2012.clients.dto.hotel.RoomItem;
+import com.dlim2012.clients.dto.hotel.facility.FacilityItem;
+import com.dlim2012.hotel.dto.file.HotelImageUrlItem;
+import com.dlim2012.hotel.dto.file.RoomImageUrlItem;
+import com.dlim2012.hotel.dto.locality.CityItem;
+import com.dlim2012.hotel.dto.locality.CountryItem;
+import com.dlim2012.hotel.dto.locality.LocalityItem;
+import com.dlim2012.hotel.dto.locality.StateItem;
 import com.dlim2012.hotel.entity.file.ImageType;
+import com.dlim2012.hotel.service.FacilityService;
 import com.dlim2012.hotel.service.HotelService;
-import com.dlim2012.dto.HotelFullAddressItem;
-import com.dlim2012.dto.HotelItem;
-import com.dlim2012.dto.IdItem;
-import com.dlim2012.dto.RoomItem;
-import com.dlim2012.dto.facility.FacilityItem;
-import com.dlim2012.dto.file.HotelImageUrlItem;
-import com.dlim2012.dto.file.RoomImageUrlItem;
-import com.dlim2012.dto.locality.CityItem;
-import com.dlim2012.dto.locality.CountryItem;
-import com.dlim2012.dto.locality.StateItem;
-import jakarta.validation.Valid;
+import com.dlim2012.hotel.service.ImageService;
+import com.dlim2012.hotel.service.LocalityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -39,72 +43,152 @@ public class HotelController {
     // todo: add rest apis for locality
 
     private final HotelService hotelService;
+    private final LocalityService localityService;
+    private final FacilityService facilityService;
+    private ImageService imageService;
+    private final JwtService jwtService;
 
     // Country (internal), Facility, Hotel, Room, Hotel Image, Room Image, Hotel Facility, Room Facility
 
     // Post
     @PostMapping(path = "/country")
-    void postCountry(@RequestBody CountryItem CountryItem) {
-        hotelService.postCountry(CountryItem);
+    void postCountry(
+            @RequestBody @Validated({CountryItem.Post.class}) CountryItem CountryItem) {
+        localityService.postCountry(CountryItem);
+    }
+
+    @PutMapping(path = "/country")
+    public void putCountry(
+            @RequestBody @Validated({CountryItem.Put.class}) CountryItem countryItem){
+        localityService.putCountry(countryItem);
     }
 
     @PostMapping(path = "/state")
-    void postState(@RequestBody StateItem postStateRequest){
-        hotelService.postState(postStateRequest);
+    void postState(
+            @RequestBody @Validated({StateItem.Post.class}) StateItem postStateRequest){
+        localityService.postState(postStateRequest);
+    }
+
+    @PutMapping(path = "/state")
+    public void putState(@RequestBody @Validated({StateItem.Put.class}) StateItem stateItem){
+        localityService.putState(stateItem);
     }
 
     @PostMapping(path = "/city")
-    void postCity(@RequestBody CityItem CityItem){
-        hotelService.postCity(CityItem);
+    void postCity(
+            @RequestBody @Validated({CityItem.Post.class}) CityItem CityItem){
+        localityService.postCity(CityItem);
     }
 
+    @PutMapping(path = "/city")
+    public void putCity(@RequestBody @Validated({CityItem.Put.class}) CityItem cityItem){
+        localityService.putCity(cityItem);
+    }
+
+    @PostMapping(path = "/locality")
+    void postLocality(
+            @RequestBody @Validated({LocalityItem.Post.class}) LocalityItem localityItem
+    ){
+        localityService.postLocality(localityItem); }
+
+    @PutMapping(path = "/locality")
+    public void putLocality(@RequestBody @Validated({LocalityItem.Put.class}) LocalityItem localityItem
+    ){
+        localityService.putLocality(localityItem); }
 
     @PostMapping(path = "/facility")
-    void postFacility(@RequestBody FacilityItem FacilityItem) {
-        hotelService.postFacility(FacilityItem);
+    void postFacility(@RequestBody @Validated({FacilityItem.Post.class}) FacilityItem FacilityItem) {
+        facilityService.postFacility(FacilityItem);
+    }
+
+    @PutMapping(path = "/facility")
+    void putFacility(@RequestBody @Validated({FacilityItem.Post.class}) FacilityItem FacilityItem) {
+        facilityService.putFacility(FacilityItem);
     }
 
     @PostMapping(path = "")
-    void postHotel(@RequestBody @Validated({HotelFullAddressItem.HotelValidation.class}) HotelFullAddressItem hotelFullAddressItem) {
-        hotelService.postHotel(hotelFullAddressItem);
+    void postHotel(@RequestBody @Validated({HotelItem.Post.class}) HotelItem hotelItem) {
+        Integer userId = jwtService.getId();
+        String managerEmail = jwtService.getEmail();
+        hotelService.postHotel(userId, hotelItem, managerEmail);
+    }
+
+    @PutMapping(path = "/{hotelId}")
+    public void putHotel(
+            @PathVariable("hotelId") Integer hotelId,
+            @RequestBody @Validated({LocalityItem.Put.class}) HotelItem hotelItem){
+        String userEmail = jwtService.getEmail();
+        String managerEmail = jwtService.getEmail();
+        hotelService.putHotel(hotelId, hotelItem, managerEmail);
     }
 
     @PostMapping(path = "/{hotelId}/rooms")
-    void postRooms(@PathVariable("hotelId") Integer hotelId, @RequestBody List<RoomItem> RoomItemList){
-        hotelService.postRoom(hotelId, RoomItemList);
+    void postRooms(@PathVariable("hotelId") Integer hotelId, @RequestBody @Validated({RoomItem.Post.class}) RoomItem roomItem){
+        String managerEmail = jwtService.getEmail();
+        hotelService.postRoom(hotelId, roomItem, managerEmail);
+    }
+
+    @PutMapping(path = "/{hotelId}/room/{roomId}")
+    public void putRoom(
+            @PathVariable("hotelId") Integer hotelId,
+            @PathVariable("roomId") Integer roomId,
+            @RequestBody @Validated({RoomItem.Put.class}) RoomItem roomItem){
+        String managerEmail = jwtService.getEmail();
+        hotelService.putRoom(hotelId, roomId, roomItem, managerEmail);
     }
 
     @PostMapping(path = "/{hotelId}/image")
     void postHotelImage(@PathVariable("hotelId") Integer hotelId, @RequestParam("image")MultipartFile file) throws IOException {
-        hotelService.postHotelImage(hotelId, file);
+        imageService.postHotelImage(hotelId, file);
     }
 
     @PostMapping(path = "/{hotelId}/room/{roomId}/image")
     void postRoomImage(@PathVariable("hotelId") Integer hotelId,
                         @PathVariable("roomId") Integer roomId,
                         @RequestParam("image") MultipartFile file) throws IOException{
-        hotelService.postRoomImage(hotelId, roomId, file);
+        imageService.postRoomImage(hotelId, roomId, file);
+    }
+
+    @PutMapping(path = "/{hotelId}/facility")
+    public void putHotelFacilities(
+            @PathVariable("hotelId") Integer hotelId,
+            @RequestBody @Validated List<HotelFacilityItem> hotelFacilityItemList
+    ){
+        facilityService.setHotelFacilities(hotelId, hotelFacilityItemList);
+    }
+
+    @PutMapping(path = "/{hotelId}/room/{roomId}/facility")
+    public void putRoomFacilities(
+            @PathVariable("hotelId") Integer hotelId,
+            @PathVariable("roomId") Integer roomId,
+            @RequestBody @Validated List<RoomFacilityItem> roomFacilityItemList
+    ){
+        facilityService.setRoomFacilities(hotelId, roomId, roomFacilityItemList);
     }
 
     // Get
     @GetMapping(path = "/country")
     List<CountryItem> getCountries(){
-        return hotelService.getAllCountries();
+        return localityService.getAllCountries();
     }
 
     @GetMapping(path = "/state")
-    List<StateItem> getStates(@RequestBody IdItem idItem){
-        return hotelService.getStates(idItem.id());
+    List<StateItem> getStates(@RequestBody @Validated IdItem countryIdItem){
+        return localityService.getStates(countryIdItem.id());
     }
 
     @GetMapping(path = "/city")
-    List<CityItem> getCity(@RequestBody IdItem idItem){
-        return hotelService.getCities(idItem.id());
+    List<CityItem> getCities(@RequestBody @Validated IdItem stateIdItem){
+        return localityService.getCities(stateIdItem.id());
     }
+
+    @GetMapping(path = "/locality")
+    List<LocalityItem> getLocalities(@RequestBody @Validated IdItem cityIdItem) {
+        return localityService.getLocalities(cityIdItem.id());}
 
     @GetMapping(path = "/facility")
     List<FacilityItem> getFacilities(){
-        return hotelService.getFacilities();
+        return facilityService.getFacilities();
     }
 
     @GetMapping(path = "/{hotelId}")
@@ -114,13 +198,21 @@ public class HotelController {
         return hotelService.getHotel(hotelId);
     }
 
+    @GetMapping(path = "/{hotelId}/room/{roomId}")
+    public RoomItem getRoom(
+            @PathVariable("hotelId") Integer hotelId,
+            @PathVariable("roomId") Integer roomId
+    ){
+        return hotelService.getRoom(hotelId, roomId);
+    }
+
     @GetMapping(path = "/{hotelId}/image/{imageType}")
     public List<HotelImageUrlItem> getHotelImageUrls(
             @PathVariable("hotelId") Integer hotelId,
             @PathVariable("imageType") String imageTypeString
     ){
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
-        return hotelService.getHotelImageUrls(hotelId, imageType);
+        ImageType imageType = imageService.getImageTypeFromString(imageTypeString);
+        return imageService.getHotelImageUrls(hotelId, imageType);
     }
 
 
@@ -131,8 +223,8 @@ public class HotelController {
             @PathVariable("imageType") String imageTypeString
 
     ){
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
-        return hotelService.getRoomImageUrls(hotelId, roomId, imageType);
+        ImageType imageType = imageService.getImageTypeFromString(imageTypeString);
+        return imageService.getRoomImageUrls(hotelId, roomId, imageType);
     }
 
     @GetMapping(path = "/{hotelId}/image/{imageType}/{imageId}")
@@ -141,9 +233,9 @@ public class HotelController {
             @PathVariable("imageType") String imageTypeString,
             @PathVariable("imageId") Integer imageId) throws IOException {
         log.info("Get hotel image requested. (hotel: {}, {}, image: {})", hotelId, imageTypeString, imageId);
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
+        ImageType imageType = imageService.getImageTypeFromString(imageTypeString);
         System.out.println(imageType);
-        byte[] image = hotelService.getHotelImage(hotelId, imageId, imageType);
+        byte[] image = imageService.getHotelImage(hotelId, imageId, imageType);
         return ResponseEntity.status(HttpStatus.OK)
                         .contentType(MediaType.valueOf("image/png"))
                                 .body(image);
@@ -157,84 +249,52 @@ public class HotelController {
             @PathVariable("imageType") String imageTypeString,
             @PathVariable("imageId") Integer imageId) throws IOException {
         log.info("Get room image requested. (hotel: {}, room: {}, {}, image: {})", hotelId, roomId, imageTypeString, imageId);
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
-        byte[] image = hotelService.getRoomImage(hotelId, roomId, imageId, imageType);
+        ImageType imageType = imageService.getImageTypeFromString(imageTypeString);
+        byte[] image = imageService.getRoomImage(hotelId, roomId, imageId, imageType);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf("image/png"))
                 .body(image);
     }
 
     @GetMapping(path = "/{hotelId}/facility")
-    public List<FacilityItem> getHotelFacilities(){
-        //todo
-        return hotelService.getHotelFacilities();
+    public List<FacilityItem> getHotelFacilities(@PathVariable("hotelId") Integer hotelId){
+        return facilityService.getHotelFacilities(hotelId);
     }
 
     @GetMapping(path = "/{hotelId}/room/{roomId}/facility")
-    public List<FacilityItem> getRoomFacilities(){
-        //todo
-        return hotelService.getRoomFacilities();
-    }
-
-
-    // Put
-
-    @PutMapping(path = "/country")
-    public void putCountry(@RequestBody CountryItem countryItem){
-        hotelService.putCountry(countryItem);
-    }
-
-    @PutMapping(path = "/state")
-    public void putState(@RequestBody StateItem stateItem){
-        hotelService.putState(stateItem);
-    }
-
-    @PutMapping(path = "/city")
-    public void putCity(@RequestBody CityItem cityItem){
-        hotelService.putCity(cityItem);
-    }
-
-    @PutMapping(path = "/{hotelId}")
-    public void putHotel(
+    public List<FacilityItem> getRoomFacilities(
             @PathVariable("hotelId") Integer hotelId,
-            @RequestBody @Valid HotelItem hotelItem){
-        hotelService.putHotel(hotelId, hotelItem);
+            @PathVariable("roomId") Integer roomId){
+        return facilityService.getRoomFacilities(hotelId, roomId);
     }
 
-    @PutMapping(path = "/{hotelId}/room/{roomId}")
-    public void putRoom(
-            @PathVariable("hotelId") Integer hotelId,
-            @PathVariable("roomId") Integer roomId,
-            @RequestBody @Valid RoomItem roomItem){
-        hotelService.putRoom(hotelId, roomId, roomItem);
-    }
 
-    @PutMapping(path = "/{hotelId}/facility")
-    public void putHotelFacilities(
-            @PathVariable("hotelId") Integer hotelId,
-            @RequestBody List<IdItem> facilityItemList
-    ){
-        hotelService.putHotelFacilities(hotelId, facilityItemList);
-    }
-
-    @PutMapping(path = "/{hotelId}/room/{roomId}/facility")
-    public void putRoomFacilities(
-            @PathVariable("hotelId") Integer hotelId,
-            @PathVariable("roomId") Integer roomId,
-            @RequestBody List<IdItem> facilityItemList
-    ){
-        hotelService.putRoomFacilities(hotelId, roomId, facilityItemList);
-    }
 
     // Delete
     @DeleteMapping(path = "/country")
-    public void deleteCountries(List<DeleteRequest> deleteRequestList){
-        hotelService.deleteCountries(deleteRequestList);
+    public void deleteCountries(@Validated List<IdItem> idItemList){
+        localityService.deleteCountries(idItemList);
+    }
+
+    @DeleteMapping(path = "/state")
+    public void deleteStates(@Validated List<IdItem> idItemList){
+        localityService.deleteStates(idItemList);
+    }
+
+
+    @DeleteMapping(path = "/city")
+    public void deleteCities(@Validated List<IdItem> idItemList){
+        localityService.deleteCities(idItemList);
+    }
+
+    @DeleteMapping(path = "/locality")
+    public void deleteLocalities(@Validated List<IdItem> idItemList){
+        localityService.deleteLocalities(idItemList);
     }
 
     @DeleteMapping(path = "/facility")
-    public void deleteFacilities(List<DeleteRequest> deleteRequestList){
-        hotelService.deleteFacilities(deleteRequestList);
+    public void deleteFacilities(List<IdItem> idItemList){
+        facilityService.deleteFacilities(idItemList);
     }
 
     @DeleteMapping(path = "/{hotelId}")
@@ -252,24 +312,18 @@ public class HotelController {
         hotelService.deleteRoom(hotelId, roomId);
     }
 
-    @DeleteMapping(path = "/{hotelId}/image/{imageType}/{imageId}")
-    public void deleteHotelImage(
+    @DeleteMapping(path = "/{hotelId}/image")
+    public void deleteHotelImages(
             @PathVariable("hotelId") Integer hotelId,
-            @PathVariable("imageType") String imageTypeString,
-            @PathVariable("imageId") Integer imageId){
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
-        hotelService.deleteHotelImage(hotelId, imageType, imageId);
+            @RequestBody @Validated List<IdItem> imageIdList){
+        imageService.deleteHotelImages(hotelId, imageIdList);
     }
 
-    @DeleteMapping(path = "/{hotelId}/room/{roomId}/image/{imageType}/{imageId}")
-    public void deleteRoomImage(
+    @DeleteMapping(path = "/{hotelId}/room/{roomId}/image")
+    public void deleteRoomImages(
             @PathVariable("hotelId") Integer hotelId,
             @PathVariable("roomId") Integer roomId,
-            @PathVariable("imageType") String imageTypeString,
-            @PathVariable("imageId") Integer imageId){
-        ImageType imageType = hotelService.getImageTypeFromString(imageTypeString);
-        hotelService.deleteRoomImage(hotelId, roomId, imageType, imageId);
+            @RequestBody @Validated List<IdItem> imageIdList){
+        imageService.deleteRoomImages(hotelId, roomId, imageIdList);
     }
-
-
 }

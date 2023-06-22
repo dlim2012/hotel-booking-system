@@ -1,12 +1,12 @@
 services:
-  hotel-booking-mysql:
-    container_name: hotel-booking-mysql
+  hotel-booking-mysql-hotel:
+    container_name: hotel-booking-mysql-hotel
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - mysql:/data/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - hotel-booking-mysql-hotel:/data/mysql
+      - ./scripts/hotel-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./hotel/src/main/java/dlim2012/hotel/entity/locality/countries.csv:/docker-entrypoint-initdb.d/countries.csv
     ports:
       - "9100:3306"
@@ -14,25 +14,88 @@ services:
     networks:
       - spring
 
-  hotel-booking-zipkin:
-    image: openzipkin/zipkin
-    container_name: hotel-booking-zipkin
+  hotel-booking-mysql-booking:
+    container_name: hotel-booking-mysql-booking
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - hotel-booking-mysql-booking:/data/mysql
+      - ./scripts/booking-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "9201:9411"
+      - "9104:3306"
+    restart: unless-stopped
     networks:
       - spring
 
-#  hotel-booking-eureka-server:
-#    image: dlim2012/tiny-url.eureka-server:latest
-#    container_name: hotel-booking-eureka-server
-#    ports:
-#      - "9202:8761"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    networks:
-#      - spring
-#    depends_on:
-#      - hotel-booking-zipkin
+  hotel-booking-mysql-user:
+    container_name: hotel-booking-mysql-user
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - hotel-booking-mysql-user:/data/mysql
+#      - ./hotel-init.sql:/docker-entrypoint-initdb.d/hotel-init.sql:ro
+    ports:
+      - "9102:3306"
+    restart: unless-stopped
+    networks:
+      - spring
+
+  elasticsearch:
+    image: elasticsearch:8.2.2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ingest.geoip.downloader.enabled=false
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    volumes:
+      - hotel-booking-es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9103:9200"
+    networks:
+      - elastic
+
+  hotel-booking-cassandra:
+    image: cassandra:4.1
+    container_name: hotel-booking-cassandra
+    ports:
+      - "9106:9042"
+    volumes:
+      - hotel-booking-cassandra:/bitnami
+#      - ./scripts/casssandra_init.sh:/init.sh
+#    entrypoint: ["sudo sh /init.sh"]
+
+  hotel-booking-redis-server:
+    container_name: hotel-booking-redis-server
+    #    hostname: redis-server
+    image: redis:6.2-alpine
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    #      - REDIS_DISABLE_COMMANDS=FLUSHDB, FLUSHALL
+    #      - REDIS_PASSWORD: password
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - hotel-booking-cache:/data
+    ports:
+      - '9105:6379'
+    restart: unless-stopped
+    networks:
+      - spring
+
+  kibana:
+    image: kibana:8.2.2
+    ports:
+      - "9203:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
 
   hotel-booking-zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
@@ -59,30 +122,26 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-  elasticsearch:
-    image: elasticsearch:8.2.2
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - ingest.geoip.downloader.enabled=false
-      - xpack.security.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-      - xpack.security.http.ssl.enabled=false
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9101:9200"
-    networks:
-      - elastic
+#  hotel-booking-eureka-server:
+#    image: dlim2012/tiny-url.eureka-server:latest
+#    container_name: hotel-booking-eureka-server
+#    ports:
+#      - "9202:8761"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#    networks:
+#      - spring
+#    depends_on:
+#      - hotel-booking-zipkin
 
-  kibana:
-    image: kibana:8.2.2
+
+  hotel-booking-zipkin:
+    image: openzipkin/zipkin
+    container_name: hotel-booking-zipkin
     ports:
-      - "9203:5601"
-    depends_on:
-      - elasticsearch
+      - "9201:9411"
     networks:
-      - elastic
+      - spring
 
 networks:
   spring:
@@ -92,6 +151,11 @@ networks:
     driver: bridge
 
 volumes:
-  mysql:
-  es_data:
+  hotel-booking-mysql-hotel:
+  hotel-booking-mysql-booking:
+  hotel-booking-mysql-user:
+  hotel-booking-es_data:
     driver: local
+  hotel-booking-cache:
+    driver: local
+  hotel-booking-cassandra:

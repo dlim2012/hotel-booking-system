@@ -1,8 +1,8 @@
 package com.dlim2012.search.service;
 
-import com.dlim2012.dto.HotelFullAddressItem;
-import com.dlim2012.dto.IdItem;
-import com.dlim2012.dto.RoomItem;
+import com.dlim2012.clients.dto.IdItem;
+import com.dlim2012.clients.dto.hotel.HotelItem;
+import com.dlim2012.clients.dto.hotel.RoomItem;
 import com.dlim2012.search.dto.HotelSearchRequest;
 import com.dlim2012.search.dto.RoomSearchRequest;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class SearchService {
 
-    public List<HotelFullAddressItem> searchHotel(HotelSearchRequest hotelSearchRequest) {
+    public List<HotelItem> searchHotel(HotelSearchRequest hotelSearchRequest) {
         // todo
         return new ArrayList<>();
     }

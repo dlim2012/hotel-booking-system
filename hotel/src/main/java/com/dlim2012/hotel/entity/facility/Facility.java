@@ -3,11 +3,10 @@ package com.dlim2012.hotel.entity.facility;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "facility")
 public class Facility {

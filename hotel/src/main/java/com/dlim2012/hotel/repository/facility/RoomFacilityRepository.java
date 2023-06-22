@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface RoomFacilityRepository extends JpaRepository<RoomFacility, Integer> {
-
+    boolean existsByFacilityId(Integer facilityId);
     List<RoomFacility> findByRoomId(Integer roomId);
+    void deleteByRoomId(Integer roomId);
 }
