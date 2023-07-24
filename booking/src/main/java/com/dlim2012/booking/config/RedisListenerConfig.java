@@ -1,6 +1,6 @@
 package com.dlim2012.booking.config;
 
-import com.dlim2012.booking.service.RedisExpirationListener;
+import com.dlim2012.booking.controller.RedisExpirationListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 public class RedisListenerConfig {
     // notify-keyspace-events Ex (redis cli: config set notify-keyspace-events Ex)
 
+
     private final String PATTERN = "__keyevent@*__:expired";
+
 //    private final String PATTERN = "task_with_max_wait_time__1";
 
     @Bean

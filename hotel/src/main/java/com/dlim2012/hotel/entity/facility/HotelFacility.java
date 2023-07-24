@@ -4,7 +4,8 @@ import com.dlim2012.hotel.entity.Hotel;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,4 +29,13 @@ public class HotelFacility {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
+    @Override
+    public String toString() {
+        return "HotelFacility{" +
+                "id=" + id +
+                ", hotel=" + (hotel == null ? null : hotel.getId()) +
+                ", facility=" + facility +
+                ", isActive=" + isActive +
+                '}';
+    }
 }

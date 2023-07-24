@@ -1,0 +1,1 @@
+docker exec -it hotel-booking-redis-server redis-cli config set notify-keyspace-events Ex

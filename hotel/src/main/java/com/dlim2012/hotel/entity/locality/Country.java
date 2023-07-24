@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class Country {
 
     private Integer id;
 
-    @Column(name = "name", length = 50, unique = true)
+    @Column(name = "name", length = 50, unique = true, nullable = false)
     private String name;
 
     @Column(name = "initials", length = 3)
@@ -29,4 +30,13 @@ public class Country {
 
     @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
     private List<State> states = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "Country{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", initials='" + initials + '\'' +
+                '}';
+    }
 }

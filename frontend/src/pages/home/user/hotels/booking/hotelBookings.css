@@ -1,0 +1,9 @@
+.bookingsContainer{
+    display: flex;
+    flex-direction: column;
+    max-width: 1024px;
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+
+}

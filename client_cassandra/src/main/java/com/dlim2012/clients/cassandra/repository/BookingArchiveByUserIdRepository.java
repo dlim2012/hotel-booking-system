@@ -6,13 +6,16 @@ import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.stream.Stream;
+import java.util.List;
 
 @Repository
 public interface BookingArchiveByUserIdRepository
         extends CassandraRepository<BookingArchiveByUserId, Integer> {
 
-    Stream<BookingArchiveByUserId> findByUserIdAndMainStatusAndEndDateTimeGreaterThan(
-            Integer userId, BookingMainStatus mainStatus, LocalDateTime endDateTime);
+    List<BookingArchiveByUserId> findByUserIdAndMainStatusAndEndDateTimeGreaterThanEqual(
+            Integer userId, BookingMainStatus mainStatus, LocalDateTime startDateTime);
+
+    List<BookingArchiveByUserId> findByUserIdAndMainStatusAndEndDateTimeGreaterThanEqualAndEndDateTimeLessThan(
+            Integer userId, BookingMainStatus mainStatus, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
 }

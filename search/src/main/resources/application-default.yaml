@@ -1,0 +1,39 @@
+server:
+  port:
+    9007
+
+spring:
+  application:
+    name: search
+  banner:
+    location: classpath:banner.txt
+  zipkin:
+    base-url: http://10.0.0.110:9201
+
+eureka:
+  instance:
+    hostname: 10.0.0.110
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  elasticsearch:
+    server: 10.0.0.110:9103
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - APP_USER

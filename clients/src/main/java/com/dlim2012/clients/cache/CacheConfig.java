@@ -39,4 +39,6 @@ public class CacheConfig {
         return new RedisProperties();
     }
 
+    public static final String bookingIdKeyName = "bookingId";
+
 }

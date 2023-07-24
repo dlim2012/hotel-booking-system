@@ -1,0 +1,9 @@
+server:
+  port:
+    1111
+
+spring:
+  application:
+    name: archival
+  banner:
+    location: classpath:banner.txt

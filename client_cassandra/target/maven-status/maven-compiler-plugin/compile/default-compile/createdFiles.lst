@@ -1,0 +1,9 @@
+com/dlim2012/clients/cassandra/entity/BookingArchiveByHotelId$BookingArchiveByHotelIdBuilder.class
+com/dlim2012/clients/cassandra/entity/BookingArchiveRoom$BookingArchiveRoomBuilder.class
+com/dlim2012/clients/cassandra/repository/BookingArchiveByUserIdRepository.class
+com/dlim2012/clients/cassandra/entity/BookingArchiveByHotelId.class
+com/dlim2012/clients/cassandra/entity/BookingArchiveByUserId$BookingArchiveByUserIdBuilder.class
+com/dlim2012/clients/cassandra/entity/BookingArchiveRoom.class
+com/dlim2012/clients/cassandra/repository/BookingArchiveByHotelIdRepository.class
+com/dlim2012/clients/cassandra/config/CassandraConfig.class
+com/dlim2012/clients/cassandra/entity/BookingArchiveByUserId.class

@@ -1,0 +1,120 @@
+.listContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.listWrapper {
+  width: 100%;
+  max-width: 1024px;
+  display: flex;
+  gap: 20px;
+}
+
+.listSearch {
+  flex: 1;
+  background-color: #febb02;
+  padding: 10px;
+  border-radius: 10px;
+  position: sticky;
+  top: 10px;
+  height: max-content;
+}
+
+.lsTitle{
+  font-size: 20px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.lsItem{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+
+.lsItem>label{
+  font-size: 12px;
+}
+
+
+.lsItem>input{
+  height: 30px;
+  border: none;
+  padding: 5px;
+}
+.lsItem>span{
+  height: 30px;
+  padding: 5px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.lsOptions{
+  /*padding: 10px;*/
+}
+
+.lsOptionItem{
+  display: flex;
+  justify-content: space-between;
+  /*margin-bottom: 10px;*/
+  color: #555;
+  font-size: 12px;
+}
+
+.currency-wrap{
+  position:relative;
+}
+
+.currency-code{
+
+  position:absolute;
+  left:8px;
+  top:4px;
+}
+
+.text-currency{
+  /*padding:10px 20px;*/
+  /*border:solid 1px #ccc;*/
+  /*border-radius:5px;*/
+  width: 70px;
+  padding-left: 10px;
+  text-align: right;
+}
+
+.lsOptionInput{
+  text-align: right;
+  width: 80px;
+  /*padding-left: 10px;*/
+}
+
+.listSearch>button{
+  padding: 10px;
+  background-color: #0071c2;
+  color: white;
+  border: none;
+  width: 100%;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.listResult {
+  flex: 3;
+}
+
+
+.lsPriceRange{
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.lsPriceRangeText{
+  font-size: 12px;
+}

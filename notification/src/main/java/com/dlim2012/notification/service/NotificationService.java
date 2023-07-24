@@ -1,11 +1,10 @@
 package com.dlim2012.notification.service;
 
-import com.dlim2012.clients.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
-import org.springframework.mail.MailSender;
 
 @Service
 @Slf4j
@@ -13,6 +12,11 @@ import org.springframework.mail.MailSender;
 public class NotificationService {
 
     private final MailSender mailSender;
+
+    public void fetchUserAndHotelManager(Integer userId, Integer hotelManagerId){
+
+    }
+
 
     public void sendMail(String to, String subject, String text){
         SimpleMailMessage msg = new SimpleMailMessage();

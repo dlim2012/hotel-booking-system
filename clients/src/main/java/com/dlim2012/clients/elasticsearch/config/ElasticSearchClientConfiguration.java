@@ -18,5 +18,21 @@ public class ElasticSearchClientConfiguration extends ElasticsearchConfiguration
         return ClientConfiguration.builder()
                 .connectedTo(hostAndPort).build();
     }
-
+//
+//    @Bean(destroyMethod = "close")
+//    public RestHighLevelClient restClient() {
+//
+////        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+////        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
+//
+//        RestClientBuilder builder = RestClient.builder(new HttpHost("10.0.0.110", 9103))
+////                .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider))
+//                .setDefaultHeaders(compatibilityHeaders());
+//
+//        return new RestHighLevelClient(builder);
+//    }
+//
+//    private Header[] compatibilityHeaders() {
+//        return new Header[]{new BasicHeader(HttpHeaders.ACCEPT, "application/vnd.elasticsearch+json;compatible-with=7"), new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/vnd.elasticsearch+json;compatible-with=7")};
+//    }
 }

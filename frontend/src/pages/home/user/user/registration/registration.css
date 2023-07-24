@@ -1,0 +1,114 @@
+:root{
+    --max-width: 384px;
+    --border-radius: 3px;
+}
+
+.formContainer{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 20px;
+    align-items: center;
+    font-size: 15px;
+
+}
+
+.formWrapper{
+    /* background-color: antiquewhite; */
+    width: 100%;
+    max-width: var(--max-width);
+
+    display: flex;
+    flex-direction: column;
+    /*align-items: lef*/
+    justify-content: space-between;
+    margin: 20px 0px 10px 0px;
+}
+
+.formTitle{
+    font-size: 20px;
+    color: #555;
+    margin-top: 20px;
+    /*margin-bottom: 10px;*/
+}
+
+.formList{
+    /*text-align: left;*/
+    width: var(--max-width);
+    display: inline-block;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.formItem{
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 15px;
+    margin-left: auto;
+    margin-right: auto;
+    align-items: center;
+}
+
+.formLabel{
+    width: 100%;
+    font-weight: normal;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.validationLabel{
+    color: red;
+    margin-bottom: 40px;
+}
+
+input[type=text], input[type=password], input[type=email] {
+    width: 95%;
+    padding: 8px;
+    margin-bottom: 5px;
+    /*margin-left: 15px;*/
+    /*margin-right: 15px;*/
+    display: inline-block;
+    border: 1px solid gray;
+    /*background: #f1f1f1;*/
+    background-color: white;
+    font-size: 14px;
+    border-radius: var(--border-radius);
+}
+
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
+    /*background-color: #ddd;*/
+    outline: none;
+    border: 2px solid #3C6CE4;
+    background-color: white;
+    border-radius: var(--border-radius);
+}
+
+.registerbtn {
+    /*background-color: #04AA6D;*/
+    background-color: #3C6CE4;
+    color: white;
+    padding: 16px 20px;
+    margin-top: 10px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    max-width: 512px;
+    opacity: 0.9;
+    border-radius: var(--border-radius);
+    font-size: 15px;
+}
+
+.signin {
+    background-color: #f1f1f1;
+    text-align: center;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.registerbtn:hover {
+    opacity:1;
+}

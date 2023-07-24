@@ -6,7 +6,8 @@ import lombok.*;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,7 +20,7 @@ public class Locality {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "zipcode", length = 20)
+    @Column(name = "zipcode", length = 20, nullable = false)
     private String zipcode;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -29,4 +30,12 @@ public class Locality {
     @OneToMany(mappedBy = "locality", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Hotel> hotels;
 
+    @Override
+    public String toString() {
+        return "Locality{" +
+                "id=" + id +
+                ", zipcode='" + zipcode + '\'' +
+                ", city=" + city +
+                '}';
+    }
 }

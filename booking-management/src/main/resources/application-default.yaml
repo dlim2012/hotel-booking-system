@@ -1,0 +1,73 @@
+server:
+  port:
+    9005
+
+spring:
+  application:
+    name: booking-management
+  banner:
+    location: classpath:banner.txt
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.0.0.110:9104/booking # ?createDatabaseIfNotExist=true
+    username: root
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+  data:
+    cassandra:
+      port: 9106
+      contact-points: 10.0.0.110
+      local-datacenter: datacenter1
+      keyspace-name: mykeyspace
+      schema-action: CREATE_IF_NOT_EXISTS
+      entity-base-package: com.dlim2012.archival.entity.cassandra
+
+  zipkin:
+    base-url: http://10.0.0.110:9201
+
+  cache:
+    type: redis
+    cache-names:
+      - booking
+    redis:
+      time-to-live: 10000
+      cache-null-values: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+eureka:
+  instance:
+    hostname: 10.0.0.110
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+custom:
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - HOTEL_MANAGER
+      - APP_USER

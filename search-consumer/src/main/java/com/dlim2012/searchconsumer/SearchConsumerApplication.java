@@ -1,12 +1,15 @@
 package com.dlim2012.searchconsumer;
 
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchClientConfiguration;
+import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
 import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
-import com.dlim2012.clients.kafka.config.*;
+import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
+import com.dlim2012.clients.utils.PriceService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.kafka.annotation.EnableKafka;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
@@ -15,15 +18,13 @@ import org.springframework.kafka.annotation.EnableKafka;
 		// elastic search
 		ElasticSearchQuery.class,
 		ElasticSearchClientConfiguration.class,
+		ElasticSearchUtils.class,
 		// kafka
 		KafkaConsumerConfig.class,
-		KafkaHotelConsumerConfig.class,
-		KafkaRoomConsumerConfig.class,
-		KafkaFacilityConsumerConfig.class,
-		KafkaHotelFacilitiesConsumerConfig.class,
-		KafkaRoomFacilitiesConsumerConfig.class,
-		KafkaBookingConsumerConfig.class,
+		// utils
+		PriceService.class,
 		})
+@PropertySource("classpath:application-${spring.profiles.active}.yaml")
 public class SearchConsumerApplication {
 
 	public static void main(String[] args) {

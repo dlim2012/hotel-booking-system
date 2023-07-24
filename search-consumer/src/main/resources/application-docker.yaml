@@ -1,0 +1,36 @@
+server:
+  port:
+    9006
+
+spring:
+  application:
+    name: search-consumer
+  banner:
+    location: classpath:banner.txt
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+  kafka:
+    bootstrap-servers: hotel-booking-broker:9092
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  elasticsearch:
+    server: hotel-booking-elasticsearch:9200
+

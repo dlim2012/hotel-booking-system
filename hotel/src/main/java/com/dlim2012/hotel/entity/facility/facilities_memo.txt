@@ -1,0 +1,85 @@
+*property-types
+Hotel
+Vacation home
+Apartment
+Resort
+Villa
+Motel
+Guesthouse
+Homestay
+
+
+#rooms-meals
+Kitchen
+Breakfast
+Dining Area
+Refrigerator
+Dishwasher
+Toaster
+
+
+#rooms-bathroom
+Free toiletries
+Towels
+Shower fridge
+Hot tub
+Hair dryer
+
+#rooms-furniture
+Closet
+Sofa
+Desk
+Air purifier
+Air conditioner
+
+
+#rooms-amenities
+TV
+Pay-per-view channels
+Telephone
+Minibar
+Coffee machine
+Wifi
+Room service
+Wake-up service/Alarm clock
+
+
+*facility-facility
+Pet friendly
+24-hour front desk
+daily housekeeping
+City view
+Arcade games
+Public computer
+Relaxation station
+Parking
+Valet parking
+Free parking
+Dry cleaning
+Laundry
+Bar
+Fitness center
+Spa
+Outdoor Swimming pool
+Indoor swimming pool
+Sauna
+Concierge
+Conference Hall
+Restaurant
+Personal care
+BBQ facilities
+Board game
+Beachfront
+Waterfront
+
+
+
+*Cancellation policy
+Free cancellation
+No prepayment
+
+Others:
+*facility-property rating
+0(unrated), 2,3,4,5
+
+

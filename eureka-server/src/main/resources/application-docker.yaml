@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: eureka-server
+  banner:
+    location: classpath:banner.txt
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+
+server:
+  port: 9200
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+

@@ -8,6 +8,7 @@ import com.dlim2012.hotel.dto.locality.CityItem;
 import com.dlim2012.hotel.dto.locality.CountryItem;
 import com.dlim2012.hotel.dto.locality.LocalityItem;
 import com.dlim2012.hotel.dto.locality.StateItem;
+import com.dlim2012.hotel.entity.Hotel;
 import com.dlim2012.hotel.entity.locality.City;
 import com.dlim2012.hotel.entity.locality.Country;
 import com.dlim2012.hotel.entity.locality.Locality;
@@ -42,6 +43,42 @@ public class LocalityService {
     private final ModelMapper modelMapper = new ModelMapper();
     private final EntityManager entityManager;
 
+    public List<String> getAddressComponents(Locality locality){
+        City city = locality.getCity();
+        State state = city.getState();
+        Country country = state.getCountry();
+        List<String> addressComponents = new ArrayList<>();
+        addressComponents.add(city.getName());
+        addressComponents.add(state.getName());
+        addressComponents.add(country.getName());
+        addressComponents.add(locality.getZipcode());
+        return addressComponents;
+    }
+
+    public String getFullAddress(Hotel hotel){
+        Locality locality = hotel.getLocality();
+        City city = locality.getCity();
+        State state = city.getState();
+        Country country = state.getCountry();
+        List<String> addressComponents = new ArrayList<>();
+        if (!hotel.getAddressLine1().isEmpty()){
+            addressComponents.add(hotel.getAddressLine1());
+        }
+        if (!city.getName().isEmpty()){
+            addressComponents.add(city.getName());
+        }
+        if (!state.getName().isEmpty()){
+            addressComponents.add(state.getName());
+        }
+        if (!country.getName().isEmpty()){
+            addressComponents.add(country.getName());
+        }
+        if (!locality.getZipcode().isEmpty()){
+            addressComponents.add(locality.getZipcode());
+        }
+        return String.join(", ", addressComponents);
+    }
+
     public void postCountry(CountryItem countryItem) {
         if (countryRepository.existsByName(countryItem.getName())) {
             throw new EntityAlreadyExistsException("Country already exists.");
@@ -68,10 +105,10 @@ public class LocalityService {
     public void deleteCountries(List<IdItem> idItemList) {
         List<Integer> toDelete = new ArrayList<>();
         for (IdItem idItem : idItemList) {
-            if (stateRepository.existsByCountryId(idItem.id())){
+            if (stateRepository.existsByCountryId(idItem.getId())){
                 throw new DeleteRuleException("The country is being used by one or more states.");
             }
-            toDelete.add(idItem.id());
+            toDelete.add(idItem.getId());
         }
         countryRepository.deleteAllById(toDelete);
     }
@@ -106,10 +143,10 @@ public class LocalityService {
     public void deleteStates(List<IdItem> idItemList) {
         List<Integer> toDelete = new ArrayList<>();
         for (IdItem idItem : idItemList) {
-            if (cityRepository.existsByStateId(idItem.id())){
+            if (cityRepository.existsByStateId(idItem.getId())){
                 throw new DeleteRuleException("The state is being used by one or more cities.");
             }
-            toDelete.add(idItem.id());
+            toDelete.add(idItem.getId());
         }
         stateRepository.deleteAllById(toDelete);
     }
@@ -142,10 +179,10 @@ public class LocalityService {
     public void deleteCities(List<IdItem> id) {
         List<Integer> toDelete = new ArrayList<>();
         for (IdItem idItem : id) {
-            if (localityRepository.existsByCityId(idItem.id())){
+            if (localityRepository.existsByCityId(idItem.getId())){
                 throw new DeleteRuleException("The city is being used by one or more localities.");
             }
-            toDelete.add(idItem.id());
+            toDelete.add(idItem.getId());
         }
         cityRepository.deleteAllById(toDelete);
     }
@@ -168,10 +205,10 @@ public class LocalityService {
     public void deleteLocalities(List<IdItem> idItemList) {
         List<Integer> toDelete = new ArrayList<>();
         for (IdItem idItem : idItemList) {
-            if (hotelRepository.existsByLocalityId(idItem.id())){
+            if (hotelRepository.existsByLocalityId(idItem.getId())){
                 throw new DeleteRuleException("The locality is being used by one or more hotels.");
             }
-            toDelete.add(idItem.id());
+            toDelete.add(idItem.getId());
         }
         localityRepository.deleteAllById(toDelete);
     }
@@ -188,9 +225,18 @@ public class LocalityService {
 
 
     public Locality createOrGetLocality(String zipcode, String cityName, String stateName, String countryName){
+        if (countryName.isEmpty()){
+            throw new IllegalArgumentException("Country name cannot be empty.");
+        }
 
-        Country country = countryRepository.findByName(countryName)
-                .orElseThrow(() -> new ResourceNotFoundException("Country not found."));
+        Country country;
+        Optional<Country> optionalCountry = countryRepository.findByName(countryName);
+        if (optionalCountry.isEmpty()){
+            country = Country.builder().name(countryName).build();
+            countryRepository.save(country);
+        } else {
+            country = optionalCountry.get();
+        }
 
         // Get State
         State state;
@@ -217,18 +263,18 @@ public class LocalityService {
 
         // Check duplicate
         Locality locality = null;
-        if (optionalState.isPresent() && optionalCity.isPresent()) {
-            Optional<Locality> optionalLocality = localityRepository.findByZipcodeAndCityId(
-                    zipcode, city.getId()
-            );
-            if (optionalLocality.isPresent()) {
-                return optionalLocality.get();
-            }
+        Optional<Locality> optionalLocality = localityRepository.findByZipcodeAndCityId(
+                zipcode, city.getId()
+        );
+        if (optionalLocality.isPresent()) {
+            return optionalLocality.get();
         }
+
         locality = Locality.builder()
                 .zipcode(zipcode)
                 .city(city)
                 .build();
+
         return localityRepository.save(locality);
     }
 

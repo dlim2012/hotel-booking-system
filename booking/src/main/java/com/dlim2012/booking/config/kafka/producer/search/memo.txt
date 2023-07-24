@@ -1,0 +1,7 @@
+*Sending dates to ES
+For speed and consistency
+    1) send only updated dates for new reservations :
+    2) send only updated price for price updates
+    3) send the whole dates and price at new Day updates
+    4) send the whole rooms at rooms updates from Hotel service
+

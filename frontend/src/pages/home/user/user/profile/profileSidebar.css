@@ -1,0 +1,51 @@
+:root {
+    --profile-sidebar-border-color: #e1e1e1;
+}
+
+.profileSidebarItem{
+    padding: 20px;
+    font-size: 15px;
+    border: none;
+}
+
+.profileSidebarList{
+    /*border: 1px solid gray;*/
+    /*border-radius: 10px;*/
+    border: none;
+}
+
+.profileSidebarList > li + li {
+    border-top: 1px solid var(--profile-sidebar-border-color);
+    /*border-right: 1px solid gray;*/
+    /*border-left: 1px solid gray;*/
+    border-bottom: none;
+}
+
+/*.profileSidebarItem{*/
+/*    border-right: 1px solid gray;*/
+/*    border-left: 1px solid gray;*/
+/*    !*border-radius: 20px;*!*/
+/*}*/
+
+.profileSidebarList:first-child{
+    border-top: 1px solid var(--profile-sidebar-border-color);
+    border-right: 1px solid var(--profile-sidebar-border-color);
+    border-left: 1px solid var(--profile-sidebar-border-color);
+    border-radius: 10px;
+}
+
+.profileSidebarList:last-child{
+    border-bottom: 1px solid var(--profile-sidebar-border-color);
+    border-radius: 10px;
+}
+
+.profileSidebarBtn{
+    background-color: white;
+    border: none;
+    font-size: 15px;
+}
+
+
+.profileSidebarBtn:hover{
+    cursor: pointer;
+}

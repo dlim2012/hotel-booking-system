@@ -1,29 +1,35 @@
 package com.dlim2012.user.controller;
 
+import com.dlim2012.security.service.JwtService;
 import com.dlim2012.user.dto.AuthenticationRequest;
 import com.dlim2012.user.dto.AuthenticationToken;
-import com.dlim2012.user.dto.RegisterRequest;
+import com.dlim2012.user.dto.UserRegisterRequest;
+import com.dlim2012.user.dto.profile.UserProfileItem;
 import com.dlim2012.user.service.TokenService;
 import com.dlim2012.user.service.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
+@CrossOrigin
 public class UserController {
-
 
     private final TokenService tokenService;
     private final UserService userService;
+    private final JwtService jwtService;
 
+    @GetMapping("/")
+    public String home(Principal principal) {
+        return "Hello" + (principal == null ? "" : ", " + principal.getName());
+    }
 
     @PostMapping("/token")
     public String token(Authentication authentication){
@@ -34,24 +40,46 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public AuthenticationToken register(@RequestBody @Valid RegisterRequest registerRequest){
-        log.info("Register requested with email '{}'", registerRequest.email());
-        String jwt = userService.register(registerRequest);
-        log.info("User registered with email '{}' ", registerRequest.email());
+    public AuthenticationToken register(@RequestBody UserRegisterRequest userRegisterRequest){
+        log.info("Register requested with email '{}'", userRegisterRequest.getEmail());
+        String jwt = userService.register(userRegisterRequest);
+        log.info("User registered with email '{}' ", userRegisterRequest.getEmail());
         return new AuthenticationToken(jwt);
-
     }
 
     @PostMapping("/login")
     public AuthenticationToken login(@RequestBody AuthenticationRequest authenticationRequest){
-        log.info("Login requested from user '{}'", authenticationRequest.email());
+        log.info("Login requested from user '{}'", authenticationRequest.getEmail());
         String jwt = userService.authenticate(authenticationRequest);
-        log.info("Login authorized to user '{}'", authenticationRequest.email());
+        log.info("Login authorized to user '{}'", authenticationRequest.getEmail());
         return new AuthenticationToken(jwt);
 
     }
 
+    @GetMapping("/profile")
+    public UserProfileItem getProfile(){
+        log.info("Get profile requested.");
+        Jwt jwt = jwtService.getJwt();
+        String userEmail = jwt.getSubject();
+        Integer userId = jwtService.getId(jwt);
+        return userService.getProfile(userId, userEmail);
+    }
 
-    // todo: set authorization scope accordingly (hotelmanager, user)
-    // todo: remove password login
+    @PostMapping("/profile/edit")
+    public void editProfile(@RequestBody UserProfileItem userProfileItem){
+        Integer userId = jwtService.getId();
+        log.info("Profile edit request from user '{}'", userId);
+        System.out.println(userProfileItem);
+
+
+        userService.editProfile(userProfileItem, userId);
+    }
+
+//    @GetMapping("/contact/user/{userId}")
+//    public UserContactInfo getContactInformation(
+//            @PathVariable("userId") Integer userId
+//    ){
+//        log.info("Contact information of user {} requested.", userId);
+//        return userService.getContactInfo(userId);
+//    }
 }

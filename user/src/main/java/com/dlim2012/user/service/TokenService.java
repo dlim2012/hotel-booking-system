@@ -1,7 +1,6 @@
 package com.dlim2012.user.service;
 
 import com.dlim2012.user.entity.User;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,14 +15,22 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class TokenService {
     private final JwtEncoder jwtEncoder;
 
-    @Value("${custom.security.jwt.expire-time-in-minutes}")
-    private Integer expireTimeInMinutes;
+//    @Value("${custom.security.jwt.expire-time-in-minutes}")
+    private final Integer expireTimeInMinutes;
 
-    public String generateToken(String username, Integer id, Collection<? extends GrantedAuthority> grantedAuthorities) {
+    public TokenService(
+            JwtEncoder jwtEncoder,
+            @Value("${custom.security.jwt.expire-time-in-minutes}") Integer expireTimeInMinutes) {
+        System.out.println("Token expire time in minutes: " + expireTimeInMinutes.toString());
+        this.jwtEncoder = jwtEncoder;
+        this.expireTimeInMinutes = expireTimeInMinutes;
+    }
+
+    public String generateToken(String username, String userDisplayName, Integer id, Collection<? extends GrantedAuthority> grantedAuthorities) {
         Instant now = Instant.now();
         String scope = grantedAuthorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -31,20 +38,25 @@ public class TokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(1, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(expireTimeInMinutes, ChronoUnit.MINUTES))
                 .subject(username)
                 .claim("id", id.toString())
                 .claim("scope", scope)
+                .claim("displayName", userDisplayName)
                 .build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
     public String generateToken(User user) {
-        return generateToken(user.getUsername(), Math.toIntExact(user.getId()), user.getAuthorities());
+        return generateToken(
+                user.getEmail(),
+                user.getDisplayName() == null ? user.getFirstName() : user.getDisplayName(),
+                Math.toIntExact(user.getId()),
+                user.getAuthorities());
     }
 
     public String generateToken(Authentication authentication) {
-        return generateToken(authentication.getName(), -1, authentication.getAuthorities());
+        return generateToken(authentication.getName(), authentication.getName(), -1, authentication.getAuthorities());
     }
 
 

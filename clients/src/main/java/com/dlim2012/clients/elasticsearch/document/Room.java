@@ -1,40 +1,29 @@
 package com.dlim2012.clients.elasticsearch.document;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.util.Set;
+
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-@Document(indexName = "room")
+@NoArgsConstructor
+@Document(indexName = "rooms")
 public class Room {
-
     @Id
-    private String id;
+    String roomId;
 
-    @Field(type = FieldType.Text, name = "displayName")
-    private String displayName;
+//    @Field(type = FieldType.Long, name = "room_id")
+//    Long roomId;
 
-    @Field(type = FieldType.Text, name = "description")
-    private String description;
+    @Field(type = FieldType.Nested)
+    Set<Dates> dates;
 
-    @Field(type = FieldType.Integer)
-    private Integer maxAdult;
-
-    @Field(type = FieldType.Integer)
-    private Integer maxChild;
-
-    @Field(type = FieldType.Integer)
-    private Integer quantity;
-
-    @Field(type = FieldType.Double)
-    private Double priceMin;
-
-    @Field(type = FieldType.Double)
-    private Double priceMax;
 }

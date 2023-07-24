@@ -4,7 +4,8 @@ import com.dlim2012.hotel.entity.Hotel;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,4 +38,16 @@ public class HotelImage {
     @Column(name = "url")
     private String url;
 
+    @Override
+    public String toString() {
+        return "HotelImage{" +
+                "id=" + id +
+                ", hotel=" + (hotel == null ? null : hotel.getId()) +
+                ", imageType=" + imageType +
+                ", contentType='" + contentType + '\'' +
+                ", name='" + name + '\'' +
+                ", filePath='" + filePath + '\'' +
+                ", url='" + url + '\'' +
+                '}';
+    }
 }

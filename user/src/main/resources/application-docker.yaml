@@ -1,0 +1,56 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: user
+  banner:
+    location: classpath:banner.txt
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://hotel-booking-mysql-user:3306/user?createDatabaseIfNotExist=true
+    username: root
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update #create-drop #update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+
+custom:
+  security:
+    rsa:
+      private-key: classpath:certs/private.pem
+      public-key: classpath:certs/public.pem
+    jwt:
+      expire-time-in-minutes: 43200 # 10 days

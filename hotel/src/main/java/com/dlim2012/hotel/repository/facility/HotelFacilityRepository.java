@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface HotelFacilityRepository extends JpaRepository<HotelFacility, Integer> {
     boolean existsByFacilityId(Integer facilityId);
+    boolean existsByHotelIdAndFacilityId(Integer hotelId, Integer facilityId);
     List<HotelFacility> findByHotelId(Integer hotelId);
 
     void deleteByHotelId(Integer hotelId);

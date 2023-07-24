@@ -1,5 +1,6 @@
 package com.dlim2012.clients.advice;
 
+import com.dlim2012.clients.exception.ImageAlreadyExistsException;
 import com.dlim2012.clients.exception.NotAuthorizedException;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class ApplicationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(IllegalArgumentException.class)
     public String handleIllegalArgument(IllegalArgumentException e){
+        log.error(e.getMessage());
         return e.getMessage();
     }
 
@@ -46,6 +48,13 @@ public class ApplicationExceptionHandler {
         return e.getMessage();
     }
 
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ImageAlreadyExistsException.class)
+    public String handleImageAlreadyExistsException(ImageAlreadyExistsException e){
+        return e.getMessage();
+    }
+
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(NotAuthorizedException.class)
     public String handleNotAuthorizedException(NotAuthorizedException e){
@@ -58,4 +67,5 @@ public class ApplicationExceptionHandler {
         log.error(e.getMessage());
         return "Internal Serval Error.";
     }
+
 }

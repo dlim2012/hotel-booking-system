@@ -7,8 +7,8 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,4 +36,15 @@ public class State {
 
     @OneToMany(mappedBy = "state", fetch = FetchType.LAZY)
     private List<City> cities = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "State{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", initials='" + initials + '\'' +
+                ", areaCode='" + areaCode + '\'' +
+                ", country=" + country +
+                '}';
+    }
 }

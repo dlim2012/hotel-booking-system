@@ -1,0 +1,26 @@
+
+.bookingContents{
+    display: flex;
+    flex-direction: row;
+    /*justify-content: center;*/
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    /*align-items: center;*/
+}
+
+.bookingHotelInfo{
+    width: 40%;
+}
+
+.hotelInfoCard{
+    border: 1px solid grey;
+    border-radius: 5px;
+    margin: 10px 0px 10px 0px;
+}
+
+.bookingInputInfo{
+    width: 60%;
+    margin-left: 50px;
+}
+

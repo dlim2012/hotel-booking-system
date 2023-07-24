@@ -1,0 +1,15 @@
+
+.profileContents{
+    display: flex;
+    flex-direction: column;
+    width: 65%;
+    margin-left: 10px;
+    max-width: 640px;
+    margin-top: 20px;
+
+}
+
+.profileTitle{
+    font-size: 15px;
+    /*background-color: #febb02;*/
+}

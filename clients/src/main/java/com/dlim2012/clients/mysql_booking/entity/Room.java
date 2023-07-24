@@ -1,35 +1,41 @@
 package com.dlim2012.clients.mysql_booking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "room")
 public class Room {
 
     @Id
-    @Column(name = "room_id", nullable = false)
-    private Integer roomId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable=false)
+    private Long id;
 
-    @Column(name = "hotel_id", nullable = false)
-    private Integer hotelId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rooms_id", nullable = false)
+    private Rooms rooms;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "room_number", nullable = false)
+    private Integer roomNumber;
 
-    @Column(name = "price_min", nullable = false)
-    private Double priceMin;
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Dates> datesSet;
 
-    @Column(name = "price_max", nullable = false)
-    private Double priceMax;
-
+    @Override
+    public String toString() {
+        return "Room{" +
+                "id=" + id +
+                ", rooms=" + (rooms == null ? null : rooms.getId()) +
+                ", roomNumber=" + roomNumber +
+                ", datesSet=" + "?" +
+                '}';
+    }
 }

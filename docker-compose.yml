@@ -1,4 +1,29 @@
 services:
+#  hotel-booking-mysql:
+#    container_name: hotel-booking-mysql-hotel
+#    image: mysql:8.0
+#    environment:
+#      MYSQL_ROOT_PASSWORD: password
+#    volumes:
+#      - hotel-booking-mysql-hotel:/data/mysql
+#      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+#      - ./hotel/src/main/java/dlim2012/hotel/entity/locality/countries.csv:/docker-entrypoint-initdb.d/countries.csv
+#    ports:
+#      - "9100:3306"
+#    restart: unless-stopped
+
+  hotel-booking-mysql-user:
+    container_name: hotel-booking-mysql-user
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - hotel-booking-mysql-user:/data/mysql
+    #      - ./hotel-init.sql:/docker-entrypoint-initdb.d/hotel-init.sql:ro
+    ports:
+      - "9102:3306"
+    restart: unless-stopped
+
   hotel-booking-mysql-hotel:
     container_name: hotel-booking-mysql-hotel
     image: mysql:8.0
@@ -11,8 +36,6 @@ services:
     ports:
       - "9100:3306"
     restart: unless-stopped
-    networks:
-      - spring
 
   hotel-booking-mysql-booking:
     container_name: hotel-booking-mysql-booking
@@ -25,24 +48,8 @@ services:
     ports:
       - "9104:3306"
     restart: unless-stopped
-    networks:
-      - spring
 
-  hotel-booking-mysql-user:
-    container_name: hotel-booking-mysql-user
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-    volumes:
-      - hotel-booking-mysql-user:/data/mysql
-#      - ./hotel-init.sql:/docker-entrypoint-initdb.d/hotel-init.sql:ro
-    ports:
-      - "9102:3306"
-    restart: unless-stopped
-    networks:
-      - spring
-
-  elasticsearch:
+  hotel-booking-elasticsearch:
     image: elasticsearch:8.2.2
     environment:
       - discovery.type=single-node
@@ -55,8 +62,13 @@ services:
       - hotel-booking-es_data:/usr/share/elasticsearch/data
     ports:
       - "9103:9200"
-    networks:
-      - elastic
+
+  kibana:
+    image: kibana:8.2.2
+    ports:
+      - "9203:5601"
+    depends_on:
+      - hotel-booking-elasticsearch
 
   hotel-booking-cassandra:
     image: cassandra:4.1
@@ -64,9 +76,8 @@ services:
     ports:
       - "9106:9042"
     volumes:
-      - hotel-booking-cassandra:/bitnami
-#      - ./scripts/casssandra_init.sh:/init.sh
-#    entrypoint: ["sudo sh /init.sh"]
+      - hotel-booking-cassandra:/var/lib/cassandra
+    # Note: manually run ./script/cassandra_init.sh for keyspace initialization
 
   hotel-booking-redis-server:
     container_name: hotel-booking-redis-server
@@ -85,17 +96,6 @@ services:
     ports:
       - '9105:6379'
     restart: unless-stopped
-    networks:
-      - spring
-
-  kibana:
-    image: kibana:8.2.2
-    ports:
-      - "9203:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - elastic
 
   hotel-booking-zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
@@ -117,38 +117,129 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'hotel-booking-zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.20:9092,PLAINTEXT_INTERNAL://hotel-booking-broker:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.0.0.110:9092,PLAINTEXT_INTERNAL://hotel-booking-broker:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
-#  hotel-booking-eureka-server:
-#    image: dlim2012/tiny-url.eureka-server:latest
-#    container_name: hotel-booking-eureka-server
-#    ports:
-#      - "9202:8761"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    networks:
-#      - spring
-#    depends_on:
-#      - hotel-booking-zipkin
 
 
   hotel-booking-zipkin:
     image: openzipkin/zipkin
     container_name: hotel-booking-zipkin
+    restart: always
     ports:
       - "9201:9411"
-    networks:
-      - spring
 
-networks:
-  spring:
-    driver: bridge
-  elastic:
-    name: elastic
-    driver: bridge
+  hotel-booking-eureka-server:
+    image: dlim2012/hotel-booking.eureka-server
+    container_name: hotel-booking-eureka-server
+    build: ./eureka-server
+    restart: always
+    ports:
+      - "9200:9200"
+
+  hotel-booking-apigw:
+    image: dlim2012/hotel-booking.apigw
+    container_name: hotel-booking-apigw
+    build: ./apigw
+    ports:
+      - "9000:9000"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+
+  hotel-booking-archival:
+    image: dlim2012/hotel-booking.archival
+    container_name: hotel-booking-archival
+    build: ./archival
+    ports:
+      - "9004:9004"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-mysql-booking
+      - hotel-booking-cassandra
+      - hotel-booking-broker
+
+  hotel-booking-booking:
+    image: dlim2012/hotel-booking.booking
+    container_name: hotel-booking-booking
+    build: ./booking
+    ports:
+      - "9003:9003"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-mysql-booking
+      - hotel-booking-redis-server
+      - hotel-booking-broker
+
+  hotel-booking-booking-management:
+    image: dlim2012/hotel-booking.booking-management
+    container_name: hotel-booking-booking-management
+    build: ./booking-management
+    ports:
+      - "9005:9005"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-mysql-booking
+      - hotel-booking-redis-server
+      - hotel-booking-cassandra
+
+  hotel-booking-hotel:
+    image: dlim2012/hotel-booking.hotel
+    container_name: hotel-booking-hotel
+    build: ./hotel
+    ports:
+      - "9001:9001"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-mysql-hotel
+
+  hotel-booking-search:
+    image: dlim2012/hotel-booking.search
+    container_name: hotel-booking-search
+    build: ./search
+    ports:
+      - "9007:9007"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+#      - hotel-booking-search-consumer
+      - hotel-booking-elasticsearch
+
+  hotel-booking-search-consumer:
+    image: dlim2012/hotel-booking.search-consumer
+    container_name: hotel-booking-search-consumer
+    build: ./search-consumer
+    ports:
+      - "9006:9006"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-elasticsearch
+      - hotel-booking-broker
+
+  hotel-booking-user:
+    image: dlim2012/hotel-booking.user
+    container_name: hotel-booking-user
+    build: ./user
+    ports:
+      - "9002:9002"
+    restart: always
+    depends_on:
+      - hotel-booking-eureka-server
+      - hotel-booking-mysql-user
+
+
+#networks:
+#  spring:
+#    driver: bridge
+#  elastic:
+#    name: elastic
+#    driver: bridge
 
 volumes:
   hotel-booking-mysql-hotel:

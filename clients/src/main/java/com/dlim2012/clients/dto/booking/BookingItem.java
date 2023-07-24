@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -46,9 +45,6 @@ public class BookingItem{
 
         @NotNull
         private LocalDateTime confirmTime;
-
-        @Null(groups = {Post.class})
-        private String userEmail;
 
 
         public interface Post {}

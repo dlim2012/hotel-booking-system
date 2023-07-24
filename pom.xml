@@ -16,6 +16,7 @@
     <name>hotelbooking</name>
     <description>Hotel Booking System</description>
     <modules>
+        <module>apigw</module>
         <module>hotel</module>
         <module>eureka-server</module>
         <module>search-consumer</module>
@@ -23,10 +24,10 @@
         <module>user</module>
         <module>booking</module>
         <module>booking-management</module>
-        <module>payment</module>
         <module>archival</module>
         <module>clients</module>
         <module>client_cassandra</module>
+        <module>client_security</module>
     </modules>
 
     <properties>

@@ -1,0 +1,64 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: apigw
+  banner:
+    location: classpath:banner.txt
+  cloud:
+    discovery:
+      locator:
+        enabled: true
+#      globalcors:
+#        cors-configurations:
+#          '[/**]':
+#            allowedOrigins: "**"
+#            allowedMethods:
+#              - GET
+#              - POST
+#              - PUT
+#              - DELETE
+#      httpclient:
+#        ssl:
+#          useInsecureTrustManager: true
+    gateway:
+      routes:
+        - id: user
+          uri: lb://USER
+          predicates:
+            - Path=/api/v1/user/**
+        - id: booking
+          uri: lb://BOOKING
+          predicates:
+            - Path=/api/v1/booking/**
+        - id: booking-management
+          uri: lb://BOOKING-MANAGEMENT
+          predicates:
+            - Path=/api/v1/booking-management/**
+        - id: hotel
+          uri: lb://HOTEL
+          predicates:
+            - Path=/api/v1/hotel/**
+        - id: search
+          uri: lb://SEARCH
+          predicates:
+            - Path=/api/v1/search/**
+        - id: search-consumer # for testing
+          uri: lb://SEARCH-CONSUMER
+          predicates:
+            - Path=/api/v1/search-consumer/**
+
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+    port: 9200
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+    registry-fetch-interval-seconds: 3

@@ -1,17 +1,18 @@
 package com.dlim2012.hotel.service;
 
 import com.dlim2012.clients.dto.IdItem;
+import com.dlim2012.clients.exception.ImageAlreadyExistsException;
 import com.dlim2012.clients.exception.ImageSizeExceededException;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.hotel.dto.file.HotelImageUrlItem;
 import com.dlim2012.hotel.dto.file.RoomImageUrlItem;
 import com.dlim2012.hotel.entity.Hotel;
-import com.dlim2012.hotel.entity.Room;
+import com.dlim2012.hotel.entity.Rooms;
 import com.dlim2012.hotel.entity.file.HotelImage;
 import com.dlim2012.hotel.entity.file.ImageType;
-import com.dlim2012.hotel.entity.file.RoomImage;
+import com.dlim2012.hotel.entity.file.RoomsImage;
 import com.dlim2012.hotel.repository.HotelRepository;
-import com.dlim2012.hotel.repository.RoomRepository;
+import com.dlim2012.hotel.repository.RoomsRepository;
 import com.dlim2012.hotel.repository.file.HotelImageRepository;
 import com.dlim2012.hotel.repository.file.RoomImageRepository;
 import com.dlim2012.hotel.util.ImageUtils;
@@ -33,7 +34,7 @@ import java.util.Optional;
 public class ImageService {
 
     private final HotelRepository hotelRepository;
-    private final RoomRepository roomRepository;
+    private final RoomsRepository roomsRepository;
     private final HotelImageRepository hotelImageRepository;
     private final RoomImageRepository roomImageRepository;
 
@@ -42,16 +43,19 @@ public class ImageService {
     private final String originalRoomImageFolder;
     private final String displayRoomImageFolder;
 
+    private final String imageUrlPrefix;
+
     private final ModelMapper modelMapper = new ModelMapper();
 
     public ImageService(HotelRepository hotelRepository,
-                        RoomRepository roomRepository,
+                        RoomsRepository roomsRepository,
                         HotelImageRepository hotelImageRepository,
                         RoomImageRepository roomImageRepository,
-                        @Value("${custom.file.path}") String filePath
+                        @Value("${custom.file.path}") String filePath,
+                        @Value("${custom.file.imageUrlPrefix}") String imageUrlPrefix
     ) throws IOException {
         this.hotelRepository = hotelRepository;
-        this.roomRepository = roomRepository;
+        this.roomsRepository = roomsRepository;
         this.hotelImageRepository = hotelImageRepository;
         this.roomImageRepository = roomImageRepository;
 
@@ -64,6 +68,8 @@ public class ImageService {
         Files.createDirectories(Paths.get(this.displayHotelImageFolder));
         Files.createDirectories(Paths.get(this.originalRoomImageFolder));
         Files.createDirectories(Paths.get(this.displayRoomImageFolder));
+
+        this.imageUrlPrefix = imageUrlPrefix;
     }
 
     public ImageType getImageTypeFromString(String imageTypeString){
@@ -84,9 +90,14 @@ public class ImageService {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
 
+        if (hotelImageRepository.existsByHotelIdAndName(hotelId, ImageType.ORIGINAL.name())){
+            throw new ImageAlreadyExistsException("Image with the same name already exists.");
+        }
+
         byte[] compressedOriginalImageBytes = ImageUtils.compressImage(file.getBytes());
         byte[] compressedDisplayImageBytes = ImageUtils.compressImage(
                 ImageUtils.createDisplayImage(file.getBytes()));
+
 
         HotelImage originalImage = HotelImage.builder()
                 .hotel(hotel)
@@ -105,14 +116,26 @@ public class ImageService {
         List<HotelImage> hotelImageList = new ArrayList<>();
         hotelImageList.add(originalImage);
         hotelImageList.add(displayImage);
-        hotelImageRepository.saveAll(hotelImageList);
+        hotelImageList = hotelImageRepository.saveAll(hotelImageList);
 
         originalImage.setFilePath(Paths.get(originalHotelImageFolder, originalImage.getId().toString()).toString());
         displayImage.setFilePath(Paths.get(displayHotelImageFolder, displayImage.getId().toString()).toString());
-        hotelImageRepository.saveAll(hotelImageList);
+        hotelImageList = hotelImageRepository.saveAll(hotelImageList);
 
         Files.write(Paths.get(originalImage.getFilePath()), compressedOriginalImageBytes);
         Files.write(Paths.get(displayImage.getFilePath()), compressedDisplayImageBytes);
+
+        if (hotel.getMainImageId() == null){
+            for (HotelImage hotelImage: hotelImageList){
+                if (hotelImage.getImageType().equals(ImageType.DISPLAY)){
+                    hotel.setMainImageId(hotelImage.getId());
+                    hotelRepository.save(hotel);
+                    break;
+                }
+            }
+
+
+        }
 
     }
 
@@ -125,8 +148,8 @@ public class ImageService {
                 .stream().map(entity -> modelMapper.map(entity, HotelImageUrlItem.class)).toList();
     }
 
-    public byte[] getHotelImage(Integer hotelId, Integer imageId, ImageType imageType) throws IOException {
-        HotelImage hotelImage = hotelImageRepository.findByHotelIdAndIdAndImageType(hotelId, imageId, imageType)
+    public byte[] getHotelImage(Integer imageId, ImageType imageType) throws IOException {
+        HotelImage hotelImage = hotelImageRepository.findByIdAndImageType(imageId, imageType)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found."));
         try {
             byte[] image = Files.readAllBytes(Paths.get(hotelImage.getFilePath()));
@@ -153,7 +176,7 @@ public class ImageService {
     public void deleteHotelImages(Integer hotelId, List<IdItem> idItemList){
         List<HotelImage> hotelImageList = new ArrayList<>();
         for (IdItem idItem: idItemList){
-            hotelImageRepository.findByHotelIdAndId(hotelId, idItem.id())
+            hotelImageRepository.findByHotelIdAndId(hotelId, idItem.getId())
                     .ifPresent(hotelImageList::add);
         }
         deleteHotelImages(hotelImageList);
@@ -169,38 +192,38 @@ public class ImageService {
             throw new ImageSizeExceededException("Image size is too big");
         }
 
-        Optional<Room> optionalRoom = roomRepository.findByHotelIdAndId(hotelId, roomId);
+        Optional<Rooms> optionalRoom = roomsRepository.findByHotelIdAndId(hotelId, roomId);
         if (optionalRoom.isEmpty()) {
             throw new ResourceNotFoundException("Hotel not found.");
         }
-        Room room = optionalRoom.get();
+        Rooms rooms = optionalRoom.get();
 
         byte[] compressedOriginalImageBytes = ImageUtils.compressImage(file.getBytes());
         byte[] compressedDisplayImageBytes = ImageUtils.compressImage(
                 ImageUtils.createDisplayImage(file.getBytes()));
 
-        RoomImage originalImage = RoomImage.builder()
-                .room(room)
+        RoomsImage originalImage = RoomsImage.builder()
+                .rooms(rooms)
                 .name(file.getOriginalFilename())
                 .imageType(ImageType.ORIGINAL)
                 .contentType(file.getContentType())
                 .filePath("")
                 .build();
-        RoomImage displayImage = RoomImage.builder()
-                .room(room)
+        RoomsImage displayImage = RoomsImage.builder()
+                .rooms(rooms)
                 .name(file.getOriginalFilename())
                 .imageType(ImageType.DISPLAY)
                 .contentType(file.getContentType())
                 .filePath("")
                 .build();
-        List<RoomImage> roomImageList = new ArrayList<>();
-        roomImageList.add(originalImage);
-        roomImageList.add(displayImage);
-        roomImageRepository.saveAll(roomImageList);
+        List<RoomsImage> roomsImageList = new ArrayList<>();
+        roomsImageList.add(originalImage);
+        roomsImageList.add(displayImage);
+        roomImageRepository.saveAll(roomsImageList);
 
         originalImage.setFilePath(Paths.get(originalRoomImageFolder, originalImage.getId().toString()).toString());
         displayImage.setFilePath(Paths.get(displayRoomImageFolder, displayImage.getId().toString()).toString());
-        roomImageRepository.saveAll(roomImageList);
+        roomImageRepository.saveAll(roomsImageList);
 
         Files.write(Paths.get(originalImage.getFilePath()), compressedOriginalImageBytes);
         Files.write(Paths.get(displayImage.getFilePath()), compressedDisplayImageBytes);
@@ -208,19 +231,19 @@ public class ImageService {
 
 
     public List<RoomImageUrlItem> getRoomImageUrls(Integer hotelId, Integer roomId, ImageType imageType) {
-        if (!roomRepository.existsByHotelIdAndId(hotelId, roomId))
+        if (!roomsRepository.existsByHotelIdAndId(hotelId, roomId))
             throw new ResourceNotFoundException("Room not found.");
-        return roomImageRepository.findByRoomIdAndImageType(roomId, imageType)
+        return roomImageRepository.findByRoomsIdAndImageType(roomId, imageType)
                 .stream().map(entity -> modelMapper.map(entity, RoomImageUrlItem.class)).toList();
     }
 
     public byte[] getRoomImage(Integer hotelId, Integer roomId, Integer imageId, ImageType imageType) {
-        if (!roomRepository.existsByHotelIdAndId(hotelId, roomId))
+        if (!roomsRepository.existsByHotelIdAndId(hotelId, roomId))
             throw new ResourceNotFoundException("Room not found.");
-        RoomImage roomImage = roomImageRepository.findByRoomIdAndIdAndImageType(roomId, imageId, imageType)
+        RoomsImage roomsImage = roomImageRepository.findByRoomsIdAndIdAndImageType(roomId, imageId, imageType)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found."));
         try {
-            byte[] image = Files.readAllBytes(Paths.get(roomImage.getFilePath()));
+            byte[] image = Files.readAllBytes(Paths.get(roomsImage.getFilePath()));
             return ImageUtils.decompressImage(image);
         } catch (IOException e){
             log.error("Image not found in the file system.");
@@ -228,33 +251,41 @@ public class ImageService {
         }
     }
 
-    public void deleteRoomImages(List<RoomImage> roomImageList){
-        for (RoomImage roomImage: roomImageList){
+    public void deleteRoomImages(List<RoomsImage> roomsImageList){
+        for (RoomsImage roomsImage : roomsImageList){
             try {
-                if (Files.deleteIfExists(Paths.get(roomImage.getFilePath()))) {
-                    log.info("Room image {} deleted from file system.", roomImage.getId());
+                if (Files.deleteIfExists(Paths.get(roomsImage.getFilePath()))) {
+                    log.info("Room image {} deleted from file system.", roomsImage.getId());
                 }
             } catch (Exception e){
-                log.info("Exception while deleting room image {}:" + e.getMessage(), roomImage.getId());
+                log.info("Exception while deleting room image {}:" + e.getMessage(), roomsImage.getId());
             }
         }
     }
 
     public void deleteRoomImages(Integer hotelId, Integer roomId, List<IdItem> idItemList){
-        if (!roomRepository.existsByHotelIdAndId(hotelId, roomId)){
+        if (!roomsRepository.existsByHotelIdAndId(hotelId, roomId)){
             throw new ResourceNotFoundException("Room not found.");
         }
-        List<RoomImage> roomImageList = new ArrayList<>();
+        List<RoomsImage> roomsImageList = new ArrayList<>();
         for (IdItem idItem: idItemList){
-            roomImageRepository.findByRoomIdAndId(roomId, idItem.id())
-                    .ifPresent(roomImageList::add);
+            roomImageRepository.findByRoomsIdAndId(roomId, idItem.getId())
+                    .ifPresent(roomsImageList::add);
         }
-        deleteRoomImages(roomImageList);
+        deleteRoomImages(roomsImageList);
     }
 
     public void deleteRoomImages(Integer roomId){
-        List<RoomImage> roomImageList = roomImageRepository.findByRoomId(roomId);
-        deleteRoomImages(roomImageList);
+        List<RoomsImage> roomsImageList = roomImageRepository.findByRoomsId(roomId);
+        deleteRoomImages(roomsImageList);
     }
 
+    public List<HotelImageUrlItem> getHotelDisplayImages(Integer hotelId) {
+        return hotelImageRepository.findByHotelIdAndImageType(hotelId, ImageType.DISPLAY).stream()
+                .map(hotelImage -> HotelImageUrlItem.builder().id(hotelImage.getId())
+                        .url(this.imageUrlPrefix + '/' + hotelImage.getId().toString())
+                        .build())
+                .toList();
+
+    }
 }

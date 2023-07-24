@@ -1,0 +1,14 @@
+.hotelMainContainer{
+    max-width: 1024px;
+    display: flex;
+    flex-direction: column;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hotelInfoContainer{
+    border: gray 1px solid;
+    border-radius: 2px;
+    padding: 10px;
+    margin: 10px;
+}

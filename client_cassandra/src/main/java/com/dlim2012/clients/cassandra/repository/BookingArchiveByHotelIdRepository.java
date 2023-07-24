@@ -7,6 +7,7 @@ import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Stream;
 
 @Repository
@@ -16,4 +17,7 @@ public interface BookingArchiveByHotelIdRepository
     Stream<BookingArchiveByUserId> findByHotelIdAndMainStatusAndEndDateTimeGreaterThan(
             Integer hotelId, BookingMainStatus mainStatus, LocalDateTime endDateTime);
 
+    List<BookingArchiveByHotelId> findByHotelIdAndMainStatusAndEndDateTimeGreaterThanEqual(Integer hotelId, BookingMainStatus status, LocalDateTime startDateTime);
+
+    List<BookingArchiveByHotelId> findByHotelIdAndMainStatusAndEndDateTimeGreaterThanEqualAndEndDateTimeLessThan(Integer hotelId, BookingMainStatus status, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

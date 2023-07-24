@@ -1,0 +1,82 @@
+server:
+  port:
+    9003
+
+spring:
+  application:
+    name: booking
+  banner:
+    location: classpath:banner.txt
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://hotel-booking-mysql-booking:3306/booking?createDatabaseIfNotExist=true
+    username: root
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update #create-drop #update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+  data:
+    redis:
+      database: 0
+      host: hotel-booking-redis-server
+      port: 6379
+
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+
+  kafka:
+    bootstrap-servers: http://hotel-booking-broker:9092
+
+
+  cache:
+    type: redis
+    cache-names:
+      - booking
+    redis:
+      time-to-live: 30000
+      cache-null-values: true
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+#    registryFetchIntervalSeconds: 5
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  hostname: 10.0.0.110
+  paypal:
+    mode: sandbox
+    client:
+      id: AU3lFjUm-hpp4z8Pls4QMHeqqqpKxrt167x8At0meKHLVFbPeBBawprvPbUSehMpIU1BS6SO--beEupW
+      secret: EMid4txa6eaYtjwCXWSWOi69TicrlPIR86gcFvsmexKuvK4I98vMFm8G-q6QY1_Cy3BTP6uaU0cYSw9c
+    host: http://10.0.0.24:3000
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - APP_USER
+      - HOTEL_MANAGER
+

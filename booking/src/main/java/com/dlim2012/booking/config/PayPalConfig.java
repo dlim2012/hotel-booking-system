@@ -24,13 +24,19 @@ public class PayPalConfig {
 
     @Value("${custom.paypal.host}")
     public String HOST;
+
     public static String PATH = "/api/v1/booking";
     public static final String INTENT = "sale";
     public static final String CONCURRENCY = "USD";
     public static final String METHOD = "paypal";
     public static final String SUCCESS_URL = "/payment/success";
     public static final String CANCEL_URL = "/payment/cancel";
-    public static final String ERROR_URL = "/payment/error";
+
+//    @Value("${custom.paypal.success-redirect-url}")
+//    public String SUCCESS_REDIRECT_URL;
+//    @Value("${custom.paypal.cancel-redirect-url}")
+//    public String CANCEL_REDIRECT_URL;
+//    public static final String ERROR_URL = "/hotels/booking/payment/error";
 
     @Bean
     public Map<String, String> paypalSdkConfig(){
@@ -53,12 +59,14 @@ public class PayPalConfig {
         return context;
     }
 
-    public String getCancelUrl(){
-        return HOST + PATH + CANCEL_URL;
+    public String getCancelUrl(Long bookingId){
+        return HOST + PATH + CANCEL_URL + "/" + bookingId.toString();
     }
 
-    public String getSuccessUrl(){
-        return HOST + PATH + SUCCESS_URL;
+    public String getSuccessUrl(Long bookingId){
+        return HOST + PATH + SUCCESS_URL + "/" + bookingId.toString();
+
+//        return HOST + SUCCESS_URL + "/" + bookingId.toString();
     }
 
 }

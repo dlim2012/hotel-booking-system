@@ -1,0 +1,33 @@
+server:
+  port:
+    9007
+
+spring:
+  application:
+    name: search
+  banner:
+    location: classpath:banner.txt
+  zipkin:
+    base-url: http://hotel-booking-zipkin:9411
+
+eureka:
+  instance:
+    hostname: hotel-booking-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+
+custom:
+  elasticsearch:
+    server: hotel-booking-elasticsearch:9200
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - APP_USER

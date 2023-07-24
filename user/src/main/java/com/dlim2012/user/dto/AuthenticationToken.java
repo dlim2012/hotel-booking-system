@@ -1,6 +1,14 @@
 package com.dlim2012.user.dto;
 
-public record AuthenticationToken(
-        String jwt
-) {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class AuthenticationToken{
+    String jwt;
 }

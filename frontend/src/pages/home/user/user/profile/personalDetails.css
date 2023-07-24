@@ -1,0 +1,240 @@
+:root {
+    --profile-border-color: #e1e1e1;
+    --button-color: #3C6CE4;
+    --light-blue-color: aliceblue;
+}
+
+.profileContainer{
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    /*align-items: center;*/
+    gap: 30px;
+    max-width: 1024px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    /*background-color: tomato;*/
+}
+
+.profileSidebar{
+
+    display: flex;
+    flex-direction: column;
+    width: 35%;
+    max-width: 384px;
+    margin-top: 20px;
+    margin-bottom: auto
+}
+
+.profileTitle p{
+    margin: 10px 0px 20px 0px;
+}
+
+.profileList{
+    width: 100%;
+    max-width: 1024px;
+}
+
+.editItem{
+    margin-right: 20px;
+}
+
+/*ul > li + li {*/
+/*    margin-left: 5px;*/
+/*    padding-left: 5px;*/
+/*    border-top: 1px solid #bbb;*/
+/*}*/
+
+ul {
+    /*border-top: 1px solid #bbb;*/
+    list-style-type: none;
+    padding: 0px;
+    /*border-bottom: 1px solid #bbb;*/
+}
+
+li {
+    border-top: 1px solid var(--profile-border-color);
+}
+
+li:last-child{
+    border-bottom: 1px solid var(--profile-border-color);
+}
+
+.profileItem{
+    width: 100%;
+    max-width: 1024px;
+    padding: 12px 0px 12px 0px;
+    /*border-bottom: gray solid 1px;*/
+}
+
+.profileItemRow{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profileKey{
+    font-size: 15px;
+    color: #333333;
+    width: 150px;
+}
+
+.profileValue{
+    font-size: 13px;
+    /*margin-top: 10px;*/
+}
+
+.editBtn1{
+    color: var(--button-color);
+    background-color: white;
+    border: none;
+    font-size: 14px;
+    margin-right: 20px;
+    padding: 8px 8px;
+    border-radius: 5px;
+}
+
+.editBtn2{
+    color: gray;
+    background-color: white;
+    border: none;
+    font-size: 14px;
+    margin-right: 20px;
+    padding: 8px 8px;
+    border-radius: 5px;
+}
+
+.editBtn1:hover{
+    cursor: pointer;
+    background-color: var(--light-blue-color);
+}
+
+.profileItemCol{
+    padding-left: 20px;
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.editTitle{
+    padding-left: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.profileItemContainer{
+    width: 95%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 15px 0px 15px 20px;
+}
+
+.profileItemInput {
+    width: 100%;
+    margin-right: 0px;
+    /*display: flex;*/
+    /*flex-direction: row;*/
+}
+
+.profileItemInputMulti{
+    display: flex;
+    width: 100%;
+    margin-right: 30px;
+    gap: 10px;
+}
+
+.profileItemInputMulti select{
+    width: 150%;
+}
+
+
+
+.profileItemInput label{
+    font-weight: bolder;
+    font-size: 14px;
+    /*justify-content: space-between;*/
+}
+
+.profileItemInput select{
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 100%;
+    margin-top: 10px;
+    /*max-width: 640px;*/
+    /*width: 300px;*/
+    padding: 6px;
+}
+
+.profileItemInput input{
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 93%;
+    margin-top: 10px;
+    /*max-width: 640px;*/
+    /*width: 300px;*/
+    padding: 6px;
+}
+
+select{
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.profileItemInput input:focus{
+    background-color: white;
+}
+
+
+.onEditBtns{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+
+.onEditBtn{
+    margin: 0px 20px 0px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    /*font-weight: bold;*/
+}
+
+.cancelBtn{
+    padding: 8px 8px;
+    border: none;
+    color: var(--button-color);
+    background-color: white;
+}
+
+
+.saveBtn{
+    padding: 8px 12px;
+    border: none;
+    color: white;
+    background-color: var(--button-color);
+}
+
+.onEditBtn:hover{
+    cursor: pointer;
+}
+
+.cancelBtn:hover{
+    background-color: var(--light-blue-color);
+}
+
+.saveBtn:hover{
+    background-color: mediumblue;
+}

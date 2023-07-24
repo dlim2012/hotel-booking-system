@@ -1,0 +1,36 @@
+server:
+  port:
+    9006
+
+spring:
+  application:
+    name: search-consumer
+  banner:
+    location: classpath:banner.txt
+  zipkin:
+    base-url: http://10.0.0.110:9201
+  kafka:
+    bootstrap-servers: 10.0.0.110:9092
+
+eureka:
+  instance:
+    hostname: 10.0.0.110
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  elasticsearch:
+    server: 10.0.0.110:9103
+

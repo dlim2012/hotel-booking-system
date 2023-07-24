@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity(name = "user")
+@Entity
 @Table(name = "user")
 public class User implements UserDetails {
 
@@ -37,12 +38,26 @@ public class User implements UserDetails {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "display_name")
+    private String displayName;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(name = "nationality")
+    private String nationality;
+
+    @Column(name = "gender")
+    private Gender gender;
+
     @Enumerated(EnumType.ORDINAL)
     private UserRole userRole;
 
     @Column(name = "user_created_at", nullable=false)
     private LocalDateTime userCreatedAt;
-
 
     @Column(name = "locked")
     private Boolean locked;

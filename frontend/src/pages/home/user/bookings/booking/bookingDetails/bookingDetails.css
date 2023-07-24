@@ -1,0 +1,39 @@
+.bookingDetails{
+    max-width: 1024px;
+    display: flex;
+    flex-direction: column;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.bookingDetailsCard{
+    border: grey 1px solid;
+    border-radius: 3px;
+    padding: 10px;
+    margin: 5px;
+}
+
+.bookingRoomInfo{
+    border: grey 1px solid;
+    border-radius: 3px;
+    padding: 10px;
+    margin: 5px;
+}
+
+.bookingRoomInfoTitle{
+    display:flex;
+    justify-content: space-between;
+}
+
+
+.bookingRoomInfoMid{
+    display: flex;
+}
+
+.bookingRoomInfoCard{
+    border: grey 1px solid;
+    border-radius: 3px;
+    padding: 10px;
+    margin: 5px;
+    width: 100%;
+}

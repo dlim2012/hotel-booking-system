@@ -36,9 +36,14 @@ public class SecurityConfig {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                                .anyRequest().permitAll()
-//                        .requestMatchers("/api/v1/user/register", "/api/v1/user/login").permitAll()
-//                                .anyRequest().authenticated()
+//                                .anyRequest().permitAll()
+                        .requestMatchers(
+                                "/api/v1/user/register",
+                                "/api/v1/user/login",
+                                "/api/v1/user/contact/**",
+                                "/api/v1/user/test-user"
+                        ).permitAll()
+                                .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
