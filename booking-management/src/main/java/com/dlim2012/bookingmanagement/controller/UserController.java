@@ -26,6 +26,11 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
 
+    @GetMapping("/test")
+    public String test(){
+        return "Test";
+    }
+
     @PostMapping("/user/booking")
     public List<BookingArchiveItem> getBookingsByUserId(
             @RequestBody ListByUserRequest request){
@@ -78,7 +83,7 @@ public class UserController {
         userService.putGuestInfo(bookingId, bookingRoomId, userId, request);
     }
 
-    @PostMapping("/booking/{bookingId}/archived")
+    @PostMapping("/user/booking/{bookingId}/archived")
     public BookingArchiveByUserId getArchivedBookingItem(
             @PathVariable("bookingId") Long bookingId,
             @RequestBody ArchivedBookingByUserSearchInfo request

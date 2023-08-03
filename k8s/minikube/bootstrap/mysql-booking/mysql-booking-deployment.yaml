@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-mysql-book
+spec:
+  selector:
+    matchLabels:
+      app: hb-mysql-book
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hb-mysql-book
+    spec:
+      containers:
+        - image: mysql:8.0
+          name: hb-mysql-book
+          env:
+            - name: MYSQL_DATABASE
+              value: book
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hb-mysql-book-secret
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: hb-mysql-book
+          volumeMounts:
+            - name: hb-mysql-book-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: hb-mysql-book-persistent-storage
+          persistentVolumeClaim:
+            claimName: hb-mysql-book-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-mysql-book
+  labels:
+    app: hb-mysql-book
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: hb-mysql-book

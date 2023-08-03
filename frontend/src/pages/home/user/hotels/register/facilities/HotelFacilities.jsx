@@ -2,6 +2,7 @@ import React from 'react';
 import {hotelFacilities, roomFacilities} from "../../../../../../assets/Lists";
 import {getWithJwt, postWithJwt} from "../../../../../../clients";
 import {useParams} from "react-router-dom";
+import './hotelFacilities.css'
 
 function HotelFacilities(props) {
     const facilities = props.info;
@@ -14,8 +15,8 @@ function HotelFacilities(props) {
 
 
     return (
-        <div>
-            <div className="facility-list">
+        <div className="hotelFacilitiesContainer">
+            <div className="facilityList">
                 {hotelFacilities.map((item, index) => (
                     <div key={index}>
                         <input

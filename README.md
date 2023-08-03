@@ -1,37 +1,121 @@
 # Hotel Booking System
 
+## Features
 
-## System Design
+### For app users
+- Search hotels with various options
+  - location (city, state, country)
+  - dates (up to 90 days)
+  - number of adults, children, beds, and rooms
+  - price range
+  - hotel features (property type, property rating, facilities)
+  - room facilities
+- Room recommendations: optimized based on number of adults/children/rooms
+- Map service for hotel locations (Google Maps API)
+- Reserve rooms with given no prepayment days and free cancellation days
+- Payment with PayPal
+- Save hotels for later consideration
+- Booking records by status and dates
+
+### For hotel managers
+- Hotel/rooms registration and modification with address recommendations (Google Places API) and image uploads.
+- Hotel summary page for hotel information, reservation, and booking history
+- Manage available and reservation dates for each room through a timeline calendar
+- Booking records by status and dates
+
+## Technologies
+- Backend framework: Spring
+- Database and message queue: MySQL, Cassandra, ElasticSearch, Redis, Kafka
+- Security: JSON Web Tokens, OAuth 2.0
+- External API: Google Maps API, Paypal
+- Compile and deployment: Maven, Docker, Kubernetes
+- Frontend: React, HTML, CSS
+
+
+## System
+
 <p align="center">
   <img src="_design/images/hotel-booking-system.drawio.png" width="900" title="hover text">
 </p>
 
 
-## Databases
+1. apigw: Spring Cloud API Gateway to route and load-balance requests 
+2. eureka-server: Spring Eureka Server
+3. zipkin: a distributed tracing system
+4. user: User service, OAuth 2.0 Resource Server
+5. hotel: Hotel/Room registration service
+6. booking: a service that processes booking
+7. booking-management: a service used to fetch booking records
+8. archival: archive completed booking records
+9. search-consumer: populate and update ElasticSearch documents
+10. search: generate and execute ElasticSearch queries
+11. notification: aggregate notification message and user information for email notification (disabled)
 
-### Hotel Main - MySQL
-<p align="left">
-  <img src="_design/images/hotel-mysql-db.png" width="900" title="hover text">
-</p>
+## Frontend
 
-### Booking - MySQL
-<p align="left">
-  <img src="_design/images/booking-mysql-db.png" width="800" title="hover text">
-</p>
 
-### ElasticSearch
-<p align="left">
-  <img src="_design/images/elasticsearch-db.png" width="800" title="hover text">
-</p>
 
-### User - MySQL 
+## To build run this project
 
-<p align="left">
-<img align="center" src="_design/images/user-mysql-db.png" width="225" title="hover text">
-</p>
+### Configurations
+1. Set base image url address (custom.file.imageUrlPrefix) in "hotel/src/main/resources/application-${profile}.yaml".
+2. Set backend ingress address (custom.paypal.host) and frontend address (custom.paypal.frontend) in "booking/src/main/resources/application-${profile}.yaml" for redirections.
 
-### Booking Archive - Cassandra 
+### 1) Run services manually
+```
+# 1. Modify database urls for each service in "${service-name}/src/main/resources/application-default.yaml"
 
-<p align="left">
-<img align="center"  src="_design/images/booking-cassandra-db.png" width="725" title="hover text">
-</p>
+# 2. Compile java files
+mvn compile
+
+# 3. Run all databases and Zipkin
+# docker compose up -f docker-compose-db.yaml -d
+
+# 4. Run all services
+cd ${service-name}
+SPRING_PROFILES_ACTIVE=default java -jar target/${service-name}-0.0.1-SNAPSHOT.jar
+```
+### 2) Run using Docker
+```
+# 1. Compile java files
+mvn compile
+
+# 2. Compile Docker images with new image names in "docker-compose.yml"
+docker compose build 
+
+# 3. Run Docker files
+docker compose up -d 
+
+# 4. Wait until a superuser for Cassandra is created (a few minutes)
+# Cassandra logs: docker logs -f hb-cassandra 
+
+# 5. Create Cassandra keyspace and tables
+sh scripts/init.sh
+```
+
+### 3) Deploy using Kubernetes
+```
+# 1. Compile java files
+mvn compile
+
+# 2. Compile Docker images with new image names in "docker-compose.yml"
+docker compose build 
+
+# 3. Change Docker images in "k8s/minikube" to use new images.
+
+# 4. Create and run all databases: Cassandra, ElasticSearch, Kafka, MySQL(x3), Redis
+cd k8s/minikube
+sh bootstrap.sh
+
+# 5. Wait until a superuser for Cassandra is created (a few minutes)
+# Cassandra logs: kubectl logs -f hb-cassandra-0
+
+# 6. Create Cassandra keyspace and table
+sh bootstrap/cassandra/init.sh
+
+# 7. Run all services
+sh service.sh
+
+# 8. Run ingress with Kong ingress controller
+sh ingress.sh
+```

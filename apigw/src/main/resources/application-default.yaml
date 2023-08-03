@@ -11,6 +11,8 @@ logging:
           gateway: TRACE
 
 spring:
+  profiles:
+    active: default
   application:
     name: apigw
   banner:

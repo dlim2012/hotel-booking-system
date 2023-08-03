@@ -9,7 +9,7 @@ spring:
     location: classpath:banner.txt
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://hotel-booking-mysql-booking:3306/booking?createDatabaseIfNotExist=true
+    url: jdbc:mysql://hb-mysql-booking:3306/booking?createDatabaseIfNotExist=true
     username: root
     password: password
   jpa:
@@ -28,27 +28,27 @@ spring:
   data:
     redis:
       database: 0
-      host: hotel-booking-redis-server
+      host: hb-redis-server
       port: 6379
 
   zipkin:
-    base-url: http://hotel-booking-zipkin:9411
+    base-url: http://hb-zipkin:9411
 
   kafka:
-    bootstrap-servers: http://hotel-booking-broker:9092
+    bootstrap-servers: http://hb-broker:9092
 
 
   cache:
     type: redis
     cache-names:
-      - booking
+      - bookingId
     redis:
-      time-to-live: 30000
+      time-to-live: 300000
       cache-null-values: true
 
 eureka:
   instance:
-    hostname: hotel-booking-eureka-server
+    hostname: hb-eureka-server
     port: 9200
     preferIpAddress: true
   client:
@@ -65,13 +65,13 @@ logging:
         security: DEBUG
 
 custom:
-  hostname: 10.0.0.110
   paypal:
     mode: sandbox
     client:
       id: AU3lFjUm-hpp4z8Pls4QMHeqqqpKxrt167x8At0meKHLVFbPeBBawprvPbUSehMpIU1BS6SO--beEupW
       secret: EMid4txa6eaYtjwCXWSWOi69TicrlPIR86gcFvsmexKuvK4I98vMFm8G-q6QY1_Cy3BTP6uaU0cYSw9c
-    host: http://10.0.0.24:3000
+    host: http://10.0.0.110:9000
+    frontend: http://ec2-35-171-6-79.compute-1.amazonaws.com
   security:
     rsa:
       public-key: classpath:certs/public.pem
@@ -79,4 +79,7 @@ custom:
       - ADMIN
       - APP_USER
       - HOTEL_MANAGER
+  redis:
+    host: hb-redis
+    port: 6379
 

@@ -40,9 +40,9 @@ spring:
   cache:
     type: redis
     cache-names:
-      - booking
+      - bookingId
     redis:
-      time-to-live: 30000
+      time-to-live: 300000
       cache-null-values: true
 
 eureka:
@@ -64,13 +64,13 @@ logging:
         security: DEBUG
 
 custom:
-  hostname: 10.0.0.110
   paypal:
     mode: sandbox
     client:
       id: AU3lFjUm-hpp4z8Pls4QMHeqqqpKxrt167x8At0meKHLVFbPeBBawprvPbUSehMpIU1BS6SO--beEupW
       secret: EMid4txa6eaYtjwCXWSWOi69TicrlPIR86gcFvsmexKuvK4I98vMFm8G-q6QY1_Cy3BTP6uaU0cYSw9c
-    host: http://10.0.0.24:3000
+    host: http://10.0.0.110:9000
+    frontend: http://ec2-35-171-6-79.compute-1.amazonaws.com
   security:
     rsa:
       public-key: classpath:certs/public.pem
@@ -78,4 +78,7 @@ custom:
       - ADMIN
       - APP_USER
       - HOTEL_MANAGER
+  redis:
+    host: 10.0.0.110
+    port: 9105
 

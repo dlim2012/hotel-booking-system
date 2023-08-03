@@ -33,6 +33,10 @@ function HotelProfileSidebar(props) {
         navigate(`/user/hotel/${hotelId}/image`)
     }
 
+    const navSetting = () => {
+        navigate(`/user/hotel/${hotelId}/settings`)
+    }
+
     return (
         <div className="profileSidebar">
             <ul className="profileSidebarList">
@@ -77,6 +81,12 @@ function HotelProfileSidebar(props) {
                     onClick= {navAddress}
                 >
                     Address
+                </li>
+                <li
+                    className="profileSidebarItem"
+                    onClick= {navSetting}
+                >
+                    Settings
                 </li>
             </ul>
         </div>

@@ -2,9 +2,11 @@ import React, {useEffect, useRef, useState} from 'react';
 import Navbar from "../../../../../../components/navbar/Navbar";
 import HotelProfileSidebar from "../HotelProfileSidebar";
 import {extractAddress} from "../../../../../../components/autocomplete/autocomplete";
-import {GoogleMap, useJsApiLoader} from "@react-google-maps/api";
+import {GoogleMap, Marker, useJsApiLoader} from "@react-google-maps/api";
 import {getWithJwt, putWithJwt} from "../../../../../../clients";
 import {useParams} from "react-router-dom";
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
 
 const mapApiJs = "https://maps.googleapis.com/maps/api/js"
 
@@ -22,10 +24,44 @@ function HotelProfileAddress(props) {
     const [searchAddress, setSearchAddress] = useState("");
     const [center, setCenter] = useState({});
     const [marker, setMarker] = useState(null);
+    const [fetching, setFetching] = useState(false);
+
+    var defaultOpenInputWarnings = {
+        noAddressLine1: false,
+        noCity: false,
+        noCountry: false
+    }
+    const [openInputWarnings, setOpenInputWarnings] = useState(defaultOpenInputWarnings);
+
 
 
     const {hotelId} = useParams();
 
+
+    function fetchAddress(){
+        console.log("fetch")
+        setFetching(true);
+        getWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                setAddress(data)
+                var newCoordinates = {lat: data.latitude, lng: data.longitude};
+                setCoordinates(newCoordinates)
+                setCenter(newCoordinates);
+                placeMarker(newCoordinates)
+            })
+            .catch(e => {
+                console.error(e)})
+            .finally(() => {
+                setFetching(false);
+            })
+    }
+
+    function onSave(){
+        var payload = {...address, ["latitude"]: coordinates.lat, ["longitude"]: coordinates.lng}
+        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`, payload);
+    }
 
     const handleFullAddress = (value) =>{
         setSearchAddress(value.target.value)
@@ -41,7 +77,6 @@ function HotelProfileAddress(props) {
             draggable: true
         });
         setMarker(newMarker);
-        setCenter(newCoordinates);
 
         window.google.maps.event.addListener(
             newMarker, 'drag', function(event) {
@@ -58,11 +93,10 @@ function HotelProfileAddress(props) {
             "lat": place.geometry.location.lat(),
             "lng": place.geometry.location.lng()
         }
-        console.log(newAddress, newCoordinates)
         setCoordinates(newCoordinates);
-        setCenter(newCoordinates)
+        setCenter(newCoordinates);
 
-        placeMarker(newCoordinates)
+        // placeMarker(newCoordinates)
     }
 
     const initAutocomplete = () => {
@@ -75,14 +109,12 @@ function HotelProfileAddress(props) {
     }
 
 
-    // map // todo: remove google api key from code
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
-    })
+    // const { isLoaded } = useJsApiLoader({
+    //     id: 'google-map-script',
+    //     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
+    // })
     const [map, setMap] = React.useState(null)
     const onLoad = React.useCallback(function callback(map) {
-        // This is just an example of getting and using the map instance!!! don't just blindly copy!
         // const bounds = new window.google.maps.LatLngBounds(center);
         // map.fitBounds(bounds);
         map.setZoom(zoom);
@@ -92,35 +124,28 @@ function HotelProfileAddress(props) {
         setMap(null)
     }, [])
 
-    function fetchAddress(){
-        getWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                setAddress(data)
-                var newCoordinates = {lat: data.latitude, lng: data.longitude};
-                setCoordinates(newCoordinates)
-                setCenter(newCoordinates);
-                placeMarker(newCoordinates)
-            })
-    }
 
-    function onSave(){
-        var payload = {...address, ["latitude"]: coordinates.lat, ["longitude"]: coordinates.lng}
-        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`, payload);
-    }
-
-    useEffect(() =>
-        initAutocomplete()
+    useEffect(() => {
+            initAutocomplete();
+        }
     )
 
     useEffect(() => {
         fetchAddress()
+        setOpenInputWarnings(defaultOpenInputWarnings)
     }, [])
 
     // if (Object.keys(address).length === 0){
     //     return;
     // }
+
+    if (fetching || marker == null){
+        return (
+            <div>
+                <Navbar/>
+            </div>
+        )
+    }
 
     return (
         <div>
@@ -157,6 +182,17 @@ function HotelProfileAddress(props) {
                             onLoad={onLoad}
                             onUnmount={onUnmount}
                         >
+                            {/*<Marker lat={coordinates.lat} lng={coordinates.lng} />*/}
+                            {Object.keys(coordinates).length === 2 &&
+                                <Marker
+                                    position={coordinates}
+                                    draggable={true}
+                                    onDrag={(coord, index)=> {
+                                        const {latLng} = coord;
+                                        setCoordinates({lat: latLng.lat(), lng: latLng.lng()})
+                                    }}
+                                />
+                            }
                             { /* Child components, such as markers, info windows, etc. */ }
                             <></>
                         </GoogleMap>
@@ -167,6 +203,8 @@ function HotelProfileAddress(props) {
                     <button onClick={onSave}>Save</button>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

@@ -28,6 +28,7 @@
         <module>clients</module>
         <module>client_cassandra</module>
         <module>client_security</module>
+        <module>notification</module>
     </modules>
 
     <properties>

@@ -31,7 +31,7 @@ public class HotelBookingDeleteKafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, HotelBookingDeleteRequest> hotelSearchDeleteConsumerFactory() {
+    public ConsumerFactory<String, HotelBookingDeleteRequest> hotelBookingDeleteConsumerFactory() {
         JsonDeserializer<HotelBookingDeleteRequest> jsonDeserializer = new JsonDeserializer<>(HotelBookingDeleteRequest.class);
         jsonDeserializer.addTrustedPackages("com.dlim2012");
         return new DefaultKafkaConsumerFactory<>(
@@ -43,9 +43,9 @@ public class HotelBookingDeleteKafkaConsumerConfig {
 
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, HotelBookingDeleteRequest> hotelSearchDeleteKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, HotelBookingDeleteRequest> hotelBookingDeleteKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, HotelBookingDeleteRequest> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(hotelSearchDeleteConsumerFactory());
+        factory.setConsumerFactory(hotelBookingDeleteConsumerFactory());
         return factory;
     }
 }

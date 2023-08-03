@@ -1,7 +1,7 @@
 import './HotelDates.css'
 import Navbar from "../../../../../components/navbar/Navbar";
 import React, {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {deleteWithJwt, getWithJwt, postWithJwt, putWithJwt} from "../../../../../clients";
 // import 'react-calendar-timeline/lib/Timeline.css'
 
@@ -14,6 +14,9 @@ import generateFakeData from "./generate-fake-data";
 import faker from "faker";
 import randomColor from "randomcolor";
 import booking from "../../../search-list/hotel/booking/booking/BookingConfirmation";
+import {MAX_BOOKING_DAYS} from "../../../../../assets/Lists";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 const dateDashFormat = (date) => {
     var getYear = date.toLocaleString("default", { year: "numeric" });
@@ -64,7 +67,7 @@ const defaultTimeStart = moment()
     .toDate();
 const defaultTimeEnd = moment()
     .startOf("day")
-    .add(30, "day")
+    .add(MAX_BOOKING_DAYS, "day")
     .toDate();
 
 
@@ -105,10 +108,12 @@ const handleItemResize = (itemId, time, edge) => {
 
 
 function HotelDates(props) {
+    const navigate = useNavigate();
+
     let randomSeed = Math.floor(Math.random() * 1000);
     const minDate = new Date();
     const maxDate = new Date();
-    maxDate.setDate(minDate.getDate() + 30);
+    maxDate.setDate(minDate.getDate() + MAX_BOOKING_DAYS);
 
     const [roomMap, setRoomMap] = useState();
     const [bookingMap, setBookingMap] = useState();
@@ -274,7 +279,7 @@ function HotelDates(props) {
                         } else {
                             var start = new Date();
                             var end = new Date();
-                            end.setDate(end.getDate()+30);
+                            end.setDate(end.getDate()+MAX_BOOKING_DAYS);
                             setSelectedItemIds([])
                             setNewDates({start: null, end: null, checkInTime: null, checkOutTime: null})
                         }
@@ -299,6 +304,10 @@ function HotelDates(props) {
             </div>
         );
     };
+
+    function navBookingDetails(bookingId){
+        navigate(`/user/hotel/${hotelId}/bookings/active/${bookingId}`, {state: {user_role: "hotel-manager"}})
+    }
 
     const onClickAddAvailability = () => {
         if (selectedItemIds.length === 1) {
@@ -561,10 +570,10 @@ function HotelDates(props) {
     var defaultStartTime = new Date();
     var defaultEndTime = new Date();
     defaultStartTime.setHours(0, 0, 0, 0);
-    defaultEndTime.setDate(defaultEndTime.getDate()+30);
+    defaultEndTime.setDate(defaultEndTime.getDate()+MAX_BOOKING_DAYS);
     defaultEndTime.setHours(0, 0, 0, 0);
 
-    if (fetching || items.length === 0){
+    if (fetching ){
         return (
             <div>
                 <Navbar/>
@@ -572,7 +581,7 @@ function HotelDates(props) {
         );
     }
 
-    console.log(roomMap)
+    console.log(itemMap[selectedItemIds[0]])
 
     return (
         <div>
@@ -698,7 +707,9 @@ function HotelDates(props) {
                             <span>First name: {mainGuestInfo.firstName}</span> <br/>
                             <span>Last name: {mainGuestInfo.lastName}</span> <br/>
                             <span>Email: {mainGuestInfo.email}</span> <br/>
-                            <button>Booking details</button> <br/>
+                            <button
+                                onClick={()=>{navBookingDetails(itemMap[selectedItemIds[0]].info.bookingId)}}
+                            >Booking details</button> <br/>
                         </div>
                         <div className="hotelDatesCard">
                             { itemMap[selectedItemIds[0]].info.status === "RESERVED" &&
@@ -846,6 +857,9 @@ function HotelDates(props) {
                     </div>
                 }
             </div>
+
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

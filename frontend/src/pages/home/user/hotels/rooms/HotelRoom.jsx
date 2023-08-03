@@ -5,6 +5,11 @@ import {getWithJwt} from "../../../../../clients";
 import Table from "../../../../../templates/Table";
 import RoomTable from "../../../../../components/tables/RoomsMgmtTable/RoomsMgmtTable";
 import HotelProfileSidebar from "../profile/HotelProfileSidebar";
+import noDataImage from "../../../../../assets/images/No data.png";
+import './HotelRoom.css'
+import {getMaxAddDate} from "../../../../../assets/Lists";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 function HotelRoom(props) {
 
@@ -20,12 +25,25 @@ function HotelRoom(props) {
         navigate("register");
     }
 
+
+
     const fetchRooms = () => {
         setFetching(true);
         getWithJwt("/api/v1/hotel/hotel/" + hotelId + "/rooms/list")
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                console.log(data)
+
+                for (let row of data){
+                    if (row.isActive){
+                        row.dates = row.availableFrom + " ~ " + row.availableUntil;
+                    } else {
+                        row.dates = "Inactive";
+                    }
+                    row.info = <button
+                        onClick={() => navigate(`${row.id}/info`)}
+                    >Edit</button>
+                }
                 setData(data);
             })
             .catch(error => {
@@ -33,7 +51,6 @@ function HotelRoom(props) {
             })
             .finally(() => {
                 setFetching(false);
-                console.log(data)
             })
     }
 
@@ -51,8 +68,16 @@ function HotelRoom(props) {
             accessor: 'displayName'
         },
         {
-            Header: 'Is Active',
-            accessor: 'isActive'
+            Header: 'Quantity',
+            accessor: 'quantity'
+        },
+        {
+            Header: 'Available dates',
+            accessor: 'dates'
+        },
+        {
+            Header: '',
+            accessor: 'info'
         }
     ]
 
@@ -63,13 +88,20 @@ function HotelRoom(props) {
                 <HotelProfileSidebar />
                 <div className="profileContents">
                     <button onClick={navRegister}>register</button>
-
-                    {!fetching &&
+                    <div className="profileRooms">
+                    {!fetching && data.length === 0 &&
+                        <div className="roomsNoData">
+                            <img src={noDataImage} width="200px"/>
+                        </div>
+                    }
+                    {!fetching && data.length > 0 &&
                         <RoomTable columns={columns} data={data} />
                     }
-
+                    </div>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

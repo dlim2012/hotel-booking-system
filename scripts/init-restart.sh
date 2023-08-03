@@ -1,4 +1,4 @@
 
-docker restart hotel-booking-booking-management
-docker restart hotel-booking-archival
-docker restart hotel-booking-search
+docker restart hb-booking-management
+docker restart hb-archival
+docker restart hb-search

@@ -3,7 +3,6 @@ package com.dlim2012.search;
 import com.dlim2012.clients.advice.ApplicationExceptionHandler;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchClientConfiguration;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
-import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -16,8 +15,7 @@ import org.springframework.context.annotation.PropertySource;
 		// advice
 		ApplicationExceptionHandler.class,
 		// elastic search
-		ElasticSearchQuery.class,
-		ElasticSearchClientConfiguration.class,
+//		ElasticSearchClientConfiguration.class,
 		ElasticSearchUtils.class
 })
 @PropertySource("classpath:application-${spring.profiles.active}.yaml")

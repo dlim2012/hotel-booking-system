@@ -29,6 +29,11 @@ public class SearchController {
     private final SearchService searchService;
     private final CountHotelService countHotelService;
 
+    @GetMapping("/test")
+    public String test(){
+        return "Test";
+    }
+
     @PostMapping(path = "/hotel")
     HotelSearchResponse searchHotel(@RequestBody @Valid HotelSearchRequest hotelSearchRequest) throws IOException {
 //        log.info("Search requested: {}", hotelSearchRequest);

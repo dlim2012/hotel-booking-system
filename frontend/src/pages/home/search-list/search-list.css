@@ -1,3 +1,5 @@
+
+
 .listContainer {
   display: flex;
   justify-content: center;
@@ -16,8 +18,9 @@
   background-color: #febb02;
   padding: 10px;
   border-radius: 10px;
-  position: sticky;
-  top: 10px;
+  /*position: revert;*/
+  /*bottom: 0;*/
+  /*top: 10px;*/
   height: max-content;
 }
 
@@ -117,4 +120,30 @@
 
 .lsPriceRangeText{
   font-size: 12px;
+}
+
+.hotelDetailsTexts{
+  margin-top: 10px;
+}
+
+.RoomInfo{
+  margin-top: 10px;
+}
+
+.searchItem{
+  margin-top: 10px;
+}
+
+.hotelMapContainer{
+  max-width: 1024px;
+  width: 100%;
+  margin-top: 10px;
+  margin-right: auto;
+  margin-left: auto;
+
+}
+
+.hotelMap{
+  display: flex;
+  justify-content: center;
 }

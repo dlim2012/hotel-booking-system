@@ -69,9 +69,11 @@ function RecommendedTable(props) {
 
     return (
         <div className="recommendationBox">
-            <table>
-                <tr>
-                    <td colSpan={3}>Recommended for {options.adult} adult{options.adult > 1 && "s"}{ options.children > 0 && " and " + (options.children + " child" + (options.children > 1 && "ren"))}</td>
+            <table className="recommendedTable">
+                <tr className="recommendedTableRow">
+                    <td
+                        className="recommendedTableCol1"
+                        colSpan={3}>Recommended for {options.adult} adult{options.adult > 1 && "s"}{ options.children > 0 && " and " + (options.children + " child" + (options.children > 1 && "ren"))}</td>
                 </tr>
                 {
                     hotelInfo.roomsList.map((room, index) => {
@@ -79,34 +81,33 @@ function RecommendedTable(props) {
                             return;
                         }
                         return (
-                                <tr>
-                                    <td>
+                                <tr className="recommendedTableRow">
+                                    <td className={"recommendedTableCol2"}>
                                         {room.recommended} x {room.displayName}: {room.bedInfoList.map((bedInfo, i) => {
                                                 return [bedInfo.quantity + " " + bedNameMap[bedInfo.size]]
                                             }).join(', ')}
 
+                                        {   paymentDate.length > 0 &&  (
+                                            <tr><td>No prepayment required until {startDate} {hotelInfo.noPrepaymentDays === 0 && "11:59 PM"}</td></tr>
+                                        )
+                                        }
+                                        { ( cancelDate.length > 0 && hotelInfo.maxFreeCancellationDays > 0 &&
+                                            <tr><td>Free cancellation before {cancelDate}</td></tr>
+                                        )
+                                        }
                                     </td>
-                                    <td>
-
-                                    </td>
-                                    <td rowSpan={(hotelInfo.roomsList.length )}>
+                                    <td
+                                        className="recommendedTableCol"
+                                        rowSpan={(hotelInfo.roomsList.length )}>
                                         <span>{optionString}</span> <br/>
                                         <span>${hotelInfo.totalPrice / 100}</span><br/>
                                         <button onClick={onReserveSelection}>Reserve your selections</button> <br/>
-                                        <span>Don't worry - clicking this button won't charge you anything!</span>
+                                        <span className="recommendedNote">Don't worry - clicking this button won't charge you anything!</span>
                                     </td>
                                 </tr>
                         );
                     }
                 )}
-                {   paymentDate.length > 0 &&  (
-                    <tr><td>No prepayment required until {startDate} {hotelInfo.noPrepaymentDays === 0 && "11:59 PM"}</td></tr>
-                )
-                }
-                { ( cancelDate.length > 0 && hotelInfo.maxFreeCancellationDays > 0 &&
-                    <tr><td>Free cancellation before {cancelDate}</td></tr>
-                    )
-                }
 
             </table>
         </div>

@@ -1,13 +1,11 @@
 package com.dlim2012.bookingmanagement.service;
 
 import com.dlim2012.bookingmanagement.dto.ListByHotelRequest;
-import com.dlim2012.bookingmanagement.dto.booking.ActiveBookingItem;
-import com.dlim2012.bookingmanagement.dto.booking.BookingArchiveItem;
-import com.dlim2012.bookingmanagement.dto.booking.BookingBasicInfo;
-import com.dlim2012.bookingmanagement.dto.booking.BookingMainGuestInfo;
+import com.dlim2012.bookingmanagement.dto.booking.*;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelDatesInfoResponse;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelMainInfoResponse;
 import com.dlim2012.clients.cassandra.entity.BookingArchiveByHotelId;
+import com.dlim2012.clients.cassandra.entity.BookingArchiveByUserId;
 import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.mysql_booking.entity.*;
@@ -92,10 +90,10 @@ public class HotelService {
 
     public HotelMainInfoResponse getHotelMain(Integer hotelId, Integer userId) {
 
-
         LocalDate today = LocalDate.now();
 
         Hotel hotel = mySqlService.asyncFindHotel(hotelId, userId);
+
         List<BookingArchiveByHotelId> bookingArchiveByHotelIdList = cassandraService.asyncQueryBookingArchiveByHotelId(
                 hotelId, BookingMainStatus.COMPLETED, today.minusMonths(1), today.plusDays(1)
         );
@@ -144,8 +142,15 @@ public class HotelService {
 
         Hotel hotel = mySqlService.asyncFindHotel(hotelId, userId);
         List<Booking> bookingList = mySqlService.asyncBookingByHotelIdAndReserved(hotelId);
+        List<Dates> hotelDatesList = mySqlService.asyncDatesByHotel(hotelId);
 
-        System.out.println(hotel);
+        Map<Long, List<Dates>> datesMap = new HashMap<>();
+        for (Dates dates: hotelDatesList){
+            Long roomId = dates.getRoom().getId();
+            List<Dates> roomDatesList = datesMap.getOrDefault(roomId, new ArrayList<>());
+            roomDatesList.add(dates);
+            datesMap.put(roomId, roomDatesList);
+        }
 
 
         Map<Long, HotelDatesInfoResponse.Room> roomMap = new HashMap<>();
@@ -165,7 +170,7 @@ public class HotelService {
                     .roomsId(roomsId)
                     .title(rooms.getShortName() + " " + room.getRoomNumber().toString())
                     .isActive(true)
-                    .dates(new ArrayList<>(room.getDatesSet().stream()
+                    .dates(new ArrayList<>(datesMap.getOrDefault(roomId, new ArrayList<>()).stream()
                         .map(dates -> HotelDatesInfoResponse.Dates.builder()
                             .status("AVAILABLE")
                             .bookingId(null)
@@ -219,7 +224,6 @@ public class HotelService {
             }
         }
 
-        System.out.println(roomMap);
         return HotelDatesInfoResponse.builder()
                 .roomMap(roomMap)
                 .build();
@@ -231,8 +235,7 @@ public class HotelService {
 
     public ActiveBookingItem getActiveBookingItemByHotel(Long bookingId, Integer userId) {
         Booking booking = mySqlService.getBookingByHotel(bookingId, userId);
-        // todo
-        throw new RuntimeException("Not implemented.");
+        return recordMapper.bookingToActiveBookingItemMapper(booking);
     }
 
     public BookingMainGuestInfo getActiveMainGuestInfo(Long bookingId, Integer userId) {
@@ -244,4 +247,8 @@ public class HotelService {
                 .build();
     }
 
+    public BookingArchiveByHotelId getArchivedBookingItemByHotel(Integer hotelId, Integer userId, Long bookingId, ArchivedBookingByUserSearchInfo request) {
+        return cassandraService.getBookingArchiveByHotelId(
+                hotelId, BookingMainStatus.valueOf(request.getBookingMainStatus()), request.getEndDate(), bookingId, userId);
+    }
 }

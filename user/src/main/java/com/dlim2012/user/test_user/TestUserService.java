@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,7 +35,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TestUserService {
 
-    private final String gatewayAddress = "http://10.0.0.110:9000";
+    @Value("${custom.gateway.hotel}")
+    private String gatewayAddressHotel;
+
+    @Value("${custom.gateway.booking}")
+    private String gatewayAddressBooking;
+
+    @Value("${custom.gateway.search}")
+    private String gatewayAddressSearch;
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
@@ -52,7 +60,7 @@ public class TestUserService {
 
 
 //        TimeUnit.MILLISECONDS.sleep(1000);
-//        User appUser = userRepository.findByEmail("appUser@hotel-booking.com")
+//        User appUser = userRepository.findByEmail("appUser@hb.com")
 //                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 //        this.appUserJwt = tokenService.generateToken(appUser);
     }
@@ -67,14 +75,14 @@ public class TestUserService {
 
     public String getAppUserJwt(){
         if (appUserJwt == null){
-            User appUser = userRepository.findByEmail("appUser@hotel-booking.com")
+            User appUser = userRepository.findByEmail("appUser@hb.com")
                     .orElseThrow(() -> new ResourceNotFoundException("User not found."));
             appUserJwt = tokenService.generateToken(appUser);
         }
         return appUserJwt;
     }
 
-    public <T> Object postWithJwt(String path, T t, Class<?> s, String jwt){
+    public <T> Object postWithJwt(String gatewayAddress, String path, T t, Class<?> s, String jwt){
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", jwt);
@@ -83,7 +91,7 @@ public class TestUserService {
     }
 
 
-    public <T> Object putWithJwt(String path, T t, Class<?> s, String jwt){
+    public <T> Object putWithJwt(String gatewayAddress, String path, T t, Class<?> s, String jwt){
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", jwt);
@@ -157,7 +165,7 @@ public class TestUserService {
 
     @Async
     public void function(String jwt) throws InterruptedException {
-        RestTemplate restTemplate = new RestTemplate();
+        System.out.println("async function");
 
         String roomsName1 = "Suite Room for Honeymoon";
         String roomsNameShort1 = "Suite";
@@ -166,6 +174,7 @@ public class TestUserService {
 
 
         Integer hotelId = ((IdItem) postWithJwt(
+                gatewayAddressHotel,
                 "/api/v1/hotel/test/hotel/register",
                 getHotelRegisterRequest(),
                 IdItem.class,
@@ -202,6 +211,7 @@ public class TestUserService {
                         "Breakfast"))
                 .build();
         Integer roomsId1 = ((IdItem) postWithJwt(
+                gatewayAddressHotel,
                 String.format("/api/v1/hotel/test/hotel/%d/room", hotelId),
                 roomsRegisterRequest1,
                 IdItem.class,
@@ -236,6 +246,7 @@ public class TestUserService {
                         "Breakfast"))
                 .build();
         Integer roomsId2 = ((IdItem) postWithJwt(
+                gatewayAddressHotel,
                 String.format("/api/v1/hotel/test/hotel/%d/room", hotelId),
                 roomsRegisterRequest2,
                 IdItem.class,
@@ -243,7 +254,7 @@ public class TestUserService {
         )).getId();
         log.info("Rooms {} registered", roomsId2);
 
-        TimeUnit.MILLISECONDS.sleep(2000);
+        TimeUnit.MILLISECONDS.sleep(3000);
         System.out.println("-----------------------------------------------------------");
 
         // reserve1
@@ -255,11 +266,14 @@ public class TestUserService {
                 .endDate(endDate)
                 .build();
         PriceAggResponse[] prices = (PriceAggResponse[]) postWithJwt(
+                gatewayAddressSearch,
                 "/api/v1/search/price",
                 priceAggRequest,
                 PriceAggResponse[].class,
                 getAppUserJwt()
         );
+        System.out.println(Arrays.toString(prices));
+
         Map<Integer, Long> priceMap = new HashMap<>();
         for (PriceAggResponse priceAggResponse: prices){
             priceMap.put(priceAggResponse.getRoomsId(), priceAggResponse.getSumPrice());
@@ -269,10 +283,12 @@ public class TestUserService {
         rooms.add(getBookingRequestRooms(roomsId1, roomsName1));
         rooms.add(getBookingRequestRooms(roomsId1, roomsName1));
         rooms.add(getBookingRequestRooms(roomsId2, roomsName2));
+        System.out.println(priceMap);
         BookingRequest reserveRequest = getBookingRequest(rooms, startDate, endDate,
                 priceMap.get(roomsId1) * 2 + priceMap.get(roomsId2)
                 );
         ReserveResponse reserveResponse = (ReserveResponse) postWithJwt(
+                gatewayAddressBooking,
                 String.format("/api/v1/booking/test/hotel/%d/reserve", hotelId),
                 reserveRequest,
                 ReserveResponse.class,
@@ -292,6 +308,7 @@ public class TestUserService {
                 .endDate(endDate)
                 .build();
         prices = (PriceAggResponse[]) postWithJwt(
+                gatewayAddressSearch,
                 "/api/v1/search/price",
                 priceAggRequest,
                 PriceAggResponse[].class,
@@ -309,6 +326,7 @@ public class TestUserService {
                 priceMap.get(roomsId2) * 2
         );
         reserveResponse = (ReserveResponse) postWithJwt(
+                gatewayAddressBooking,
                 String.format("/api/v1/booking/test/hotel/%d/reserve", hotelId),
                 reserveRequest,
                 ReserveResponse.class,
@@ -316,12 +334,13 @@ public class TestUserService {
         );
         System.out.println(reserveResponse);
 
-
         TimeUnit.MILLISECONDS.sleep(500);
         System.out.println("-----------------------------------------------------------");
 
         // cancel reserve 2
-        putWithJwt(String.format("/api/v1/booking/test/booking/%d/user", reserveResponse.getBookingId()),
+        putWithJwt(
+                gatewayAddressBooking,
+                String.format("/api/v1/booking/test/booking/%d/user", reserveResponse.getBookingId()),
                 null,
                 Void.class,
                 appUserJwt
@@ -340,6 +359,7 @@ public class TestUserService {
                 .endDate(endDate)
                 .build();
         prices = (PriceAggResponse[]) postWithJwt(
+                gatewayAddressSearch,
                 "/api/v1/search/price",
                 priceAggRequest,
                 PriceAggResponse[].class,
@@ -358,6 +378,7 @@ public class TestUserService {
                 priceMap.get(roomsId1) * 3
         );
         BookingResponse bookingResponse = (BookingResponse) postWithJwt(
+                gatewayAddressBooking,
                 String.format("/api/v1/booking/test/hotel/%d/book", hotelId),
                 bookingRequest,
                 BookingResponse.class,
@@ -377,6 +398,7 @@ public class TestUserService {
                 .endDate(endDate)
                 .build();
         prices = (PriceAggResponse[]) postWithJwt(
+                gatewayAddressSearch,
                 "/api/v1/search/price",
                 priceAggRequest,
                 PriceAggResponse[].class,
@@ -395,6 +417,7 @@ public class TestUserService {
                 priceMap.get(roomsId2) * 3
         );
         bookingResponse = (BookingResponse) postWithJwt(
+                gatewayAddressBooking,
                 String.format("/api/v1/booking/test/hotel/%d/book", hotelId),
                 bookingRequest,
                 BookingResponse.class,
@@ -405,19 +428,11 @@ public class TestUserService {
         System.out.println("-----------------------------------------------------------");
         // process booking
         putWithJwt(
+                gatewayAddressBooking,
                 String.format("/api/v1/booking/test/booking/%d/process", bookingResponse.getBookingId()),
                 null,
                 Void.class,
                 appUserJwt
                 );
-        log.info("Processing booking {}", bookingResponse.getBookingId());
-
-    }
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    public static class EmptyClass{
-
     }
 }

@@ -1,4 +1,14 @@
-.profileContents{
+.profileRooms{
     display: flex;
-    flex-direction: row
+    flex-direction: column;
+}
+
+button {
+    width: fit-content;
+}
+
+.roomsNoData{
+    justify-content: center;
+    display: flex;
+    margin-top: 80px;
 }

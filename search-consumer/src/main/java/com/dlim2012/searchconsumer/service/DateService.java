@@ -34,11 +34,11 @@ public class DateService {
 
 //    private final ElasticSearchQuery elasticSearchQuery;
 //    private final ElasticsearchTemplate elasticsearchTemplate;
-    private final RestHighLevelClient client = new RestHighLevelClient(
-            RestClient.builder(
-                    new HttpHost("10.0.0.110", 9103, "http")
-            )
-    );
+//    private final RestHighLevelClient client = new RestHighLevelClient(
+//            RestClient.builder(
+//                    new HttpHost("10.0.0.110", 9103, "http")
+//            )
+//    );
 
     private final RoomsRepository roomsRepository;
     private final DateRepository dateRepository;
@@ -162,7 +162,6 @@ public class DateService {
                 newRoomsList.add(newRooms);
                 hotel.setRooms(newRoomsList);
 
-
                 hotelRepository.save(hotel);
                 return;
             } catch (OptimisticLockingFailureException | ResourceNotFoundException e){
@@ -190,7 +189,6 @@ public class DateService {
                 }
 
                 // update rooms
-
                 List<Rooms> newRoomsList = new ArrayList<>();
                 if (hotel.getRooms() != null){
                     List<Rooms> roomsList = hotel.getRooms();
@@ -309,7 +307,6 @@ public class DateService {
             }
         }
         log.error("Updating dates for hotel {} failed after {} retries.", details.getHotelId(), NUM_RETRY_UPDATE);
-
     }
 
     @Scheduled(cron = "0 3 4 * * ?") // 4:30 am every day

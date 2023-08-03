@@ -6,6 +6,8 @@ import HotelBookingCard from "./hotelBookingCard";
 import {postWithJwt} from "../../../../../clients";
 import {statusMap} from "../../../../../assets/Lists";
 import {useParams} from "react-router-dom";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 
 function HotelBookings(props) {
@@ -99,6 +101,8 @@ function HotelBookings(props) {
                     }
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

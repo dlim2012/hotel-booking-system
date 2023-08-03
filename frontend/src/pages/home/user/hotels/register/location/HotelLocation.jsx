@@ -4,6 +4,7 @@ import {GoogleMap, useJsApiLoader} from "@react-google-maps/api";
 import {geocodeByAddress, getLatLng} from "react-places-autocomplete";
 import {center_init} from "../../../../../../assets/Lists";
 import {extractAddress} from "../../../../../../components/autocomplete/autocomplete";
+import './hotelLocation.css'
 
 const mapApiJs = "https://maps.googleapis.com/maps/api/js"
 
@@ -23,7 +24,7 @@ function HotelLocation(props) {
     const [center, setCenter] = useState(center_init);
     const [marker, setMarker] = useState(null);
 
-    const {address, setAddress, coordinates, setCoordinates} = props;
+    const {address, setAddress, coordinates, setCoordinates, openWarnings, setOpenWarnings} = props;
 
 
     const handleFullAddress = (value) =>{
@@ -99,38 +100,122 @@ function HotelLocation(props) {
     console.log(address)
     return (
 
-        <div>
-            <div className="search">
-                <span></span>
-                <p>Search Location:</p>
-                <input ref={searchInput} type="text" placeholder={"Search location..."}
-                       value={searchAddress} onChange={handleFullAddress}/>
-                {/*<button>GpsFixed</button>*/}
-            </div>
-            <div className="address">
-                <p>Address line 1:  <input
+        <div className="hotelLocationContainer">
+            <div className="hotelLocationSearch">
+                <label>Search Location</label>
+                <input
+                    ref={searchInput}
                     type="text"
-                    value={address.addressLine1}
-                    onChange={e => {setAddress({...address, addressLine1: e.target.value})}}></input></p>
-                <p>Address Line 2: <input value={address.addressLine2} onChange={e=>setAddress({...address, addressLine2: e.target.value})}></input></p>
-                <p>Neighborhood: <input value={address.neighborhood} onChange={e=>setAddress({...address, neighborhood: e.target.value})}></input></p>
-                <p>City: <input value={address.city} onChange={e => {setAddress({...address, city: e.target.value})}}/></p>
-                <p>State: <input value={address.state} onChange={e => {setAddress({...address, state: e.target.value})}} /></p>
-                <p>Country: <input value={address.country} onChange={e => {setAddress({...address, country: e.target.value})}} /></p>
-                <p>Zipcode: <input value={address.zipcode} onChange={e => {setAddress({...address, zipcode: e.target.value})}} /></p>
+                    placeholder={"Search location..."}
+                    value={searchAddress}
+                    onChange={handleFullAddress}
+                />
             </div>
-            <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={center}
-                zoom={zoom}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-            >
-                { /* Child components, such as markers, info windows, etc. */ }
-                <></>
-            </GoogleMap>
-            <div className="addressLatLng">
-                <p>Coordinates: <span>({Math.round(coordinates.lat * 10000) / 10000}, {Math.round(coordinates.lng * 10000) / 10000})</span></p>
+            <div className="hotelLocationAddress">
+                <h3>Hotel Location</h3>
+                <label>Address line 1</label>
+                <input
+                    type="text"
+                    maxLength="50"
+                    value={address.addressLine1}
+                    onChange={e => {
+                        setOpenWarnings({...openWarnings, addressLine1: false})
+                        setAddress({...address, addressLine1: e.target.value})
+                    }}
+                />
+                { openWarnings.addressLine1 &&
+                    <div className="hotelLocationInputWarning">
+                        Please enter an address line.
+                    </div>
+                }
+                <label>Address line 2</label>
+                <input
+                    type="text"
+                    value={address.addressLine2}
+                    onChange={e => {setAddress({...address, addressLine2: e.target.value})}}
+                />
+            <div className="addressItems">
+                <div className="addressItemsElement">
+                    <label>Neighborhood</label>
+                    <input
+                        type="text"
+                        value={address.neighborhood}
+                        onChange={e=>setAddress({...address, neighborhood: e.target.value})}>
+                    </input>
+                </div>
+                <div className="addressItemsElement">
+                    <label>City</label>
+                    <div className="addressItemsElementInput">
+                        <input
+                            type="text"
+                            value={address.city}
+                            onChange={e => {
+                                setOpenWarnings({...openWarnings, city: false})
+                                setAddress({...address, city: e.target.value})
+                            }}
+
+                        />
+                        { openWarnings.city &&
+                            <div className="hotelLocationInputWarning">
+                                Please enter the city name.
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div className="addressItemsElement">
+                    <label>Zipcode</label>
+                    <input
+                        type="text"
+                        value={address.zipcode}
+                        onChange={e => {setAddress({...address, zipcode: e.target.value})}}
+                />
+            </div>
+            </div>
+            <div className="addressItems">
+                <div className="addressItemsElement">
+                    <label>State</label>
+                    <input
+                        type="text"
+                        value={address.state}
+                        onChange={e => {setAddress({...address, state: e.target.value})}}
+                    />
+                </div>
+                <div className="addressItemsElement">
+                    <label>Country</label>
+                    <div className="addressItemsElementInput">
+                        <input
+                            type="text"
+                            value={address.country}
+                            onChange={e => {
+                                setOpenWarnings({...openWarnings, country: false})
+                                setAddress({...address, country: e.target.value})
+                            }}
+                        />
+                        { openWarnings.country &&
+                            <div className="hotelLocationInputWarning">
+                                Please enter a country name.
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div className="addressItemsElement">
+                </div>
+            </div>
+                <div className="hotelLocationMap">
+                    <GoogleMap
+                        mapContainerStyle={containerStyle}
+                        center={center}
+                        zoom={zoom}
+                        onLoad={onLoad}
+                        onUnmount={onUnmount}
+                    >
+                        { /* Child components, such as markers, info windows, etc. */ }
+                        <></>
+                    </GoogleMap>
+                    <div className="addressLatLng">
+                        <p>Coordinates: <span>({Math.round(coordinates.lat * 10000) / 10000}, {Math.round(coordinates.lng * 10000) / 10000})</span></p>
+                    </div>
+                </div>
             </div>
         </div>
 

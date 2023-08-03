@@ -16,7 +16,6 @@ import {useLocation, useNavigate, useParams} from "react-router-dom";
 import login from "../../user/user/login/Login";
 import {deleteWithJwt, getWithJwt, postWithJwt} from "../../../../clients";
 import RecommendedTable from "../../../../components/tables/HotelPageTables/RecommendedTable";
-import RoomsTable from "../../../../components/tables/HotelPageTables/RoomsTable";
 import image1 from '../../../../assets/images/hotel-sub-images/hotel-sub-1.jpeg'
 import image2 from '../../../../assets/images/hotel-sub-images/hotel-sub-2.jpeg'
 import image3 from '../../../../assets/images/hotel-sub-images/hotel-sub-3.jpeg'
@@ -27,7 +26,9 @@ import {faStar} from "@fortawesome/free-regular-svg-icons";
 import {format} from "date-fns";
 import {DateRange} from "react-date-range";
 import {DateRangePicker} from "@syncfusion/ej2-react-calendars";
-import {bedsMap} from "../../../../assets/Lists";
+import {bedsMap, MAX_BOOKING_DAYS} from "../../../../assets/Lists";
+import {GoogleMap, Marker} from "@react-google-maps/api";
+import ScrollToTop from "../../../../components/scrollToTop/scrollToTop";
 
 
 const photos = [
@@ -39,10 +40,18 @@ const photos = [
   {src: image6,}
 ];
 
+const containerStyle = {
+    width: '600px',
+    height: '600px'
+};
+
+const zoom = 10;
+
 const Hotel = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+    console.log(localStorage)
 
     var today = new Date();
     var tomorrow = new Date();
@@ -72,6 +81,8 @@ const Hotel = () => {
       location?.state?.roomSelection == null ? {}: location.state.roomSelection);
   const [saved, setSaved] = useState(false);
 
+  const [center, setCenter] = useState({})
+
   const [fetching1, setFetching1] = useState(false);
   const [fetching2, setFetching2] = useState(false);
 
@@ -83,8 +94,8 @@ const Hotel = () => {
     var maxDay1 = new Date()
     var maxDay2 = new Date()
     minDay2.setDate(minDay1.getDate() + 1)
-    maxDay1.setDate(minDay1.getDate() + 29)
-    maxDay2.setDate(minDay2.getDate() + 30)
+    maxDay1.setDate(minDay1.getDate() + MAX_BOOKING_DAYS - 1)
+    maxDay2.setDate(minDay2.getDate() + MAX_BOOKING_DAYS)
     minDay1 = minDay1.toISOString().substring(0, 10)
     minDay2 = minDay2.toISOString().substring(0, 10)
     maxDay1 = maxDay1.toISOString().substring(0, 10)
@@ -118,24 +129,24 @@ const Hotel = () => {
             var startDate = date[0].startDate
             var today = new Date();
             for (let rooms of data.roomsInfoList) {
-                if (rooms.noPrepaymentDays === 0){
-                    rooms.prepayUntil = new Date(date[0].startDate);
-                    rooms.freeCancellationUntil = new Date(date[0].startDate);
-                }
+                // if (rooms.noPrepaymentDays === 0){
+                //     rooms.prepayUntil = new Date(date[0].startDate);
+                //     rooms.freeCancellationUntil = new Date(date[0].startDate);
+                // }
 
                 var prepayUntil = new Date();
+                var freeCancellationUntil = new Date();
                 prepayUntil.setDate(startDate.getDate() - rooms.noPrepaymentDays)
+                freeCancellationUntil.setDate(startDate.getDate() - rooms.freeCancellationDays)
 
-                if (prepayUntil.getDate() < today.getDate()) {
+                if (prepayUntil.getDate() >= today.getDate()) {
                     rooms.prepayUntil = prepayUntil;
                 }
-                var freeCancellationUntil = new Date();
-                freeCancellationUntil.setDate(startDate.getDate() - rooms.freeCancellationDays)
-                if (freeCancellationUntil.getDate() < today.getDate()) {
+                if (freeCancellationUntil.getDate() >= today.getDate()) {
                     rooms.freeCancellationUntil = freeCancellationUntil;
                 }
             }
-
+            setCenter({lat: data.latitude, lng: data.longitude})
 
             setHotelDetails(data);
             setSaved(data.saved)
@@ -173,12 +184,6 @@ const Hotel = () => {
             }
         )
   }
-
-  useEffect(() => {
-    fetchHotelDetails();
-      fetchAvailabilityInfo(date);
-  }, [])
-
 
   const handleOpen = (i) => {
     setSlideNumber(i);
@@ -280,25 +285,46 @@ const Hotel = () => {
     setSaved(newSaved);
   }
 
-  var dates = Math.round((date[0].endDate.getTime() - date[0].startDate.getTime()) / 86400000);
-  var numRoomsSelected = 0
-  var totalPrice = 0
-  for (let key in roomSelection){
-    var numRoom = parseInt(roomSelection[key]);
-    numRoomsSelected += numRoom;
-    totalPrice += numRoom * availability[key].price
-  }
+    useEffect(() => {
+        fetchHotelDetails();
+        fetchAvailabilityInfo(date);
+    }, [])
 
 
-  if (fetching1 || fetching2 || Object.keys(hotelDetails).length === 0 || Object.keys(availability).length === 0){
+    const [map, setMap] = React.useState(null)
+    const onLoad = React.useCallback(function callback(map) {
+        // const bounds = new window.google.maps.LatLngBounds(center);
+        // map.fitBounds(bounds);
+        map.setZoom(zoom);
+        setMap(map)
+    }, [])
+    const onUnmount = React.useCallback(function callback(map) {
+        setMap(null)
+    }, [])
+
+  if (fetching1 || fetching2
+      // || Object.keys(hotelDetails).length === 0 || Object.keys(availability).length === 0
+  ){
     return (
         <div><Navbar/></div>
     )
   }
 
+    console.log(availability)
+
+    var dates = Math.round((date[0].endDate.getTime() - date[0].startDate.getTime()) / 86400000);
+    var numRoomsSelected = 0
+    var totalPrice = 0
+    for (let key in roomSelection){
+        var numRoom = parseInt(roomSelection[key]);
+        numRoomsSelected += numRoom;
+        totalPrice += numRoom * availability[key].price
+    }
+
 
   return (
     <div>
+        <ScrollToTop/>
       <Navbar />
       {/*<Header type="list" />*/}
       <div className="hotelContainer">
@@ -351,9 +377,12 @@ const Hotel = () => {
                 Excellent location – {Math.round(hotelInfo.distance * 10)/10} km from center
               </span>
             }
-          <span className="hotelPriceHighlight">
-            Book a stay over $114 at this property and get a free airport taxi
+            {hotelInfo != null &&
+
+                <span className="hotelPriceHighlight">
+            Book a stay over ${hotelInfo.totalPrice / 100} at this property and get a free airport taxi
           </span>
+            }
           <div className="hotelImages">
             {photos.map((photo, i) => (
               <div className="hotelImgWrapper" key={i}>
@@ -389,7 +418,7 @@ const Hotel = () => {
 
           <div className="hotelFacilityItems">
             <div className="hotelFacilityItemsTitle">
-              <h1>Hotel facilities</h1>
+              <h2>Hotel facilities</h2>
             </div>
             <div className="hotelFacilityItemsList">
               { hotelDetails.facilityDisplayNameList &&
@@ -401,7 +430,7 @@ const Hotel = () => {
           </div>
           { hotelInfo != null &&
           <div className="Recommended">
-            <h1>Recommended</h1>
+            <h2>Recommended</h2>
             <RecommendedTable hotelInfo={hotelInfo} date={date} options={options}
                               hotelDetails={hotelDetails}
                               roomSelection={roomSelection} setRoomSelection={setRoomSelection}
@@ -410,14 +439,14 @@ const Hotel = () => {
           }
 
           <div className="hotelDetailsTexts">
-            <h1 className="hotelTitle">Stay in the heart of City</h1>
-            <p className="hotelDesc">
+            <h2 className="hotelTitle">Stay in the heart of City</h2>
+            <span className="hotelDesc">
               {hotelDetails.description}
-            </p>
+            </span>
           </div>
 
           <div className="RoomInfo">
-            <h1>Availability</h1>
+            <h2>Availability</h2>
             <div className="searchItems">
               <div className="searchItem">
                 <span>Check-In</span>
@@ -463,7 +492,7 @@ const Hotel = () => {
               </div>
             </div>
             <div>
-              <table id="availabilityTable">
+              <table  id="availabilityTable" className="availabilityTable">
                 <tr>
                   <th>Room Type</th>
                   <th>Price for {dates} night(s)</th>
@@ -477,8 +506,9 @@ const Hotel = () => {
                           return;
                       }
                     var avail = availability[info.id]
+                      // console.log(info.prepayUntil, info.prepayUntil == null)
                     return (
-                        <tr>
+                        <tr className="availibilityTableRow">
                           <td>
                             <div className="roomName">{info.displayName}</div>
                               <div className="roomBeds">
@@ -505,13 +535,13 @@ const Hotel = () => {
                             </div>
                           </td>
                           <td>
-                              {info.prepayUntil != null && info.prepayUntil.getDate() === date[0].startDate.getDate() &&
+                              {info.prepayUntil != null && info?.prepayUntil?.getDate() === date[0].startDate.getDate() &&
                                   <div>
                                       No prepayment needed - pay at the property
                                   </div>
 
                               }
-                            { info.prepayUntil != null && info.prepayUntil.getDate() !== date[0].startDate.getDate() &&
+                            {info.prepayUntil != null && info.prepayUntil.getDate() !== date[0].startDate.getDate() &&
                               <div>
                                   No prepayment until {info.prepayUntil.toISOString().substring(0, 10)}
                               </div>
@@ -543,14 +573,20 @@ const Hotel = () => {
                             </div>
                           </td>
                           {index === 0 &&
-                              <td rowSpan={hotelDetails.roomsInfoList.length}>
+                              <td
+                                  rowSpan={hotelDetails.roomsInfoList.length}
+                                  className="availabilityTableReserveCol"
+                              >
                                 {numRoomsSelected > 0 &&
                                     <div>{numRoomsSelected} room(s) for ${totalPrice / 100}</div>
                                 }
-                                <button onClick={onReserve}>I'll reserve</button>
+                                <button
+                                    className="reserveBtn"
+                                    onClick={onReserve}
+                                >I'll reserve</button>
                                 <ul>
-                                  <li>Confirmation is immediate</li>
-                                  <li>No booking or credit card fees!</li>
+                                  <li className="availibilityNote">Confirmation is immediate</li>
+                                  <li className="availibilityNote">No booking or credit card fees!</li>
                                 </ul>
                               </td>
                           }
@@ -562,12 +598,34 @@ const Hotel = () => {
             </div>
 
           </div>
-          <MailList />
-          <Footer />
+        </div>
+        <div className="hotelMapContainer">
+            <h2>Location</h2>
+            <div className="hotelMap">
+                <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={center}
+                    zoom={zoom}
+                    onLoad={onLoad}
+                    onUnmount={onUnmount}
+                >
+                    {/*<Marker lat={coordinates.lat} lng={coordinates.lng} />*/}
+                    <Marker
+                        position={center}
+                        // draggable={true}
+                        // onDrag={(coord, index)=> {
+                        //     const {latLng} = coord;
+                        //     setCoordinates({lat: latLng.lat(), lng: latLng.lng()})
+                        // }}
+                    />
+                    <></>
+                </GoogleMap>
+            </div>
         </div>
 
-
       </div>
+        <MailList />
+        <Footer />
     </div>
   );
 };

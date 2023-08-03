@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 @Service
@@ -28,11 +29,14 @@ public class PriceService {
 
     private final EntityManager entityManager;
 
+
+    private final Random rand = new Random();
+
     public Long getPrice(
             Long priceMin,
             Long priceMax
             ){
-        return (priceMax + priceMin) / 2;
+        return priceMin + (long) ((priceMax - priceMin) * rand.nextDouble());
     }
 
     public List<Price> getDefaultPrice(

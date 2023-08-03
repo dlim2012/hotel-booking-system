@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-mysql-hotel
+spec:
+  selector:
+    matchLabels:
+      app: hb-mysql-hotel
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hb-mysql-hotel
+    spec:
+      containers:
+        - image: mysql:8.0
+          name: hb-mysql-hotel
+          env:
+            - name: MYSQL_DATABASE
+              value: hotel
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hb-mysql-hotel-secret
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: hb-mysql-hotel
+          volumeMounts:
+            - name: hb-mysql-hotel-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: hb-mysql-hotel-persistent-storage
+          persistentVolumeClaim:
+            claimName: hb-mysql-hotel-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-mysql-hotel
+  labels:
+    app: hb-mysql-hotel
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: hb-mysql-hotel

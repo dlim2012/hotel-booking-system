@@ -1,7 +1,7 @@
 
 
 
-docker exec -u root -it hotel-booking-cassandra cqlsh -u cassandra -p cassandra -e "
+docker exec -u root -it hb-cassandra cqlsh -u cassandra -p cassandra -e "
     CREATE KEYSPACE mykeyspace WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1} AND DURABLE_WRITES = true;
     USE mykeyspace;
     CREATE TYPE booking_archive_room(
@@ -63,5 +63,10 @@ docker exec -u root -it hotel-booking-cassandra cqlsh -u cassandra -p cassandra 
     ) WITH CLUSTERING ORDER BY (main_status DESC, end_date_time DESC)
     "
 
-docker exec -it hotel-booking-redis-server redis-cli config set notify-keyspace-events Ex;
+docker exec -it hb-redis redis-cli config set notify-keyspace-events Ex;
+
+
+docker restart hb-booking-management
+docker restart hb-archival
+docker restart hb-search
 

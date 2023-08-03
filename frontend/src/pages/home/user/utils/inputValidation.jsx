@@ -9,6 +9,18 @@ export const validEmail = (email) => {
     return res;
 }
 
+
+export function validateEmail(email) {
+    if (email.length === 0){
+        return false;
+    }
+
+    var validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+    return email.match(validRegex)
+}
+
+
 export const validPhoneNumber = (number) => {
     var phoneno1 = /^\d{10}$/;
     var phoneno2 = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;

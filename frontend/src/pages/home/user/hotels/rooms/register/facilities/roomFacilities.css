@@ -1,0 +1,18 @@
+.roomFacilityList{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.roomFacility{
+    /*width: 45%;*/
+    width: fit-content;
+    border: #cecece 1px solid;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 3px;
+}
+
+.roomFacility > label{
+    margin-left: 5px;
+}
+

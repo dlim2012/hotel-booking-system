@@ -4,6 +4,8 @@ import com.dlim2012.security.service.JwtService;
 import com.dlim2012.user.dto.AuthenticationRequest;
 import com.dlim2012.user.dto.AuthenticationToken;
 import com.dlim2012.user.dto.UserRegisterRequest;
+import com.dlim2012.user.dto.profile.NewPasswordRequest;
+import com.dlim2012.user.dto.profile.NewPasswordResponse;
 import com.dlim2012.user.dto.profile.UserProfileItem;
 import com.dlim2012.user.service.TokenService;
 import com.dlim2012.user.service.UserService;
@@ -25,6 +27,11 @@ public class UserController {
     private final TokenService tokenService;
     private final UserService userService;
     private final JwtService jwtService;
+
+    @GetMapping("/test")
+    public String test(){
+        return "Test";
+    }
 
     @GetMapping("/")
     public String home(Principal principal) {
@@ -69,12 +76,26 @@ public class UserController {
     public void editProfile(@RequestBody UserProfileItem userProfileItem){
         Integer userId = jwtService.getId();
         log.info("Profile edit request from user '{}'", userId);
-        System.out.println(userProfileItem);
 
 
         userService.editProfile(userProfileItem, userId);
     }
 
+    @DeleteMapping("/delete")
+    public void deleteUser(){
+        Integer userId = jwtService.getId();
+        log.info("Delete user request from user '{}'", userId);
+        userService.deleteUser(userId);
+    }
+
+    @PostMapping("/password")
+    public NewPasswordResponse changePassword(
+            @RequestBody NewPasswordRequest newPasswordRequest
+            ){
+        Integer userId = jwtService.getId();
+        log.info("Change password request from user '{}'", userId);
+        return userService.changePassword(userId, newPasswordRequest);
+    }
 //    @GetMapping("/contact/user/{userId}")
 //    public UserContactInfo getContactInformation(
 //            @PathVariable("userId") Integer userId

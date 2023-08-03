@@ -1,0 +1,18 @@
+.hotelFacilityList{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+
+.hotelFacility{
+    /*width: 45%;*/
+    width: fit-content;
+    border: #cecece 1px solid;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 3px;
+}
+
+.hotelFacility > label{
+    margin-left: 5px;
+}

@@ -23,8 +23,6 @@ function BookingCard(props) {
             <span>Hotel: {item.hotelName}</span> <br/>
             <span>Rooms</span> <br/>
             <button>Details</button>
-
-
         </div>
     );
 }

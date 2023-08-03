@@ -1,0 +1,63 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: user
+  banner:
+    location: classpath:banner.txt
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: create #create-drop #update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+  kafka:
+    bootstrap-servers: hb-kafka-service:9092
+
+  sql:
+    init:
+      mode: always
+
+#  zipkin:
+#    base-url: http://hb-zipkin:9411
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+eureka:
+  instance:
+    hostname: hb-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+    enabled: false
+
+
+custom:
+  security:
+    rsa:
+      private-key: classpath:certs/private.pem
+      public-key: classpath:certs/public.pem
+    jwt:
+      expire-time-in-minutes: 43200 # 10 days
+  gateway: # used to generate test user
+    hotel: http://hb-hotel:80
+    booking: http://hb-booking:80
+    search: http://hb-search:80

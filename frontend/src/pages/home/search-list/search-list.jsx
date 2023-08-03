@@ -22,6 +22,8 @@ import {
 } from "../../../assets/Lists";
 
 import Slider from "@mui/material/Slider";
+import MailList from "../../../components/mailList/MailList";
+import Footer from "../../../components/footer/Footer";
 
 const searchListPath = "/hotels"
 
@@ -41,8 +43,7 @@ const SearchList = () => {
   const [openOptions, setOpenOptions] = useState(false);
   const [options, setOptions] = useState(location.state.options);
 
-  const [priceRange, setPriceRange] = useState([0, 0])
-  const [usePriceRange, setUsePriceRange] = useState(false);
+  const [priceRange, setPriceRange] = useState([0, 1000000])
   const [priceMaxRange, setPriceMaxRange] = useState([0, 10000])
 
   const [propertyType, setPropertyType] = useState(
@@ -78,6 +79,11 @@ const SearchList = () => {
 
   const [fetching, setFetching] = useState(false);
 
+  const [openCriteria, setOpenCriteria] = useState(
+      // {priceRange: false, propertyType: false, propertRating: false, hotelFacility: false, roomAmenity: false}
+    {priceRange: true, propertyType: true, propertyRating: true, hotelFacility: true, roomAmenity: true}
+  );
+
   useEffect(() => {
 
   })
@@ -93,7 +99,6 @@ const SearchList = () => {
       "lng": place.geometry.location.lng()
     }
     setCoordinates(newCoordinates);
-    console.log(newAddress, newCoordinates)
   }
 
   const initAutocomplete = () => {
@@ -103,12 +108,8 @@ const SearchList = () => {
     autocomplete.addListener("place_changed", () => onChangeAddress(autocomplete))
   }
 
-
-  const requestSearch = () => {
+  const requestSearch = (item) => {
     setFetching(true);
-
-    console.log(priceRange)
-
     var payload = {
       useRecommeded: useRecommended,
       startDate: date[0].startDate.toISOString(),
@@ -117,35 +118,41 @@ const SearchList = () => {
       state: address.state,
       country: address.country,
       numAdult: options.adult,
-      numChild: options.child == null ? 0 : options.child,
+      numChild: options.children == null ? 0 : options.children,
       numRoom: options.room,
       numBed: -1,
       propertyTypes: [],
       propertyRating: [],
       hotelFacility: [],
       roomsFacility: [],
-      priceMin: usePriceRange ? Math.floor(Math.exp(priceRange[0])): null,
-      priceMax: usePriceRange ? Math.floor(Math.exp(priceRange[1])) : null
+      priceMin: Math.floor(Math.exp(priceRange[0])),
+      priceMax: Math.floor(Math.exp(priceRange[1]))
     }
 
-    console.log(propertyType)
-    for (var key in propertyType){
-      if (propertyType[key] === true){
+    var payloadPropertyType = item?.propertyType == null ? propertyType : item.propertyType
+    for (var key in payloadPropertyType){
+      if (payloadPropertyType[key] === true){
         payload["propertyTypes"].push(key);
       }
     }
-    for (var key in propertyRating){
-      if (propertyRating[key] === true){
+
+    var payloadPropertyRating = item?.propertyRating == null ? propertyRating : item.propertyRating;
+    for (var key in payloadPropertyRating){
+      if (payloadPropertyRating[key] === true){
         payload["propertyRating"].push(key);
       }
     }
-    for (var key in hotelFacility){
-      if (hotelFacility[key] === true){
+
+    var payloadHotelFacility = item?.hotelFacility == null ? hotelFacility : item.hotelFacility
+    for (var key in payloadHotelFacility){
+      if (payloadHotelFacility[key] === true){
         payload["hotelFacility"].push(key);
       }
     }
-    for (var key in roomAmenity){
-      if (roomAmenity[key] === true){
+
+    var payloadRoomAmenity = item?.roomAmenity == null ? roomAmenity : item.roomAmenity
+    for (var key in payloadRoomAmenity){
+      if (payloadRoomAmenity[key] === true){
         payload["roomsFacility"].push(key);
       }
     }
@@ -155,11 +162,9 @@ const SearchList = () => {
       payload["longitude"] = coordinates.lng;
     }
 
-    console.log("search request", payload)
     post("/api/v1/search/hotel", payload)
         .then(response => response.json())
         .then(data => {
-          console.log(data)
           var list = data.hotelList;
           list.sort(function(x, y){
             if (x.score > y.score){
@@ -171,74 +176,68 @@ const SearchList = () => {
             }
           })
           var newMaxPriceRange = [Math.log(data.minPrice / 1.1), Math.log(data.maxPrice * 1.1)]
+          console.log(newMaxPriceRange)
           setPriceMaxRange(newMaxPriceRange)
-          if (priceRange[1] === 0){
-            setPriceRange(newMaxPriceRange)
-          }
+          // setPriceRange(newMaxPriceRange)
           setSearchResults(list);
           setNumSearchResults(data.numResults);
 
-          if (destination != null) {
-            var newResultString = `${destination}, ${format(date[0].startDate, "MM/dd/yyyy")} to ${format(date[0].endDate, "MM/dd/yyyy")}, ${options.adult} adult${options.adult > 1 ? 's' : ''}, ${options.child == null ? 0 : options.child} children, and ${options.room} room${options.adult > 1 ? 's' : ''}`;
+          if (destination === "Where are you going?"){
+            var newResultString = `San Francisco, California, United States, ${format(date[0].startDate, "MM/dd/yyyy")} to ${format(date[0].endDate, "MM/dd/yyyy")}, ${options.adult} adult${options.adult > 1 ? 's' : ''}, ${options.children == null ? 0 : options.children} children, and ${options.room} room${options.adult > 1 ? 's' : ''}`;
+          }
+          else if (destination != null) {
+            var newResultString = `${destination}, ${format(date[0].startDate, "MM/dd/yyyy")} to ${format(date[0].endDate, "MM/dd/yyyy")}, ${options.adult} adult${options.adult > 1 ? 's' : ''}, ${options.children == null ? 0 : options.children} children, and ${options.room} room${options.adult > 1 ? 's' : ''}`;
           } else {
-            var newResultString = `${format(date[0].startDate, "MM/dd/yyyy")} to ${format(date[0].endDate, "MM/dd/yyyy")}, ${options.adult} adult${options.adult > 1 ? 's' : ''}, ${options.child == null ? 0 : options.child} children, and ${options.room} room${options.adult > 1 ? 's' : ''}`;
+            var newResultString = `${format(date[0].startDate, "MM/dd/yyyy")} to ${format(date[0].endDate, "MM/dd/yyyy")}, ${options.adult} adult${options.adult > 1 ? 's' : ''}, ${options.children == null ? 0 : options.children} children, and ${options.room} room${options.adult > 1 ? 's' : ''}`;
           }
           setResultString(newResultString)
         })
         .catch((error) => {
-          console.error(error)
+          console.error("Error", error)
         }).finally(() => {
             console.log("setFetching(false);")
             setFetching(false);
         }
-
     )
   }
 
   useEffect(() => {
-    console.log("useEffect() in search-list")
-    requestSearch()
+    requestSearch({})
   }, [])
 
   const onPriceRangeChange = (event, newValue) => {
       setPriceRange(newValue)
-      setUsePriceRange(true)
   }
 
   var headerAttr = {
-    "destination": destination,
-    "setDestination": setDestination,
-    "address": address,
-    "setAddress": setAddress,
-    "coordinates": coordinates,
-    "setCoordinates": setCoordinates,
-    "openDate": openDate,
-    "setOpenDate": setOpenDate,
-    "date": date,
-    "setDate": setDate,
-    "openOptions": openOptions,
-    "setOpenOptions": setOpenOptions,
-    "options": options,
-    "setOptions": setOptions,
-    "priceRange": priceRange,
-    "setPriceMaxRange": setPriceMaxRange,
-    // "setPriceRange": setPriceRange,
-    "propertyType": propertyType,
-    // "setPropertyType": setPropertyType,
-    "cancellationPolicy": cancellationPolicy,
-    // "setCancellationPolicy": setCancellationPolicy,
-    "hotelFacilities": hotelFacility,
-    // "setHotelFacilities": setHotelFacilities,
-    "roomAmenities": roomAmenity,
-    // "setRoomAmenities": setRoomAmenities,
-    "propertyRating": propertyRating,
-    // "setPropertyRating": setPropertyRating
-    "requestSearch": requestSearch
-
+    destination, setDestination,
+  address, setAddress,
+    coordinates, setCoordinates,
+    openDate, setOpenDate,
+    date, setDate,
+    openOptions, setOpenOptions,
+    options, setOptions,
+    priceRange, setPriceRange,
+    setPriceMaxRange,
+    propertyType,
+    cancellationPolicy,
+    hotelFacility,
+    roomAmenity,
+    propertyRating,
+    requestSearch
+    // cancellationPolicy
   }
 
+  console.log(openCriteria)
+  console.log(openCriteria.priceRange)
+
   if (fetching){
-    return <>...</>
+    return (
+        <div>
+          <Navbar />
+          <Header type="list" attrs={headerAttr}/>
+        </div>
+    );
   }
 
   return (
@@ -248,7 +247,7 @@ const SearchList = () => {
       <div className="listContainer">
         <div className="listWrapper">
           <div className="listSearch">
-            <h1 className="lsTitle">Search</h1>
+            <h1 className="lsTitle">Search criteria</h1>
             {/*<div className="lsItem">*/}
             {/*  <label>Destination</label>*/}
             {/*  <input ref={addressSearchInput} value={destination} onChange={event => {*/}
@@ -269,9 +268,11 @@ const SearchList = () => {
             {/*  )}*/}
             {/*</div>*/}
             <div className="lsItem">
-              <label>Price Range</label>
+              <label
+                  // onClick={() => {setOpenCriteria({...openCriteria, ["priceRange"]: !openCriteria.priceRange})}}
+              >Price Range</label>
+              { openCriteria.priceRange &&
               <div className="lsPriceRange">
-
                   <Slider
                       value={priceRange}
                       onChange={onPriceRangeChange}
@@ -279,12 +280,15 @@ const SearchList = () => {
                       max={priceMaxRange[1]}
                       step={0.0001}
                   />
-                  <span className="lsPriceRangeText">Selected range: {Math.floor(Math.exp(priceRange[0]) /100)} ~ {Math.ceil(Math.exp(priceRange[1])/100)}</span>
+                  <span className="lsPriceRangeText">Selected range: $ {Math.floor(Math.exp(priceRange[0]) /100)} ~ {Math.ceil(Math.exp(priceRange[1])/100)}</span>
               </div>
+              }
             </div>
             <div className="lsItem">
-              <label>Property Type</label>
-              { Object.keys(propertyTypesMap).map((item, index) => {
+              <label
+                // onClick={() => setOpenCriteria({...openCriteria, ["propertyType"]: !openCriteria.propertyType})}
+              >Property Type</label>
+              { openCriteria.propertyType && Object.keys(propertyTypesMap).map((item, index) => {
                 return <div className="lsOptions">
                           <div className="lsOptionItem">
                                 <span className="lsOptionText">
@@ -292,8 +296,9 @@ const SearchList = () => {
                                       type="checkbox"
                                       checked = {propertyType[item]}
                                       onChange={(e) => {
-                                        setPropertyType({...propertyType, [item]: e.target.checked});
-                                        requestSearch();
+                                        var newPropertyType = {...propertyType, [item]: e.target.checked}
+                                        setPropertyType(newPropertyType);
+                                        requestSearch({propertyType: newPropertyType});
                                       }}
                                   />
                                   {item}
@@ -321,8 +326,10 @@ const SearchList = () => {
             {/*  })}*/}
             {/*</div>*/}
             <div className="lsItem">
-              <label>Property rating</label>
-              { propertyRatings.map((item, index) => {
+              <label
+                // onClick={() => {setOpenCriteria({...openCriteria, ["propertyRating"]: !openCriteria.propertyRating})}}
+              >Property rating</label>
+              { openCriteria.propertyRating && propertyRatings.map((item, index) => {
                 return <div className="lsOptions">
                   <div className="lsOptionItem">
                     <span className="lsOptionText">
@@ -330,8 +337,9 @@ const SearchList = () => {
                           type="checkbox"
                           checked = {propertyRating[item['value']]}
                           onChange={(e) => {
-                            setPropertyRating({...propertyRating, [item['value']]: e.target.checked});
-                            requestSearch();
+                            var newPropertyRating = {...propertyRating, [item['value']]: e.target.checked}
+                            setPropertyRating(newPropertyRating);
+                            requestSearch({propertyRating: newPropertyRating});
                           }}
                       />
                       {item['label']}
@@ -341,8 +349,10 @@ const SearchList = () => {
               })}
             </div>
             <div className="lsItem">
-              <label>Hotel Facilities</label>
-              { hotelFacilities.map((item, index) => {
+              <label
+                // onClick={() => {setOpenCriteria({...openCriteria, ["hotelFacility"]: !openCriteria.hotelFacility})}}
+              >Hotel Facilities</label>
+              { openCriteria.hotelFacility && hotelFacilities.map((item, index) => {
                 return <div className="lsOptions">
                   <div className="lsOptionItem">
                       <span className="lsOptionText">
@@ -350,8 +360,9 @@ const SearchList = () => {
                             type="checkbox"
                             checked = {hotelFacility[item]}
                             onChange={(e) => {
-                              setHotelFacility({...hotelFacility, [item]: e.target.checked});
-                              requestSearch();
+                              var newHotelFacility = {...hotelFacility, [item]: e.target.checked}
+                              setHotelFacility(newHotelFacility);
+                              requestSearch({hotelFacility: newHotelFacility});
                             }}
                         />
                         {item}
@@ -361,8 +372,10 @@ const SearchList = () => {
               })}
             </div>
             <div className="lsItem">
-              <label>Room Amenities</label>
-              { roomFacilities.map((item, index) => {
+              <label
+                  // onClick={() => {setOpenCriteria({...openCriteria, ["roomAmenity"]: !openCriteria.roomAmenity})}}
+              >Room Amenities</label>
+              { openCriteria.roomAmenity && roomFacilities.map((item, index) => {
                 return <div className="lsOptions">
                   <div className="lsOptionItem">
                       <span className="lsOptionText">
@@ -370,8 +383,9 @@ const SearchList = () => {
                             type="checkbox"
                             checked={roomAmenity[item]}
                             onChange={(e) => {
-                              setRoomAmenity({...roomAmenity, [item]: e.target.checked});
-                              requestSearch();
+                              var newRoomAmenity = {...roomAmenity, [item]: e.target.checked}
+                              setRoomAmenity(newRoomAmenity);
+                              requestSearch({roomAmenity: newRoomAmenity});
                             }}
                         />
                         {item}
@@ -397,6 +411,8 @@ const SearchList = () => {
 
         </div>
       </div>
+      <MailList/>
+      <Footer/>
     </div>
   );
 };

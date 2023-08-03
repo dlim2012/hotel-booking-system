@@ -4,6 +4,8 @@ import {postWithJwt} from "../../../../../clients";
 import {statusMap} from "../../../../../assets/Lists";
 import './userBooking.css';
 import UserBookingCard from "./BookingCard";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 
 function UserBookings(props) {
@@ -98,7 +100,8 @@ function UserBookings(props) {
                     }
                 </div>
             </div>
-
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

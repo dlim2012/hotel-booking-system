@@ -1,7 +1,7 @@
 package com.dlim2012.searchconsumer.controller;
 
 
-import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
+//import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDetails;
@@ -31,8 +31,8 @@ public class  SearchConsumerKafkaListeners {
     private final DateService dateService;
     private final PriceService priceService;
 
-    private final ElasticSearchQuery elasticSearchQuery;
-    private final ModelMapper modelMapper = new ModelMapper();
+//    private final ElasticSearchQuery elasticSearchQuery;
+//    private final ModelMapper modelMapper = new ModelMapper();
 
     private final HotelRepository hotelRepository;
     private final RoomsRepository roomsRepository;

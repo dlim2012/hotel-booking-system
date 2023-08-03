@@ -1,0 +1,41 @@
+server:
+  port:
+    9006
+
+spring:
+  application:
+    name: search-consumer
+  banner:
+    location: classpath:banner.txt
+#  zipkin:
+#    base-url: http://hb-zipkin:9411
+  kafka:
+    bootstrap-servers: hb-kafka-service:9092
+
+eureka:
+  instance:
+    hostname: hb-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+    enabled: false
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  elasticsearch:
+    server: hb-elasticsearch-es-http:9200
+    username: elastic
+    password: changeme
+    useSsl: true
+
+

@@ -11,12 +11,12 @@ import static java.lang.Math.min;
 @Service
 public class PriceService {
 
-    private final Integer DAYS = 30;
+    private final Integer MAX_BOOKING_DAYS = 30;
 
     public Long getPriceSumInCents(LocalDate startDate, LocalDate endDate, Long priceMax, Long priceMin, Integer quantity){
         Long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         LocalDate today = LocalDate.now();
-        Long averagePrice = priceMin + (priceMax - priceMin) * (getDayDiff(today, startDate) + getDayDiff(today, endDate)) / 2 / DAYS;
+        Long averagePrice = priceMin + (priceMax - priceMin) * (getDayDiff(today, startDate) + getDayDiff(today, endDate)) / 2 / MAX_BOOKING_DAYS;
         double price = days * averagePrice * quantity;
         return (Long) (long) (price * 100);
     }
@@ -24,7 +24,7 @@ public class PriceService {
     public Long getPriceInCents(
             Long dayDiff, Long priceMax, Long priceMin
     ){
-        return priceMin + (priceMax - priceMin) * dayDiff / DAYS;
+        return priceMin + (priceMax - priceMin) * dayDiff / MAX_BOOKING_DAYS;
     }
 
     public Long getPriceInCents(
@@ -36,7 +36,7 @@ public class PriceService {
     public Long getDayDiff(
             LocalDate today, LocalDate localDate
     ){
-        return min(DAYS, max(0, ChronoUnit.DAYS.between(today, localDate)));
+        return min(MAX_BOOKING_DAYS, max(0, ChronoUnit.DAYS.between(today, localDate)));
     }
 
     public Long changeDoubleToCents(

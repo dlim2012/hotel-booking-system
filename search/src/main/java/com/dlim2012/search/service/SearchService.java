@@ -3,6 +3,7 @@ package com.dlim2012.search.service;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
 import com.dlim2012.clients.entity.PropertyType;
 import com.dlim2012.clients.entity.SharedIds;
+import com.dlim2012.search.config.ElasticSearchHighLevelClientConfig;
 import com.dlim2012.search.dto.hotelSearch.*;
 import com.dlim2012.search.dto.priceAgg.PriceAggRequest;
 import com.dlim2012.search.dto.priceAgg.PriceAggResponse;
@@ -11,11 +12,17 @@ import com.dlim2012.search.dto.quantity.RoomsAvailabilityResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
@@ -44,6 +51,9 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import static java.lang.Math.max;
@@ -51,27 +61,24 @@ import static java.lang.Math.min;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class SearchService {
 
     private final ElasticSearchUtils elasticSearchUtils;
-    private final ElasticsearchOperations elasticsearchOperations;
     private final SharedIds sharedIds = new SharedIds();
     private final QueryBuilderService queryBuilderService;
-//    private final Comparator<Map<String, Object>> roomsMapComparator = new Comparator<Map<String, Object>>() {
-//        @Override
-//        public int compare(Map<String, Object> o1, Map<String, Object> o2) {
-//
-//        }
-//    }
     private final Integer MAX_HITS = 100;
     private final ModelMapper modelMapper = new ModelMapper();
 
-    private final RestHighLevelClient client = new RestHighLevelClient(
-            RestClient.builder(
-                    new HttpHost("10.0.0.110", 9103, "http")
-            )
-    );
+
+    private final RestHighLevelClient client;
+
+
+
+    public SearchService(ElasticSearchUtils elasticSearchUtils, QueryBuilderService queryBuilderService, ElasticSearchHighLevelClientConfig highLevelClientConfig) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        this.elasticSearchUtils = elasticSearchUtils;
+        this.queryBuilderService = queryBuilderService;
+        this.client = highLevelClientConfig.getClient();
+    }
 
     private final Integer SIZE = 100;
 
@@ -200,6 +207,8 @@ public class SearchService {
             for (String facility: request.getHotelFacility()){
                 Integer facilityId = sharedIds.getFacilityId(facility);
 //                System.out.println("facilityId " + facilityId + " " + facility);
+                System.out.println(facilityId);
+                System.out.println(nestHotelFacility(facilityId));
                 hotelBool.must(nestHotelFacility(facilityId));
             }
         }
@@ -254,7 +263,7 @@ public class SearchService {
                                             .size(1)
                                             .fetchSource(new String[]{"name",
                                                     "propertyTypeOrdinal", "neighborhood", "city", "state", "country", "zipcode",
-                                                    "geoPoint", "description"
+                                                    "geoPoint", "description", "facility"
                                             }, null)
                                     )
                             )
@@ -294,6 +303,7 @@ public class SearchService {
 
     public HotelSearchResponse search(HotelSearchRequest request) throws IOException {
         long start = System.currentTimeMillis();
+        System.out.println(request);
 
 //        SearchRequest searchRequest = new SearchRequest("hotel");
 //        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -316,9 +326,6 @@ public class SearchService {
                 searchResponse.getHits().getTotalHits().value
         );
 
-        System.out.println("search " + (System.currentTimeMillis() - start));
-
-//        System.out.println(searchResponse.toString());
 
         ParsedNested nestRooms = searchResponse.getAggregations().get("nest_rooms");
         ParsedFilter filterRoomFacilities = nestRooms.getAggregations().get("filter_room_facilities");
@@ -338,6 +345,9 @@ public class SearchService {
         long maxPrice = 0L;
         long count = 0;
         for (Terms.Bucket hotelBucket: termsHotelId.getBuckets()){
+            long roomMinPrice = 100000000L;
+            long roomMaxPrice = 0L;
+
             Integer hotelId;
             try {
                 hotelId = Integer.valueOf(hotelBucket.getKeyAsString());
@@ -355,6 +365,9 @@ public class SearchService {
             ParsedNested nestPrice = unnestToRooms.getAggregations().get("nest_price");
             ParsedFilter filterPriceByDates = nestPrice.getAggregations().get("filter_price_by_dates");
             ParsedTerms termsRoomsInPrice = filterPriceByDates.getAggregations().get("terms_rooms_in_price");
+
+//            System.out.println("====================================================");
+//            System.out.println(hotelMap);
 
             // Read rooms prices
             Map<Integer, Long> roomsPrice = new HashMap<>();
@@ -390,7 +403,7 @@ public class SearchService {
             }
 
             ParsedTerms termsRoomsInDates = hotelBucket.getAggregations().get("terms_rooms_in_dates");
-            List<Long> priceList = new ArrayList<>();
+//            List<Long> priceList = new ArrayList<>();
             for (Terms.Bucket roomsBucket: termsRoomsInDates.getBuckets()) {
                 Integer roomsId = roomsBucket.getKeyAsNumber().intValue();
                 Map<String, Object> rooms = roomsMap.getOrDefault(roomsId, null);
@@ -401,8 +414,8 @@ public class SearchService {
                 Integer quantity = Math.toIntExact(((ParsedCardinality) roomsBucket.getAggregations().get("num_room_by_rooms")).getValue());
                 rooms.put("quantity", quantity);
                 Long priceSum = (Long) rooms.get("priceSum");
-                minPrice = min(minPrice, priceSum);
-                maxPrice = max(maxPrice, priceSum);
+                roomMinPrice = min(roomMinPrice, priceSum);
+                roomMaxPrice = max(roomMaxPrice, priceSum);
             }
 
 //            // get minimal and maximal price
@@ -430,6 +443,8 @@ public class SearchService {
             Expression numBed = model.addExpression("num_bed").lower(request.getNumBed());
             Expression numRoom = model.addExpression("num_room").lower(request.getNumRoom());
 
+//            System.out.println(request);
+
             // Set up linear programming equation
             Map<Integer, Integer> roomsOrderMap = new HashMap<>();
             int i = 0;
@@ -448,6 +463,8 @@ public class SearchService {
                 Long priceSum = (Long) rooms.get("priceSum");
                 Integer quantity = (Integer) rooms.get("quantity");
 
+//                System.out.println(maxAdult + " " + maxChild + " " + numBeds + " " + breakfast + " " + priceSum + " " + quantity);
+
                 Integer weight = ((maxAdult + maxChild + 5 ) + (numBeds > 0 ? 3 * numBeds : 0)) * 2 + (breakfast ? 1 : 0);
                 Variable v = model
                         .addVariable(roomsId.toString())
@@ -461,16 +478,13 @@ public class SearchService {
                 numBed.set(v, numBeds);
                 numRoom.set(v, 1);
                 priceExpr.set(v, priceSum);
-
                 roomsOrderMap.put(roomsId, i);
                 i += 1;
-
             }
-
-
 
             // Run linear programming
             Optimisation.Result result = model.minimise();
+//            System.out.println(result);
             if (!result.getState().isSuccess()){
 //                log.error("Optimisation unsuccesful (state: {})", result.getState().name());
 //                System.out.println(hotelMap);
@@ -479,7 +493,7 @@ public class SearchService {
             }
 
             count += 1;
-            if (hotelSearchResponseItemList.size() >= 50){
+            if (hotelSearchResponseItemList.size() >= 25){
                 continue;
             }
 
@@ -520,7 +534,6 @@ public class SearchService {
                 }
 
 
-
                 HotelSearchRooms hotelSearchRooms = HotelSearchRooms.builder()
                         .roomsId(roomsId)
                         .displayName((String) rooms.get("displayName"))
@@ -541,6 +554,9 @@ public class SearchService {
                         .build();
                 hotelSearchRoomsList.add(hotelSearchRooms);
 
+
+                minPrice = min(minPrice, roomMinPrice * request.getNumRoom());
+                maxPrice = max(maxPrice, roomMaxPrice * (int) rooms.get("quantity"));
             }
 
             HotelSearchResponseItem hotelSearchResponseItem = HotelSearchResponseItem.builder()
@@ -561,7 +577,7 @@ public class SearchService {
                     .build();
             if (request.getLatitude() != null && request.getLongitude() != null && hotelMap.containsKey("geoPoint")){
                 Map<String, Object> geoPoint = (Map<String, Object>) hotelMap.get("geoPoint");
-                System.out.println(request.getLatitude() + " " + request.getLongitude() + " " + (Double) geoPoint.get("lat") + " " + (Double) geoPoint.get("lon"));
+//                System.out.println(request.getLatitude() + " " + request.getLongitude() + " " + (Double) geoPoint.get("lat") + " " + (Double) geoPoint.get("lon"));
 
                 if (geoPoint.containsKey("lat") && geoPoint.containsKey("lon")) {
                     hotelSearchResponseItem.setDistance(DistanceService.distance(
@@ -581,6 +597,7 @@ public class SearchService {
 //            System.out.println(hotelSearchResponseItem);
 
             hotelSearchResponseItemList.add(hotelSearchResponseItem);
+
         }
 
         System.out.println("time " + (System.currentTimeMillis() - start));
@@ -595,11 +612,10 @@ public class SearchService {
         HotelSearchResponse hotelSearchResponse = HotelSearchResponse.builder()
                 .hotelList(hotelSearchResponseItemList)
                 .numResults((int) count)
-                .maxPrice(maxPrice * request.getNumRoom())
-                .minPrice(minPrice * request.getNumRoom())
+                .maxPrice(maxPrice)
+                .minPrice(minPrice)
                 .build();
 
-        System.out.println(count + " " + maxPrice + " " + minPrice);
 
 //        System.out.println(hotelSearchResponse);
         return hotelSearchResponse;

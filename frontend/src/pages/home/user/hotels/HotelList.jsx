@@ -2,9 +2,13 @@ import './hotelList.css';
 import Navbar from "../../../../components/navbar/Navbar";
 import {useLocation, useNavigate} from "react-router-dom";
 import Table from "../../../../templates/Table";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {getWithJwt} from "../../../../clients";
 import HotelMgmtTable from "../../../../components/tables/HotelMgmtTable/HotelMgmtTable";
+
+import noDataImage from "../../../../assets/images/No data.png"
+import MailList from "../../../../components/mailList/MailList";
+import Footer from "../../../../components/footer/Footer";
 
 function HotelList(props) {
     const navigate= useNavigate();
@@ -59,6 +63,7 @@ function HotelList(props) {
         // }
     ]
 
+
     return (
         <div>
             <Navbar />
@@ -66,10 +71,17 @@ function HotelList(props) {
                 <div className="btnContainer">
                     <button onClick={navRegister}>Register</button>
                 </div>
-                {!fetching &&
+                { !fetching && data.length === 0 &&
+                    <div className="hotelsNoData">
+                        <img src={noDataImage} width="200px"/>
+                    </div>
+                }
+                {!fetching && data.length > 0 &&
                     <HotelMgmtTable columns={columns} data={data} />
                 }
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

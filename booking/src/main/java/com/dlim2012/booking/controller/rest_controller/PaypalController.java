@@ -36,12 +36,12 @@ class PaypalController{
             log.info("Payment {} for booking {} executed", paymentId, bookingId);
 //            redirectAttributes.addFlashAttribute("flashAttribute", "redirectWithRedirectView");
             redirectAttributes.addAttribute("attribute", "redirectWithRedirectView");
-            return new RedirectView(payPalConfig.HOST + "/hotels/booking/payment/success/" + bookingId.toString());
+            return new RedirectView(payPalConfig.FRONTEND + "/hotels/booking/payment/success/" + bookingId.toString());
         } else {
             log.info("Payment {} for booking {} ignored (not executed).", paymentId, bookingId);
 //            redirectAttributes.addFlashAttribute("flashAttribute", "redirectWithRedirectView");
             redirectAttributes.addAttribute("status", "timeout");
-            return new RedirectView(payPalConfig.HOST + "/hotels/booking/payment/cancel/" + bookingId.toString());
+            return new RedirectView(payPalConfig.FRONTEND + "/hotels/booking/payment/cancel/" + bookingId.toString());
         }
     }
 
@@ -56,6 +56,6 @@ class PaypalController{
 
 //        redirectAttributes.addFlashAttribute("flashAttribute", "redirectWithRedirectView");
         redirectAttributes.addAttribute("status", "cancelled");
-        return new RedirectView(payPalConfig.HOST + "/hotels/booking/payment/cancel/" + bookingId.toString());
+        return new RedirectView(payPalConfig.FRONTEND + "/hotels/booking/payment/cancel/" + bookingId.toString());
     }
 }

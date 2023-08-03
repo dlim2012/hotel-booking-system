@@ -1,3 +1,4 @@
+import "./header.css";
 import {
   faBed,
   faCalendarDays,
@@ -7,7 +8,6 @@ import {
   faTaxi,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./header.css";
 import { DateRange } from "react-date-range";
 import {useEffect, useRef, useState} from "react";
 import "react-date-range/dist/styles.css"; // main css file
@@ -23,33 +23,30 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
 
 
   const addressSearchInput = useRef(null);
+  const [openNoAddress, setOpenNoAddress] = useState(false);
 
   // console.log(attrs)
 
-  const destination = attrs.destination;
-  const setDestination = attrs.setDestination;
-  const address = attrs.address;
-  const setAddress = attrs.setAddress;
-  const coordinates = attrs.coordinates;
-  const setCoordinates = attrs.setCoordinates;
-  const openDate = attrs.openDate;
-  const setOpenDate = attrs.setOpenDate;
-  const date = attrs.date;
-  const setDate = attrs.setDate;
-  const openOptions = attrs.openOptions;
-  const setOpenOptions = attrs.setOpenOptions;
-  const options = attrs.options;
-  const setOptions = attrs.setOptions;
-  const priceRange = attrs.priceRange;
-  const propertyType = attrs.propertyType;
-  const propertyRating = attrs.propertyRating;
-  const cancellationPolicy = attrs.cancellationPolicy;
-  const hotelFacilities = attrs.hotelFacilities;
-  const roomAmenities = attrs.roomAmenities;
+  const {
+    destination, setDestination, address, setAddress, coordinates, setCoordinates,
+    openDate, setOpenDate, date, setDate, openOptions, setOpenOptions, options, setOptions,
+      priceRange, propertyType, propertyRating, cancellationPolicy, hotelFacility, roomAmenity,
+      setPriceRange
+  }  = attrs;
+
+  // const priceRange = undefined;
+  // const propertyType = undefined;
+  // const propertyRating = undefined;
+  // const cancellationPolicy = undefined;
+  // const hotelFacilities = undefined;
+  // const roomAmenities = undefined;
 
   const navigate = useNavigate();
 
   const handleOption = (name, operation) => {
+    if (setPriceRange !== undefined) {
+      setPriceRange([0, 100000000])
+    }
     setOptions((prev) => {
       return {
         ...prev,
@@ -62,21 +59,20 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
     // console.log(address, destination, coordinates, date, options);
     // console.log(priceRange, propertyType, cancellationPolicy, hotelFacilities, roomAmenities, propertyRating)
     if (Object.keys(address).length === 0){
-      alert("Please enter a destination.")
+      setOpenNoAddress(true);
       return;
     }
     if (location.pathname !== "/hotels") {
       navigate("/hotels", {
         state: {
           address, destination, coordinates, date, options,
-          priceRange, propertyType, cancellationPolicy, hotelFacilities, roomAmenities, propertyRating
+          priceRange, propertyType, cancellationPolicy, hotelFacilities: hotelFacility, roomAmenities: roomAmenity, propertyRating
         }
       });
     } else {
       attrs.requestSearch();
     }
   };
-
 
   const onChangeAddress = (autocomplete) => {
     setDestination(addressSearchInput.current.value)
@@ -88,13 +84,16 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
       "lng": place.geometry.location.lng()
     }
     setCoordinates(newCoordinates);
+    setOpenNoAddress(false);
     console.log(newAddress, newCoordinates);
   }
 
   const initAutocomplete = () => {
     if (!addressSearchInput.current) return;
-
-    const autocomplete = new window.google.maps.places.Autocomplete(addressSearchInput.current, { types: ['(cities)']}); // only cities: ,
+    const autocomplete = new window.google.maps.places.Autocomplete(addressSearchInput.current, { types: ['(cities)']});
+    autocomplete.setComponentRestrictions({
+      country: ["us", "pr", "vi", "gu", "mp"],
+    });// only cities: ,
     autocomplete.setFields((["address_component", "geometry"]));
     autocomplete.addListener("place_changed", () => onChangeAddress(autocomplete))
   }
@@ -111,6 +110,7 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
           const decoded = jwt_decode(jwt)
           localStorage.setItem("firstname", decoded.sub)
           localStorage.setItem("jwt", jwt);
+          localStorage.setItem("test-user", true);
         })
         .catch(e => {
           console.error(e)})
@@ -122,6 +122,9 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
   if (fetching){
     return;
   }
+
+  console.log(date)
+  console.log(options)
 
   return (
     <div className="header">
@@ -157,13 +160,17 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
             <h1 className="headerTitle">
               A demo website for hotel booking
             </h1>
+
             <p className="headerDesc">
-              Register a free test user account to explore the website.
+              Register a free user account.
               {/*Get rewarded for your travels – unlock instant savings of 10% or*/}
               {/*more with a free account*/}
             </p>
 
-            <button className="headerBtn" onClick={handleLogin}>Sign in / Register</button>
+            { (localStorage["test-user"] == null || !localStorage["test-user"]) &&
+            <button className="headerBtn" onClick={handleLogin}>Generate test user</button>
+            }
+            {/*<button className="headerBtn" onClick={handleLogin}>Sign in / Register</button>*/}
 
           </>
             )}
@@ -174,15 +181,33 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
                 <input
                     ref = {addressSearchInput}
                   type="text"
-                  placeholder={destination}
+                  placeholder={openNoAddress ? "Please enter an address" : destination}
                   className="headerSearchInput"
                   // onChange={(e) => setAddress(e.target.value)}
                 />
+                {/*<input*/}
+                {/*    className="addressInput"*/}
+                {/*    ref = {addressSearchInput}*/}
+                {/*    style={*/}
+                {/*      {color: "red"}*/}
+                {/*    }*/}
+                {/*    type="text"*/}
+                {/*    placeholder={openNoAddress ? "Please enter an address" : destination}*/}
+                {/*    className="headerSearchInput"*/}
+                {/*    // onChange={(e) => setAddress(e.target.value)}*/}
+                {/*/>*/}
               </div>
               <div className="headerSearchItem">
                 <FontAwesomeIcon icon={faCalendarDays} className="headerIcon" />
                 <span
-                  onClick={() => setOpenDate(!openDate)}
+                  onClick={() => {
+                    if (openDate) {
+                      setOpenDate(false)
+                    } else {
+                      setOpenOptions(false)
+                      setOpenDate(true)
+                    }
+                  }}
                   className="headerSearchText"
                 >{`${format(date[0].startDate, "MM/dd/yyyy")} to ${format(
                   date[0].endDate,
@@ -191,7 +216,12 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
                 {openDate && (
                   <DateRange
                     editableDateInputs={true}
-                    onChange={(item) => setDate([item.selection])}
+                    onChange={(item) => {
+                      if (setPriceRange !== undefined){
+                        setPriceRange([0, 100000000])
+                      }
+                      setDate([item.selection])
+                    }}
                     moveRangeOnFirstSelection={false}
                     ranges={date}
                     className="date"
@@ -202,7 +232,15 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
               <div className="headerSearchItem">
                 <FontAwesomeIcon icon={faPerson} className="headerIcon" />
                 <span
-                  onClick={() => setOpenOptions(!openOptions)}
+                  onClick={() => {
+                    if (openOptions) {
+                      setOpenOptions(false)
+                    } else {
+                      setOpenOptions(true)
+                      setOpenDate(false)
+                    }
+                  }
+                  }
                   className="headerSearchText"
                 >{`${options.adult} adult · ${options.children} children · ${options.room} room`}</span>
                 {openOptions && (

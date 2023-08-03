@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-hotel
+  labels:
+    app: hb-hotel
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: hb-hotel
+      labels:
+        app: hb-hotel
+    spec:
+      containers:
+        - name: hb-hotel
+          image: dlim2012/hb.hotel:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9001
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+            - name: DB_HOST
+              value: hb-mysql-hotel
+            - name: DB_NAME
+              value: hotel
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: password
+          volumeMounts:
+            - name: hb-hotel-persistent-storage
+              mountPath: /images
+      volumes:
+        - name: hb-hotel-persistent-storage
+          persistentVolumeClaim:
+            claimName: hb-hotel-pv-claim
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-hotel

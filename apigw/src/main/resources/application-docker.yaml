@@ -50,11 +50,11 @@ spring:
             - Path=/api/v1/search-consumer/**
 
   zipkin:
-    base-url: http://hotel-booking-zipkin:9411
+    base-url: http://hb-zipkin:9411
 
 eureka:
   instance:
-    hostname: hotel-booking-eureka-server
+    hostname: hb-eureka-server
     port: 9200
   client:
     registerWithEureka: true

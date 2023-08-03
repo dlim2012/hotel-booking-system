@@ -1,65 +1,66 @@
 services:
-#  hotel-booking-mysql:
-#    container_name: hotel-booking-mysql-hotel
+#  hb-mysql:
+#    container_name: hb-mysql-hotel
 #    image: mysql:8.0
 #    environment:
 #      MYSQL_ROOT_PASSWORD: password
 #    volumes:
-#      - hotel-booking-mysql-hotel:/data/mysql
+#      - hb-mysql-hotel:/data/mysql
 #      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 #      - ./hotel/src/main/java/dlim2012/hotel/entity/locality/countries.csv:/docker-entrypoint-initdb.d/countries.csv
 #    ports:
 #      - "9100:3306"
 #    restart: unless-stopped
 
-  hotel-booking-mysql-user:
-    container_name: hotel-booking-mysql-user
+  hb-mysql-user:
+    container_name: hb-mysql-user
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - hotel-booking-mysql-user:/data/mysql
+      - hb-mysql-user:/data/mysql
     #      - ./hotel-init.sql:/docker-entrypoint-initdb.d/hotel-init.sql:ro
     ports:
       - "9102:3306"
     restart: unless-stopped
 
-  hotel-booking-mysql-hotel:
-    container_name: hotel-booking-mysql-hotel
+  hb-mysql-hotel:
+    container_name: hb-mysql-hotel
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - hotel-booking-mysql-hotel:/data/mysql
+      - hb-mysql-hotel:/data/mysql
       - ./scripts/hotel-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./hotel/src/main/java/dlim2012/hotel/entity/locality/countries.csv:/docker-entrypoint-initdb.d/countries.csv
     ports:
       - "9100:3306"
     restart: unless-stopped
 
-  hotel-booking-mysql-booking:
-    container_name: hotel-booking-mysql-booking
+  hb-mysql-booking:
+    container_name: hb-mysql-booking
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - hotel-booking-mysql-booking:/data/mysql
+      - hb-mysql-booking:/data/mysql
       - ./scripts/booking-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "9104:3306"
     restart: unless-stopped
 
-  hotel-booking-elasticsearch:
+  hb-elasticsearch:
     image: elasticsearch:8.2.2
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - ingest.geoip.downloader.enabled=false
+#      - ELASTIC_PASSWORD=changeme
       - xpack.security.enabled=false
       - xpack.security.transport.ssl.enabled=false
       - xpack.security.http.ssl.enabled=false
     volumes:
-      - hotel-booking-es_data:/usr/share/elasticsearch/data
+      - hb-es_data:/usr/share/elasticsearch/data
     ports:
       - "9103:9200"
 
@@ -67,20 +68,23 @@ services:
     image: kibana:8.2.2
     ports:
       - "9203:5601"
+#    environment:
+#      - ELASTICSEARCH_USERNAME=elastic
+#      - ELASTICSEARCH_PASSWORD=changeme
     depends_on:
-      - hotel-booking-elasticsearch
+      - hb-elasticsearch
 
-  hotel-booking-cassandra:
+  hb-cassandra:
     image: cassandra:4.1
-    container_name: hotel-booking-cassandra
+    container_name: hb-cassandra
     ports:
       - "9106:9042"
     volumes:
-      - hotel-booking-cassandra:/var/lib/cassandra
+      - hb-cassandra:/var/lib/cassandra
     # Note: manually run ./script/cassandra_init.sh for keyspace initialization
 
-  hotel-booking-redis-server:
-    container_name: hotel-booking-redis-server
+  hb-redis:
+    container_name: hb-redis
     #    hostname: redis-server
     image: redis:6.2-alpine
     environment:
@@ -92,146 +96,180 @@ services:
         limits:
           memory: 512M
     volumes:
-      - hotel-booking-cache:/data
+      - hb-cache:/data
     ports:
       - '9105:6379'
     restart: unless-stopped
 
-  hotel-booking-zookeeper:
+  hb-zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
-    container_name: hotel-booking-zookeeper
+    container_name: hb-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
-  hotel-booking-broker:
+  hb-broker:
     image: confluentinc/cp-kafka:7.3.2
-    container_name: hotel-booking-broker
+    container_name: hb-broker
     ports:
       # To learn about configuring Kafka for access across networks see
       # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
       - "9092:9092"
     depends_on:
-      - hotel-booking-zookeeper
+      - hb-zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'hotel-booking-zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: 'hb-zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.0.0.110:9092,PLAINTEXT_INTERNAL://hotel-booking-broker:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://hb-broker:9092,PLAINTEXT_INTERNAL://hb-broker:29092
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.0.0.110:9092,PLAINTEXT_INTERNAL://hb-broker:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
 
-  hotel-booking-zipkin:
+  hb-zipkin:
     image: openzipkin/zipkin
-    container_name: hotel-booking-zipkin
-    restart: always
+    container_name: hb-zipkin
+    restart: unless-stopped
     ports:
       - "9201:9411"
 
-  hotel-booking-eureka-server:
-    image: dlim2012/hotel-booking.eureka-server
-    container_name: hotel-booking-eureka-server
+  hb-eureka-server:
+    image: dlim2012/hb.eureka-server
+    container_name: hb-eureka-server
     build: ./eureka-server
-    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    restart: unless-stopped
     ports:
       - "9200:9200"
 
-  hotel-booking-apigw:
-    image: dlim2012/hotel-booking.apigw
-    container_name: hotel-booking-apigw
+  hb-apigw:
+    image: dlim2012/hb.apigw
+    container_name: hb-apigw
     build: ./apigw
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9000:9000"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
+      - hb-eureka-server
 
-  hotel-booking-archival:
-    image: dlim2012/hotel-booking.archival
-    container_name: hotel-booking-archival
+  hb-archival:
+    image: dlim2012/hb.archival
+    container_name: hb-archival
     build: ./archival
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9004:9004"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-mysql-booking
-      - hotel-booking-cassandra
-      - hotel-booking-broker
+      - hb-eureka-server
+      - hb-mysql-booking
+      - hb-cassandra
+      - hb-broker
 
-  hotel-booking-booking:
-    image: dlim2012/hotel-booking.booking
-    container_name: hotel-booking-booking
+  hb-booking:
+    image: dlim2012/hb.booking
+    container_name: hb-booking
     build: ./booking
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9003:9003"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-mysql-booking
-      - hotel-booking-redis-server
-      - hotel-booking-broker
+      - hb-eureka-server
+      - hb-mysql-booking
+      - hb-redis
+      - hb-broker
 
-  hotel-booking-booking-management:
-    image: dlim2012/hotel-booking.booking-management
-    container_name: hotel-booking-booking-management
+  hb-booking-management:
+    image: dlim2012/hb.booking-management
+    container_name: hb-booking-management
     build: ./booking-management
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9005:9005"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-mysql-booking
-      - hotel-booking-redis-server
-      - hotel-booking-cassandra
+      - hb-eureka-server
+      - hb-mysql-booking
+      - hb-redis
+      - hb-cassandra
 
-  hotel-booking-hotel:
-    image: dlim2012/hotel-booking.hotel
-    container_name: hotel-booking-hotel
+  hb-hotel:
+    image: dlim2012/hb.hotel
+    container_name: hb-hotel
     build: ./hotel
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9001:9001"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-mysql-hotel
+      - hb-eureka-server
+      - hb-mysql-hotel
 
-  hotel-booking-search:
-    image: dlim2012/hotel-booking.search
-    container_name: hotel-booking-search
+  hb-search:
+    image: dlim2012/hb.search
+    container_name: hb-search
     build: ./search
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9007:9007"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-#      - hotel-booking-search-consumer
-      - hotel-booking-elasticsearch
+      - hb-eureka-server
+#      - hb-search-consumer
+      - hb-elasticsearch
 
-  hotel-booking-search-consumer:
-    image: dlim2012/hotel-booking.search-consumer
-    container_name: hotel-booking-search-consumer
-    build: ./search-consumer
+  hb-search-consumer:
+    image: dlim2012/hb.search-consumer
+    container_name: hb-search-consumer
+    build:
+      context: ./search-consumer
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9006:9006"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-elasticsearch
-      - hotel-booking-broker
+      - hb-eureka-server
+      - hb-elasticsearch
+      - hb-broker
 
-  hotel-booking-user:
-    image: dlim2012/hotel-booking.user
-    container_name: hotel-booking-user
-    build: ./user
+  hb-user:
+    image: dlim2012/hb.user
+    container_name: hb-user
+    build:
+      context: ./user
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "9002:9002"
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - hotel-booking-eureka-server
-      - hotel-booking-mysql-user
+      - hb-eureka-server
+      - hb-mysql-user
+
+  hb-notification:
+    image: dlim2012/hb.notification
+    container_name: hb-notification
+    build:
+      context: ./notification
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9008:9008"
+    restart: unless-stopped
+    depends_on:
+      - hb-eureka-server
 
 
 #networks:
@@ -242,11 +280,11 @@ services:
 #    driver: bridge
 
 volumes:
-  hotel-booking-mysql-hotel:
-  hotel-booking-mysql-booking:
-  hotel-booking-mysql-user:
-  hotel-booking-es_data:
+  hb-mysql-hotel:
+  hb-mysql-booking:
+  hb-mysql-user:
+  hb-es_data:
     driver: local
-  hotel-booking-cache:
+  hb-cache:
     driver: local
-  hotel-booking-cassandra:
+  hb-cassandra:

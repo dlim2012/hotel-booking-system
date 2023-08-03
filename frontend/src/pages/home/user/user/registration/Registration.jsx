@@ -10,15 +10,17 @@ import { validEmail } from "../../utils/inputValidation";
 import Cookies from "universal-cookie"
 // import '../../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 function Registration() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [firstName, setFirstName] = useState("firstname");
-    const [lastName, setLastName] = useState("lastname");
-    const [email, setEmail] = useState("asdf@adsf.com");
-    const [password, setPassword] = useState("asdfadsf");
-    const [password2, setPassword2] = useState("asdfadsf");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [password2, setPassword2] = useState("");
     // const [firstName, setFirstName] = useState("");
     // const [lastName, setLastName] = useState("");
     // const [email, setEmail] = useState("");
@@ -150,10 +152,12 @@ function Registration() {
                     <button className="registerbtn" onClick={register}>Register</button>
                 </div>
                 <div className="container signin">
-                    <p>Already have an account? <a href="#">Sign in</a>.</p>
+                    <p>Already have an account? <a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/login">Sign in</a>.</p>
                 </div>
             </div>
         </div>
+        <MailList/>
+        <Footer/>
     </div>
   );
 }

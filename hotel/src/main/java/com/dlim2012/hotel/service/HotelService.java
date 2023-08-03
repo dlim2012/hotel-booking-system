@@ -1,19 +1,22 @@
 package com.dlim2012.hotel.service;
 
 import com.dlim2012.clients.entity.PropertyType;
-import com.dlim2012.clients.exception.EntityAlreadyExistsException;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDetails;
+import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingInActivateRequest;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDetails;
 import com.dlim2012.hotel.dto.hotel.list.HotelRowItem;
 import com.dlim2012.hotel.dto.hotel.profile.HotelAddressItem;
 import com.dlim2012.hotel.dto.hotel.profile.HotelFacilityItem;
 import com.dlim2012.hotel.dto.hotel.profile.HotelGeneralInfoItem;
+import com.dlim2012.hotel.dto.hotel.profile.HotelIsActiveItem;
 import com.dlim2012.hotel.dto.hotel.registration.HotelRegisterRequest;
 import com.dlim2012.hotel.dto.hotel.registration.HotelRoomsInfoResponse;
+import com.dlim2012.hotel.dto.query.HotelIsActiveQuery;
 import com.dlim2012.hotel.entity.Hotel;
+import com.dlim2012.hotel.entity.Rooms;
 import com.dlim2012.hotel.entity.facility.HotelFacility;
 import com.dlim2012.hotel.entity.locality.City;
 import com.dlim2012.hotel.entity.locality.Country;
@@ -44,6 +47,7 @@ public class HotelService {
     private final HotelFacilityRepository hotelFacilityRepository;
     private final SavedUserRepository savedUserRepository;
 
+    private final RoomsService roomsService;
     private final JwtService jwtService;;
 
 
@@ -51,8 +55,8 @@ public class HotelService {
     private final KafkaTemplate<String, HotelSearchDeleteRequest> hotelSearchDeleteKafkaTemplate;
     private final KafkaTemplate<String, HotelBookingDeleteRequest> hotelBookingDeleteKafkaTemplate;
     private final KafkaTemplate<String, HotelBookingDetails> hotelBookingKafkaTemplate;
+    private final KafkaTemplate<String, HotelBookingInActivateRequest> hotelBookingInactivateKafkaTemplate;
 
-    private final RoomsService roomsService;
     private final ImageService imageService;
     private final LocalityService localityService;
     private final FacilityService facilityService;
@@ -325,7 +329,7 @@ public class HotelService {
                 .propertyRating(hotel.getPropertyRating())
                 .facility(hotel.getHotelFacilities().stream()
                         .map(entity -> HotelSearchDetails.FacilityDto.builder()
-                                .id(entity.getId())
+                                .id(entity.getFacility().getId())
                                 .displayName(entity.getFacility().getDisplayName())
                                 .build())
                         .toList()
@@ -340,15 +344,61 @@ public class HotelService {
         hotelBookingKafkaTemplate.send("hotel-booking", hotelBookingDetails);
     }
 
+    public HotelIsActiveItem getHotelIsActive(Integer hotelId, Integer userId) {
+        HotelIsActiveQuery hotelIsActiveQuery = hotelRepository.findIsActiveInfo(hotelId, userId);
+        System.out.println(hotelIsActiveQuery.getIsActive() + " " + hotelIsActiveQuery.getActiveRoomsCount() );
+        return HotelIsActiveItem.builder()
+                .isActive(hotelIsActiveQuery.getIsActive())
+                .roomsActiveCount(hotelIsActiveQuery.getActiveRoomsCount())
+                .build();
+    }
 
-    public void deleteHotel(Integer hotelId) {
-        if (!hotelRepository.existsById(hotelId)){
-            throw new ResourceNotFoundException("Hotel not found for deletion.");
+    public void activate(Integer hotelId, Integer userId) {
+        Hotel hotel = hotelRepository.findByIdAndHotelManagerIdAndIsActive(hotelId, userId, false)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        hotel.setIsActive(true);
+        hotelRepository.save(hotel);
+        sendHotelKafka(hotel, true);
+        for (Rooms rooms: hotel.getRooms()){
+            if (rooms.getIsActive()){
+                roomsService.postRoomsKafka(rooms, userId);
+            }
         }
-        hotelRepository.deleteById(hotelId);
+    }
+
+    public void inActivate(Integer hotelId, Integer userId) {
+        Hotel hotel = hotelRepository.findByIdAndHotelManagerIdAndIsActive(hotelId, userId, true)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        hotel.setIsActive(false);
+        hotelRepository.save(hotel);
+        hotelSearchDeleteKafkaTemplate.send("hotel-search-delete",
+                HotelSearchDeleteRequest.builder().hotelId(hotelId).build());
+        hotelBookingInactivateKafkaTemplate.send("hotel-booking-inactivate",
+                HotelBookingInActivateRequest.builder().hotelId(hotelId).build());
+    }
+
+    public void deleteHotel(Integer hotelId, Integer userId) {
+        Hotel hotel = hotelRepository.findByIdAndHotelManagerId(hotelId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found for deletion."));
+//        for (Rooms rooms: hotel.getRooms()){
+//            roomsService.deleteRooms(hotelId, rooms);
+//            roomsBookingDeleteKafkaTemplate.send("rooms-booking-delete", RoomsBookingDeleteRequest.builder().hotelId(hotelId).roomsId(rooms.getId()).build())
+//        }
+        hotelRepository.delete(hotel);
         hotelSearchDeleteKafkaTemplate.send("hotel-search-delete",
                 HotelSearchDeleteRequest.builder().hotelId(hotelId).build());
         hotelBookingDeleteKafkaTemplate.send("hotel-booking-delete",
                 HotelBookingDeleteRequest.builder().hotelId(hotelId).build());
+    }
+
+    public void deleteAllHotelByHotelManager(Integer userId) {
+        List<Hotel> hotelList = hotelRepository.findByHotelManagerId(userId);
+        for (Hotel hotel: hotelList){
+            hotelSearchDeleteKafkaTemplate.send("hotel-search-delete",
+                    HotelSearchDeleteRequest.builder().hotelId(hotel.getId()).build());
+            hotelBookingDeleteKafkaTemplate.send("hotel-booking-delete",
+                    HotelBookingDeleteRequest.builder().hotelId(hotel.getId()).build());
+        }
+        hotelRepository.deleteAll(hotelList);
     }
 }

@@ -5,6 +5,7 @@ import com.dlim2012.clients.entity.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "booking")
-public class Booking {
+public class Booking implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

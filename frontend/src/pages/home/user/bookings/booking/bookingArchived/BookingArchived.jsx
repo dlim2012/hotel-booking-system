@@ -4,15 +4,19 @@ import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {postWithJwt, putWithJwt} from "../../../../../../clients";
 import {getDateTime} from "../../../utils/stringFormatting";
 import './bookingArchived.css'
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
 
 function BookingArchived(props) {
 
     const location = useLocation();
     const navigate = useNavigate();
-    const { bookingId } = useParams();
+    const { bookingId, hotelId } = useParams();
     const { item } = location.state;
     const [fetching, setFetching] = useState(false);
     const [data, setData] = useState({});
+
+    const {user_role} = location.state;
 
     function fetchArchived(){
         setFetching(true)
@@ -20,7 +24,13 @@ function BookingArchived(props) {
             bookingMainStatus: item.mainStatus,
             endDate: item.endDate
         }
-        postWithJwt(`/api/v1/booking-management/booking/${bookingId}/archived`, payload)
+        if (user_role === "app-user") {
+            var pathname = `/api/v1/booking-management/user/booking/${bookingId}/archived`
+        } else if (user_role === "hotel-manager"){
+            // const {hotelId} = useParams();
+            var pathname = `/api/v1/booking-management/hotel/${hotelId}/booking/${bookingId}/archived`
+        }
+        postWithJwt(pathname, payload)
             .then(response => response.json())
             .then(data => {
                 setData(data)
@@ -95,6 +105,8 @@ function BookingArchived(props) {
                     }
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

@@ -11,7 +11,6 @@ public class JwtService {
 
     public Jwt getJwt(){
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("pricipal: {}", principal);
         if (!principal.getClass().equals(Jwt.class)){
             throw new IllegalStateException("The authentication is not a JWT Authentication.");
         }

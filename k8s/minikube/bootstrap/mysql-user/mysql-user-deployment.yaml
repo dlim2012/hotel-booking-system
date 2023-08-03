@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-mysql-user
+spec:
+  selector:
+    matchLabels:
+      app: hb-mysql-user
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hb-mysql-user
+    spec:
+      containers:
+        - image: mysql:8.0
+          name: hb-mysql-user
+          env:
+            - name: MYSQL_DATABASE
+              value: user
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hb-mysql-user-secret
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: hb-mysql-user
+          volumeMounts:
+            - name: hb-mysql-user-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: hb-mysql-user-persistent-storage
+          persistentVolumeClaim:
+            claimName: hb-mysql-user-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-mysql-user
+  labels:
+    app: hb-mysql-user
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: hb-mysql-user

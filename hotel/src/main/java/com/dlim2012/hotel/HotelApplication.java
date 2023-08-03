@@ -1,6 +1,7 @@
 package com.dlim2012.hotel;
 
 import com.dlim2012.clients.advice.ApplicationExceptionHandler;
+import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
 import com.dlim2012.security.config.AuthenticationConfig;
 import com.dlim2012.security.config.JwtAuthenticationFilter;
 import com.dlim2012.security.config.SecurityConfig;
@@ -29,9 +30,9 @@ import org.springframework.kafka.annotation.EnableKafka;
         JwtService.class,
         SecurityConfig.class,
         // advice
-        ApplicationExceptionHandler.class
+        ApplicationExceptionHandler.class,
         // kafka
-
+        KafkaConsumerConfig.class
 })
 @PropertySource("classpath:application-${spring.profiles.active}.yaml")
 public class HotelApplication {

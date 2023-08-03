@@ -23,11 +23,17 @@ function ProfileSidebar(props) {
                         onClick={e=>{setSubject("security")}}
                     >Security</button>
                 </li>
+                {/*<li className="profileSidebarItem">*/}
+                {/*    <button*/}
+                {/*        className={"profileSidebarBtn"}*/}
+                {/*        onClick={e=>{setSubject("email-notifications")}}*/}
+                {/*    >Email notifications</button>*/}
+                {/*</li>*/}
                 <li className="profileSidebarItem">
                     <button
                         className={"profileSidebarBtn"}
-                        onClick={e=>{setSubject("email-notifications")}}
-                    >Email notifications</button>
+                        onClick={e=>{setSubject("settings")}}
+                    >Settings</button>
                 </li>
             </ul>
         </div>

@@ -2,3 +2,17 @@
     display: flex;
     flex-direction: column;
 }
+
+.profileContentsWarning{
+    color: red;
+    font-size: 15px;
+}
+
+.profileFormItem{
+    margin-top: 10px;
+}
+
+.profileFormItem > input{
+    width: 100%;
+    padding: 3px;
+}

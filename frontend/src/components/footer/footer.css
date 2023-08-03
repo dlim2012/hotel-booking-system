@@ -1,6 +1,10 @@
-.footer{
+.mainFooter{
+  display: flex;
+  flex-direction: column;
+  max-width: 1024px;
   width: 100%;
-  width: 1000px;
+  margin-right: auto;
+  margin-left: auto;
   font-size: 12px;
 }
 
@@ -35,12 +39,12 @@
 .fListItem{
   margin-bottom: 10px;
   color: #003580;
-  cursor: pointer;
+  /*cursor: pointer;*/
 }
 
 
 .fListItem2{
   margin-bottom: 10px;
   color: black;
-  cursor: pointer;
+  /*cursor: pointer;*/
 }

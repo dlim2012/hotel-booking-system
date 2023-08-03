@@ -19,6 +19,10 @@
   object-fit: cover;
 }
 
+.pListImg:hover{
+  cursor: pointer
+}
+
 .pListTitles>h1{
   font-size: 18px;
   color: #444;

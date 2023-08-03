@@ -17,7 +17,7 @@ import java.util.List;
 
 public class TestRequests {
 
-    private final String userEmail = "admin@hotel-booking.com";
+    private final String userEmail = "admin@hb.com";
     private final String userPassword = "admin_user_password";
 
     public UserRegisterRequest userRegisterRequest = UserRegisterRequest.builder()

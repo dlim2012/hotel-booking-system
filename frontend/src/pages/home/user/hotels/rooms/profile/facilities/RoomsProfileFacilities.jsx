@@ -5,6 +5,9 @@ import RoomFacilities from "../../register/facilities/RoomFacilities";
 import {hotelFacilities, roomFacilities} from "../../../../../../../assets/Lists";
 import {getWithJwt, putWithJwt} from "../../../../../../../clients";
 import {useParams} from "react-router-dom";
+import MailList from "../../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../../components/footer/Footer";
+import './roomsProfileFacilities.css'
 
 function RoomsProfileFacilities(props) {
 
@@ -51,16 +54,18 @@ function RoomsProfileFacilities(props) {
                         <h1>Facilities</h1>
                     </div>
                     <div>
-                        <div className="facility-list">
+                        <div className="roomFacilityList">
                             {roomFacilities.map((item, index) => (
-                                <div key={index}>
+                                <div
+                                    className="roomFacility"
+                                    key={index}>
                                     <input
                                         type="checkbox"
                                         checked={info[item]}
                                         onChange={e => {
                                             setInfo({...info, [item]: e.target.checked});
                                         }}/>
-                                    <span>{item}</span>
+                                    <label>{item}</label>
                                 </div>
                             ))}
                         </div>
@@ -68,6 +73,8 @@ function RoomsProfileFacilities(props) {
                     <button onClick={onSave}>Save</button>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

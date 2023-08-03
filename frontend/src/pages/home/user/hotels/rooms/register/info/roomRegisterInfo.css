@@ -1,0 +1,77 @@
+
+.roomRegisterContainer{
+    display: flex;
+    flex-direction: column;
+}
+
+.roomRegisterTopic{
+    border: #cecece 1px solid;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.roomRegisterTopicContents{
+    display: flex;
+    /*justify-content: space-between;*/
+}
+
+.roomRegisterFormItem{
+}
+
+.roomRegisterTopicItem{
+    width: 300px;
+
+}
+
+.roomRegisterFormItems{
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    justify-content: left;
+}
+
+.roomRegisterFormItemsElement{
+    border-radius: 5px;
+    margin: 10px;
+    display: flex;
+
+}
+
+.roomRegisterFormItemsElement > label{
+    margin-right: 10px;
+    min-width: 0px;
+}
+
+.roomRegisterFormItem > textarea{
+    width: 95%;
+    height: 100px;
+}
+
+.roomRegisterFormItemSubContainer{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.roomRegisterFormItemSub{
+    display: flex;
+    margin-left: 10px;
+    border: #cecece 1px solid;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+.roomRegisterFormItemSub > label{
+    min-width: 80px;
+    font-size: 13px;
+}
+
+.roomRegisterInfoNote{
+    font-size: 13px;
+}
+
+.roomRegisterInfoWarning{
+    color: red;
+    font-size: 13px;
+}

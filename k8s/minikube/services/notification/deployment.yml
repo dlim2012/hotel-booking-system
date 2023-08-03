@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-notification
+  labels:
+    app: hb-notification
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: hb-notification
+      labels:
+        app: hb-notification
+    spec:
+      containers:
+        - name: hb-notification
+          image: dlim2012/hb.notification:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9008
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-notification

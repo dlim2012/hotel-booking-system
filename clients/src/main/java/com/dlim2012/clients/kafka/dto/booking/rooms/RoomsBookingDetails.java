@@ -21,6 +21,7 @@ public class RoomsBookingDetails {
     private Integer hotelId;
     private Integer hotelManagerId;
     //    private HotelSearchDetails hotelSearchDetails;
+    private Boolean activate;
     private String displayName;
     private String shortName;
     private Integer maxAdult;

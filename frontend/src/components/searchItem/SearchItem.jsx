@@ -11,7 +11,7 @@ const SearchItem = (props) => {
   // const options = props.options;
   const { hotelInfo, date, options, useRecommeded } = props;
   const hotelId = hotelInfo.hotelId;
-  console.log("useRecommended", useRecommeded)
+  // console.log("useRecommended", useRecommeded)
 
   // console.log(props)
 
@@ -64,8 +64,10 @@ const SearchItem = (props) => {
         <div className="siDetailTexts">
           <span className="siPrice">${Math.round(hotelInfo.totalPrice/ 100)}</span>
           <span className="siTaxOp">Includes taxes and fees</span>
-          <button className="siCheckButton" onClick = {handleSiBtn}>See availability</button>
         </div>
+          <div className="siDetailsBtn">
+            <button className="siCheckButton" onClick = {handleSiBtn}>See availability</button>
+          </div>
       </div>
     </div>
   );

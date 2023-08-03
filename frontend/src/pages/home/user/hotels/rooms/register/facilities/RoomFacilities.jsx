@@ -1,12 +1,15 @@
 import React from 'react';
 import {roomFacilities} from "../../../../../../../assets/Lists";
+import './roomFacilities.css'
 
 function RoomFacilities(props) {
     return (
         <div>
-            <div className="facility-list">
+            <div className="roomFacilityList">
                 {roomFacilities.map((item, index) => (
-                    <div key={index}>
+                    <div
+                        className="roomFacility"
+                        key={index}>
                         <input
                             type="checkbox"
                             checked={props.info[item]}

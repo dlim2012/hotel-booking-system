@@ -59,12 +59,11 @@ public class TestUserController {
                     .firstName("John")
                     .lastName("Taylor")
                     .email(email)
-                    .password(passwordEncoder.encode("password"))
+                    .password(passwordEncoder.encode("test-user"))
                     .userRole(UserRole.APP_USER)
                     .userCreatedAt(LocalDateTime.now())
                     .locked(false)
                     .build();
-
 
             user = userRepository.save(user);
 
@@ -75,9 +74,9 @@ public class TestUserController {
             throw new RuntimeException("Failed to generate test user.");
         }
 
-        testUserService.asyncMethod();
+//        testUserService.asyncMethod();
+        System.out.println(jwt);
         testUserService.function(jwt);
-
 
         log.info("Test User registered with email {}", user.getEmail());
         return new AuthenticationToken(jwt);

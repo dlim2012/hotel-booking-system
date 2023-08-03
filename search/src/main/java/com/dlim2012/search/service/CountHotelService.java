@@ -1,14 +1,21 @@
 package com.dlim2012.search.service;
 
 import com.dlim2012.clients.entity.PropertyType;
+import com.dlim2012.search.config.ElasticSearchHighLevelClientConfig;
 import com.dlim2012.search.dto.count.NumberByCityRequest;
 import com.dlim2012.search.dto.count.NumberByPropertyTypeRequest;
 import com.dlim2012.search.dto.count.NumberResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
@@ -18,18 +25,20 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class CountHotelService {
 
-    private final RestHighLevelClient client = new RestHighLevelClient(
-            RestClient.builder(
-                    new HttpHost("10.0.0.110", 9103, "http")
-            )
-    );
+    private final RestHighLevelClient client;
+
+    public CountHotelService(ElasticSearchHighLevelClientConfig highLevelClientConfig) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        this.client = highLevelClientConfig.getClient();
+    }
 
     public NumberResponse numHotelByCity(NumberByCityRequest request) throws IOException {
 

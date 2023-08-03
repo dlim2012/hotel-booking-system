@@ -1,12 +1,15 @@
 package com.dlim2012.clients.mysql_booking.repository;
 
 import com.dlim2012.clients.mysql_booking.entity.BookingRoom;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -67,4 +70,21 @@ public interface BookingRoomRepository extends JpaRepository<BookingRoom, Long> 
             @Param("bookingRoomId") Long bookingRoomId,
             @Param("hotelManagerId") Integer hotelManagerId);
 
+    @Query(
+            value = "SELECT br.* FROM booking_room br " +
+                    "JOIN booking_rooms brs ON br.booking_rooms_id = brs.id " +
+                    "WHERE brs.rooms_id = :roomsId",
+            nativeQuery = true
+    )
+    Set<BookingRoom> findByRoomsId(
+            @Param("roomsId") Integer roomsId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            value = "SELECT br FROM BookingRoom br " +
+                    "JOIN BookingRooms brs ON br.bookingRooms = brs " +
+                    "WHERE brs.roomsId = :roomsId"
+    )
+    List<BookingRoom> findByRoomsIdWithLock(
+            @Param("roomsId") Integer roomsId);
 }

@@ -68,4 +68,16 @@ public class CassandraService {
         }
         throw new ResourceNotFoundException("BookingArchiveByUserId not found.");
     }
+
+    public BookingArchiveByHotelId getBookingArchiveByHotelId(Integer hotelId, BookingMainStatus status, LocalDate endDate, Long bookingId, Integer hotelManagerId) {
+        List<BookingArchiveByHotelId> bookingArchiveByHotelIdList = asyncQueryBookingArchiveByHotelId(
+                hotelId, status, endDate, endDate.plusDays(1)
+        );
+        for (BookingArchiveByHotelId bookingArchiveByHotelId: bookingArchiveByHotelIdList){
+            if (bookingArchiveByHotelId.getBookingId().equals(bookingId) && bookingArchiveByHotelId.getHotelManagerId().equals(hotelManagerId)){
+                return bookingArchiveByHotelId;
+            }
+        }
+        throw new ResourceNotFoundException("BookingArchiveByUserId not found.");
+    }
 }

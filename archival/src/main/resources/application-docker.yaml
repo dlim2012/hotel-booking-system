@@ -10,7 +10,7 @@ spring:
     location: classpath:banner.txt
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://hotel-booking-mysql-booking:3306/booking # ?createDatabaseIfNotExist=true
+    url: jdbc:mysql://hb-mysql-booking:3306/booking # ?createDatabaseIfNotExist=true
     username: root
     password: password
   jpa:
@@ -31,21 +31,21 @@ spring:
     cassandra:
       host:
       port: 9042
-      contact-points: hotel-booking-cassandra
+      contact-points: hb-cassandra
       local-datacenter: datacenter1
       keyspace-name: mykeyspace
       schema-action: CREATE_IF_NOT_EXISTS
       entity-base-package: com.dlim2012.archival.entity.cassandra
 
   zipkin:
-    base-url: http://hotel-booking-zipkin:9411
+    base-url: http://hb-zipkin:9411
 
   kafka:
-    bootstrap-servers: http://hotel-booking-broker:9092
+    bootstrap-servers: http://hb-broker:9092
 
 eureka:
   instance:
-    hostname: hotel-booking-eureka-server
+    hostname: hb-eureka-server
     port: 9200
     preferIpAddress: true
   client:

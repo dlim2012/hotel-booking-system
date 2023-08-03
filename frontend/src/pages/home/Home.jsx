@@ -17,6 +17,7 @@ import losAngelesImage from "../../assets/images/home/city/los-angeles.jpeg";
 
 const Home = () => {
 
+
     const location = useLocation();
 
 
@@ -28,8 +29,9 @@ const Home = () => {
             location.state?.destination);
     // const [address, setAddress] = useState(location.state?.address);
     const [address, setAddress] = useState(
-        {"city": "New York", "state": "New York", "country": "United States"}
-        // {"city": "San Francisco", "state": "California", "country": "United States"}
+        // {}
+        // {"city": "New York", "state": "New York", "country": "United States"}
+        {"city": "San Francisco", "state": "California", "country": "United States"}
         // {"city": "Amherst", "state": "Massachusetts", "country": "United States"}
     );
     // const [coordinates, setCoordinates] = useState(location.state?.coordinates);
@@ -48,7 +50,6 @@ const Home = () => {
                     endDate: tomorrow,
                     key: "selection",
                 },]
-
             : location.state.date)
     );
     const [openOptions, setOpenOptions] = useState(false);
@@ -60,7 +61,6 @@ const Home = () => {
                 room: 1,
             }: location.state.options
     );
-
 
     const [propertyTypeCounts, setPropertyTypeCounts] = useState([null, null, null, null, null])
     const [fetchingPropertyTypeCounts, setFetchingPropertyTypeCounts] = useState(false)

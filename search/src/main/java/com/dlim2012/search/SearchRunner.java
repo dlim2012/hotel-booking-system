@@ -3,7 +3,6 @@ package com.dlim2012.search;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
 import com.dlim2012.clients.elasticsearch.document.Rooms;
-import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import com.dlim2012.search.dto.hotelSearch.HotelSearchRequest;
 import com.dlim2012.search.service.SearchService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SearchRunner implements CommandLineRunner {
 
-    private final ElasticSearchQuery elasticSearchQuery;
+
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticSearchUtils elasticSearchUtils;
     private final SearchService searchService;

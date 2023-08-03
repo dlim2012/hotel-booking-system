@@ -42,7 +42,6 @@ public class BookingNotificationKafkaConsumerConfig {
         );
     }
 
-
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, BookingNotification> bookingNotificationKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, BookingNotification> factory = new ConcurrentKafkaListenerContainerFactory<>();

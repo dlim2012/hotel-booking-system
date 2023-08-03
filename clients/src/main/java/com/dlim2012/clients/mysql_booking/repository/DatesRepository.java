@@ -101,6 +101,7 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
     Set<Dates> findByHotelIdAndIntersectDatesWithLock(Integer hotelId, LocalDate startDate, LocalDate endDate);
 
     @Transactional
+    @Modifying
     @Query(
             value = "DELETE d FROM dates d " +
                     "JOIN room r ON d.room_id = r.id " +
@@ -186,6 +187,18 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
             @Param("i1") int i1,
             @Param("i2") int i2
     );
+
+    @Modifying
+    @Transactional
+    @Query(
+            value = "DELETE d FROM dates d " +
+                    "JOIN room r ON d.room_id = r.id " +
+                    "JOIN rooms rs ON r.rooms_id = rs.id " +
+                    "WHERE rs.hotel_id = :hotelId",
+            nativeQuery = true
+    )
+    void deleteByHotelId(
+            @Param("hotelId") Integer hotelId);
 
 
 //    @Transactional

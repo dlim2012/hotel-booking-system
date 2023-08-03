@@ -33,4 +33,7 @@ logging:
 custom:
   elasticsearch:
     server: 10.0.0.110:9103
+    username: elastic
+    password: changeme
+    useSsl: false
 

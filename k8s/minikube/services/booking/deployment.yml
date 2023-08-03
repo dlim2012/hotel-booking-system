@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-booking
+  labels:
+    app: hb-booking
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: hb-booking
+      labels:
+        app: hb-booking
+    spec:
+      containers:
+        - name: hb-booking
+          image: dlim2012/hb.booking:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9003
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+            - name: DB_HOST
+              value: hb-mysql-book
+            - name: DB_NAME
+              value: booking
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: password
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-booking

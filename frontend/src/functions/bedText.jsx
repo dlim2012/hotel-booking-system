@@ -10,7 +10,7 @@ const bedNameMap = {
 }
 
 const getBedText = (bedInfoList) => {
-    console.log(bedInfoList)
+    // console.log(bedInfoList)
     var bedInfo = ""
     if (bedInfoList.length === 1){
         var quantity = bedInfoList[0].quantity;
@@ -21,7 +21,7 @@ const getBedText = (bedInfoList) => {
         if (quantity > 1){
             size += "s";
         }
-        bedInfo =  quantity + size;
+        bedInfo =  quantity + " " + size;
     } else {
         var numBed = 0;
         for (var i=0; i<bedInfoList.length; i++) {

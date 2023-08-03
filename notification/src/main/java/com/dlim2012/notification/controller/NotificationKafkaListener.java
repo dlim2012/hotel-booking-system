@@ -17,7 +17,7 @@ public class NotificationKafkaListener {
     private final NotificationService notificationService;
 
 
-    @KafkaListener(topics="booking-notification", containerFactory = "hotelBookingKafkaListenerContainerFactory", groupId = "booking-notification")
+    @KafkaListener(topics="booking-notification", containerFactory = "bookingNotificationKafkaListenerContainerFactory", groupId = "booking-notification")
     void bookingListener(BookingNotification bookingNotification){
         log.info("Kafka Listener received: \"booking-notification\" for booking {} of hotel {}",
                 bookingNotification.getBookingId(), bookingNotification.getHotelId());

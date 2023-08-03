@@ -2,7 +2,7 @@ import "./footer.css";
 
 const Footer = () => {
   return (
-    <div className="footer">
+    <div className="mainFooter">
       <div className="fListHeaders">
         <ul className="fListHeader">
           <li>Property Types</li>
@@ -14,7 +14,7 @@ const Footer = () => {
           <li>Hotel</li>
         </ul>
         {/*<ul className="fListHeader">*/}
-        {/*  <li>Contact/Others</li>*/}
+        {/*  <>Contact/Others</li>*/}
         {/*</ul>*/}
       </div>
       <div className="fLists">

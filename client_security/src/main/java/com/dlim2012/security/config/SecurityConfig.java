@@ -21,16 +21,16 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 //    private PasswordEncoder passwordEncoder;
 
-    @Bean
-    public InMemoryUserDetailsManager user() {
-        return new InMemoryUserDetailsManager(
-                User.withUsername("admin")
-//                        .passwordEncoder(passwordEncoder::encode)
-                        .password("{noop}password")
-                        .authorities("read")
-                        .build()
-        );
-    }
+//    @Bean
+//    public InMemoryUserDetailsManager user() {
+//        return new InMemoryUserDetailsManager(
+//                User.withUsername("admin")
+////                        .passwordEncoder(passwordEncoder::encode)
+//                        .password("{noop}password")
+//                        .authorities("read")
+//                        .build()
+//        );
+//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -40,15 +40,20 @@ public class SecurityConfig {
 //                        .anyRequest().permitAll()
                                 .requestMatchers(
                                         "/api/v1/hotel/image/*",
-                                        "/api/v1/hotel/hotel/*/rooms",
+//                                        "/api/v1/hotel/hotel/*/rooms",
                                         "/api/v1/hotel/public/**",
-                                        "/api/v1/hotel/test/**",
                                         "/api/v1/search/hotel",
                                         "/api/v1/search/price",
                                         "/api/v1/booking/public/**",
                                         "/api/v1/booking/payment/**",
                                         "/api/v1/booking/redirect",
+                                        "/api/v1/hotel/test",
+                                        "/api/v1/booking/test",
+                                        "/api/v1/search/test",
+                                        "/api/v1/booking-management/test",
+                                        "/api/v1/hotel/test/**",
                                         "/api/v1/booking/test/**",
+                                        "/api/v1/search/test/**",
                                         "/api/v1/search-consumer/test/**"
                                         ).permitAll()
                                 .anyRequest().authenticated()

@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hb-cassandra
+  labels:
+    app: hb-cassandra
+spec:
+  serviceName: hb-cassandra
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hb-cassandra
+  template:
+    metadata:
+      labels:
+        app: hb-cassandra
+    spec:
+      terminationGracePeriodSeconds: 1800
+      containers:
+        - name: hb-cassandra
+          image: cassandra:4.1
+          ports:
+            - containerPort: 7000
+              name: intra-node
+            - containerPort: 7001
+              name: tls-intra-node
+            - containerPort: 7199
+              name: jmx
+            - containerPort: 9042
+              name: cql
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: 4Gi
+            requests:
+              cpu: "1000m"
+              memory: 4Gi
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - nodetool drain
+          env:
+            - name: MAX_HEAP_SIZE
+              value: 2G
+            - name: HEAP_NEWSIZE
+              value: 1G
+            - name: CASSANDRA_SEEDS
+              value: "hb-cassandra-0.hb-cassandra.default.svc.cluster.local"
+            - name: CASSANDRA_CLUSTER_NAME
+              value: "K8Demo"
+            - name: CASSANDRA_DC
+              value: "datacenter1"
+            - name: CASSANDRA_RACK
+              value: "Rack1-K8Demo"
+            - name: CASSANDRA_START_RPC
+              value: "true"
+            - name: CASSANDRA_RPC_ADDRESS
+              value: "0.0.0.0"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          # These volume mounts are persistent. They are like inline claims,
+          # but not exactly because the names need to match exactly one of
+          # the stateful pod volumes.
+          volumeMounts:
+            - name: hb-cassandra-data
+              mountPath: /var/lib/cassandra
+  # These are converted to volume claims by the controller
+  # and mounted at the paths mentioned above.
+  # do not use these in production until ssd GCEPersistentDisk or other ssd pd
+  volumeClaimTemplates:
+    - metadata:
+        name: hb-cassandra-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: fast
+        resources:
+          requests:
+            storage: 5Gi
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast
+provisioner: k8s.io/minikube-hostpath
+parameters:
+  type: pd-standard

@@ -1,10 +1,13 @@
 import Navbar from "../../../../../components/navbar/Navbar";
 import ProfileSidebar from "./ProfileSidebar";
-import PersonalDetails from "./PersonalDetails";
-import PersonalSecurity from "./PersonalSecurity";
-import PersonalEmail from "./PersonalEmail";
+import PersonalDetails from "./info/PersonalDetails";
+import PersonalSecurity from "./security/PersonalSecurity";
+import PersonalEmail from "./email/PersonalEmail";
 import "./profileMain.css"
 import {useState} from "react";
+import UserSettings from "./settings/UserSettings";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 function ProfileMain(props) {
     const [subject, setSubject] = useState(props.subject == null ? "personal-details" : props.subject);
@@ -34,7 +37,7 @@ function ProfileMain(props) {
                     <div className="profileContents">
                         <div className="profileTitle">
                             <h1>Security</h1>
-                            <p>Update your info and find out how it's used.</p>
+                            {/*<p>Update your info and find out how it's used.</p>*/}
                         </div>
                         <PersonalSecurity />
                     </div>
@@ -49,8 +52,19 @@ function ProfileMain(props) {
                         <PersonalEmail />
                     </div>
                 }
+                {
+                    subject === "settings" &&
+                    <div className="profileContents">
+                        <div className="profileTitle">
+                            <h1>Settings</h1>
+                        </div>
+                        <UserSettings />
+                    </div>
+                }
 
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

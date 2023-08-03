@@ -15,7 +15,7 @@ import HotelLocation from "./pages/home/user/hotels/register/location/HotelLocat
 import HotelRegister from "./pages/home/user/hotels/register/HotelRegister";
 import RoomRegister from "./pages/home/user/hotels/rooms/register/RoomRegister"
 import HotelRoom from "./pages/home/user/hotels/rooms/HotelRoom";
-import PersonalDetails from "./pages/home/user/user/profile/PersonalDetails";
+import PersonalDetails from "./pages/home/user/user/profile/info/PersonalDetails";
 import Registration from "./pages/home/user/user/registration/Registration";
 import HotelProfileInfo from "./pages/home/user/hotels/profile/info/HotelProfileInfo";
 import HotelProfileAddress from "./pages/home/user/hotels/profile/address/HotelProfileAddress";
@@ -38,6 +38,9 @@ import HotelMain from "./pages/home/user/hotels/main/HotelMain";
 import HotelDates from "./pages/home/user/hotels/dates/HotelDates";
 import Saved from "./pages/home/user/saved/Saved";
 import BookingArchived from "./pages/home/user/bookings/booking/bookingArchived/BookingArchived";
+import HotelProfileSettings from "./pages/home/user/hotels/profile/settings/HotelProfileSettings";
+import RoomsSettings from "./pages/home/user/hotels/rooms/profile/settings/RoomsSettings";
+import Reserved from "./pages/home/search-list/hotel/booking/payment/reserved/Reserved";
 
 // const dataProvider = restProvider('http://localhost:9000');
 
@@ -50,21 +53,27 @@ function App() {
               <Route path="/user/login" element={<Login />} />
               <Route element={<ProtectedRoutes />}>
                   <Route path="/user/profile" element={<ProfileMain />} />
+                  {/* 4 pages in Profile Main */}
                   <Route path="/user/hotel" element={<HotelList />} />
                   <Route path="/user/hotel/register" element={<HotelRegister />} />
+                  {/* 3 pages in Hotel Register */}
                   <Route path="/user/hotel/:hotelId" element={<HotelMain />} />
                   <Route path="/user/hotel/:hotelId/info" element={<HotelProfileInfo />} />
                   <Route path="/user/hotel/:hotelId/dates" element={<HotelDates />} />
                   <Route path="/user/hotel/:hotelId/bookings" element={<HotelBookings />} />
+                  <Route path="/user/hotel/:hotelId/bookings/active/:bookingId" element={<BookingDetails />} />
+                  <Route path="/user/hotel/:hotelId/bookings/archived/:bookingId" element={<BookingArchived />} />
                   <Route path="/user/hotel/:hotelId/rooms" element={<HotelRoom />} />
                   <Route path="/user/hotel/:hotelId/rooms/register" element={<RoomRegister />} />
                   <Route path="/user/hotel/:hotelId/facilities" element={<HotelProfileFacilities />} />
                   <Route path="/user/hotel/:hotelId/image" element={<HotelProfileImages />} />
                   <Route path="/user/hotel/:hotelId/address" element={<HotelProfileAddress />} />
+                  <Route path="/user/hotel/:hotelId/settings" element={<HotelProfileSettings />} />
                   {/*<Route path="/user/hotel/:hotelId/rooms/:roomsId/dates" element={<RoomsDates />} />*/}
-                  <Route path="/user/hotel/:hotelId/rooms/:roomsId/booking" element={<RoomsBooking />} />
+                  {/*<Route path="/user/hotel/:hotelId/rooms/:roomsId/booking" element={<RoomsBooking />} />*/}
                   <Route path="/user/hotel/:hotelId/rooms/:roomsId/info" element={<RoomsProfileInfo />} />
                   <Route path="/user/hotel/:hotelId/rooms/:roomsId/facilities" element={<RoomsProfileFacilities />} />
+                  <Route path="/user/hotel/:hotelId/rooms/:roomsId/settings" element={<RoomsSettings />} />
                   {/*<Route path="/user/hotel/:hotelId/booking" element={<RoomsProfileFacilities />} />*/}
                   <Route path="/user/bookings" element={<UserBookings />} />
                   <Route path="/user/bookings/active/:bookingId" element={<BookingDetails />} />
@@ -75,9 +84,10 @@ function App() {
               <Route path="/hotels" element={<SearchList/>}/>
               <Route path="/hotels/:hotelId" element={<Hotel/>}/>
               <Route path="/hotels/:hotelId/booking" element={<BookingConfirmation/>}/>
+              <Route path="/hotels/booking/reserved/:bookingId" element={<Reserved/>}/>/
               <Route path="/hotels/booking/payment/success/:bookingId" element={<PaymentSuccess/>}/>/
               <Route path="/hotels/booking/payment/cancel/:bookingId" element={<PaymentCancelled/>}/>
-              <Route path="/hotels/booking/payment/error/:bookingId" element={<PaymentError/>}/>
+              {/*<Route path="/hotels/booking/payment/error/:bookingId" element={<PaymentError/>}/>*/}
           </Routes>
       </BrowserRouter>
   );

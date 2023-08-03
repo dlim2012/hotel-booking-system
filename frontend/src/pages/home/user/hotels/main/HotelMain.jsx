@@ -3,6 +3,8 @@ import Navbar from "../../../../../components/navbar/Navbar";
 import {useLocation, useNavigate} from "react-router-dom";
 import './hotelMain.css'
 import {getWithJwt} from "../../../../../clients";
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 
 
@@ -14,6 +16,7 @@ function HotelMain(props) {
 
     const hotel = location.state.hotel;
 
+    console.log(hotel)
     function navHotelInfo(){
         navigate(`/user/hotel/${hotel.id}/info`);
     }
@@ -56,18 +59,32 @@ function HotelMain(props) {
                     <button
                         onClick={() => {navigate(`/hotels/${hotel.id}`)}}
                     >View page</button></h1>
-                <div className="hotelInfoContainer">
-                    <span onClick={navHotelInfo}>Hotel info</span> <br/>
+                <div className="hotelMainItem">
+                    <div className="hotelMainItemLabelContainer">
+
+                    <h2
+                        className="hotelMainItemLabel"
+                        onClick={navHotelInfo}>Hotel info</h2>
+                        <button
+
+                            onClick={navHotelInfo}
+                        >Edit</button>
+                    </div>
                     <span>Name: {hotel.name}</span> <br/>
                     <span>Address: {hotel.address}</span> <br/>
-                    <span>#Room types: (5) Info</span> <br/>
-                    <span>#rooms: (10)</span> <br/>
+                    <span>#Room types: {info.numRooms}</span> <br/>
+                    <span>#rooms: {info.numRoom}</span> <br/>
                 </div>
-                <div className="hotelInfoContainer">
-                    <span
-                        onClick={navHotelDates}
-                    >Reservations</span> <br />
-                    <span>------------------</span> <br/>
+                <div className="hotelMainItem">
+                    <div className="hotelMainItemLabelContainer">
+                        <h2
+                            className="hotelMainItemLabel"
+                            onClick={navHotelDates}
+                    >Reservations</h2>
+                        <button
+                            onClick={navHotelDates}
+                        >Manage</button>
+                    </div>
                     <span>Summary</span> <br/>
                     <span>#Available dates: {info.availableDates}</span> <br/>
                     <span>#Reservation: {info.numReserved}</span> <br/>
@@ -86,15 +103,21 @@ function HotelMain(props) {
                     </div>
                     {/*// }*/}
                 </div>
-                <div className="hotelInfoContainer">
-                    <span
-                        onClick={navHotelBooking}
-                    >Booking History</span><br />
+                <div className="hotelMainItem">
+                    <div className="hotelMainItemLabelContainer">
+                        <h2
+                            className="hotelMainItemLabel"
+                            onClick={navHotelBooking}
+                    >Booking History</h2>
+                        <button onClick={navHotelBooking}>View</button>
+                    </div>
                     <span>#Booking completed since {info.recordStartDate}: {info.recordNumBooking}</span> <br/>
                     <span>Total price last month: ${info.recordTotalPrice}</span> <br/>
                 </div>
 
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

@@ -1,0 +1,16 @@
+
+.reservedContainer{
+    /*display: flex;*/
+    /*flex-direction: column;*/
+    /*justify-content: center;*/
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    /*align-items: center;*/
+}
+
+.roomList {
+    list-style-type: circle;
+    list-style-position: inside;
+
+}

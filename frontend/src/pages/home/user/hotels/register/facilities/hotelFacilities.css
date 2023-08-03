@@ -1,0 +1,14 @@
+.hotelFacilitiesContainer{
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.facilityList{
+    display: grid;
+    /*grid-column-start: 1;*/
+    /*grid-column-end: 3;*/
+    /*grid-row-start: 1;*/
+    /*grid-row-end: 3;*/
+}

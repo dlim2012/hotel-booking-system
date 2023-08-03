@@ -1,0 +1,64 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: hotel
+  banner:
+    location: classpath:banner.txt
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update #create-drop #update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+#  zipkin:
+#    base-url: http://hb-zipkin:9411
+
+  kafka:
+#    bootstrap-servers: "hb-kafka-service.default.svc.cluster.local:9092"
+    bootstrap-servers: hb-kafka-service:9092
+
+eureka:
+  instance:
+    hostname: hb-eureka-server
+    port: 9200
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
+    enabled: false
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+custom:
+  security:
+    rsa:
+      public-key: classpath:certs/public.pem
+    roles:
+      - ADMIN
+      - APP_USER
+      - HOTEL_MANAGER
+  file:
+    path: "/images"
+    imageUrlPrefix: "http://10.0.0.110:9000/api/v1/hotel/image"

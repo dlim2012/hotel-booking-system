@@ -7,9 +7,9 @@ function BookingCard(props) {
 
     function onClickDetails(item) {
         if (item.mainStatus === "RESERVED" || item.mainStatus === "BOOKED") {
-            navigate(`/user/bookings/active/${item.id}`, {state: {item: item}});
+            navigate(`/user/bookings/active/${item.id}`, {state: {item: item, user_role: "app-user"}});
         } else {
-            navigate(`/user/bookings/archived/${item.id}`, {state: {item: item}})
+            navigate(`/user/bookings/archived/${item.id}`, {state: {item: item, user_role: "app-user"}})
         }
     }
 

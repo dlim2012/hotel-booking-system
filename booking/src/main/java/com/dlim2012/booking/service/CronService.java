@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -45,7 +46,6 @@ public class CronService {
 
 
     @Scheduled(cron = "0 0 0 * * ?")
-//    @Scheduled(fixedRate = 1000000)
     public void newDay(){
         System.out.println("============================== cron =================================");
         /* This function assumes that there are no duplicate available dates for each room */
@@ -113,6 +113,9 @@ public class CronService {
             System.out.println("updating entities..." + ((System.currentTimeMillis() - start)));
             for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
                 for (Rooms rooms : entry.getValue()) {
+                    if (!rooms.getIsActive()){
+                        continue;
+                    }
                     Integer roomsId = rooms.getId();
 
                     /* rooms dates */
@@ -124,6 +127,7 @@ public class CronService {
                             maxBookingDate : rooms.getAvailableUntil();
 
                     for (Room room : rooms.getRoomSet()) {
+
                         List<Dates> roomDatesToUpdate = new ArrayList<>();
                         List<Dates> roomDatesToDelete = new ArrayList<>();
 
@@ -193,11 +197,10 @@ public class CronService {
 
             System.out.println("updating respository..." + ((System.currentTimeMillis() - start)));
             //  update repository
-            Set<Long> datesIdToKeep = new HashSet<>(datesSet.stream().map(Dates::getId).toList());
-            datesSet.addAll(datesToUpdate);
-
+//            Set<Long> datesIdToKeep = new HashSet<>(datesSet.stream().map(Dates::getId).toList());
 
             // todo: make this part async
+            datesSet.addAll(datesToUpdate);
             List<Dates> updatedDates = datesRepository.saveAll(datesToUpdate);
             datesRepository.deleteAll(datesToDelete);
             List<Price> updatedPrices = priceRepository.saveAll(priceList);
@@ -320,21 +323,48 @@ public class CronService {
 
             List<Booking> bookingList = bookingRepository
                     .findByNoPrepaymentAndHotelRange(hotelStartId, hotelEndId, today, BookingStatus.RESERVED);
+            Set<Rooms> roomsSet = roomsRepository.findByHotelIdRangeWithLock(hotelStartId, hotelEndId);
+
+            Map<Integer, Rooms> roomsMap = new HashMap<>();
+            for (Rooms rooms: roomsSet){
+                roomsMap.put(rooms.getId(), rooms);
+            }
+
+
             log.info("Cron job - processing no prepayments. found {} bookings with hotel ids in {} ~ {}",
                     bookingList.size(), hotelStartId, hotelEndId - 1);
 
+            List<Dates> datesToAdd = new ArrayList<>();
+
             for (Booking booking: bookingList){
                 boolean allCancelled = true;
-//                Long priceInCents = booking.getPriceInCents();
+                Long priceInCents = booking.getPriceInCents();
                 for (BookingRooms bookingRooms: booking.getBookingRooms()){
-
+                    Rooms rooms = roomsMap.getOrDefault(bookingRooms.getRoomsId(), null);
                     if (bookingRooms.getPrepayUntil() != null && bookingRooms.getPrepayUntil().isBefore(today)){
-//                        for (BookingRoom bookingRoom : bookingRooms.getBookingRoomList()) {
-//                            if (bookingRoom.getStatus().equals(BookingStatus.RESERVED)){
-//                                bookingRoom.setStatus(BookingStatus.CANCELLED_NO_PREPAYMENT);
-//                                priceInCents -= bookingRooms.getPricePerRoomInCents();
-//                            }
-//                        }
+                        for (BookingRoom bookingRoom : bookingRooms.getBookingRoomList()) {
+                            if (bookingRoom.getStatus().equals(BookingStatus.RESERVED)){
+                                log.info("Cancelling booking {} - booking room {} (hotel {}, room {}) due to no prepayment.",
+                                        booking.getId(), bookingRoom.getId(), booking.getHotelId(), bookingRooms.getRoomsId());
+                                bookingRoom.setStatus(BookingStatus.CANCELLED_NO_PREPAYMENT);
+                                priceInCents -= bookingRooms.getPricePerRoomInCents();
+                                if (rooms != null){
+                                    rooms.setDatesReserved(rooms.getDatesReserved() -
+                                            (int) ChronoUnit.DAYS.between(
+                                                    bookingRoom.getStartDateTime().toLocalDate(),
+                                                    booking.getEndDateTime().toLocalDate()));
+                                    Long roomId = bookingRoom.getRoomId();
+                                    for (Room room: rooms.getRoomSet()){
+                                        if (room.getId().equals(roomId)){
+                                            datesToAdd.add(Dates.builder().room(room).startDate(bookingRoom.getStartDateTime().toLocalDate())
+                                                    .endDate(bookingRoom.getEndDateTime().toLocalDate()).build());
+                                            break;
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
                     } else {
                         if (!allCancelled){
                             for (BookingRoom bookingRoom : bookingRooms.getBookingRoomList()) {
@@ -345,7 +375,7 @@ public class CronService {
                         }
                     }
                 }
-//                booking.setPriceInCents(priceInCents);
+                booking.setPriceInCents(priceInCents);
                 if (allCancelled){
                     booking.setMainStatus(BookingMainStatus.CANCELLED);
                     booking.setStatus(BookingStatus.CANCELLED_NO_PREPAYMENT);
@@ -353,7 +383,9 @@ public class CronService {
                 }
             }
 
+            datesRepository.saveAll(datesToAdd);
             bookingRepository.saveAll(bookingList);
+            roomsRepository.saveAll(roomsSet);
             bookingIdArchiveKafkaTemplate.send("booking-archive", BookingIdArchiveRequest.builder()
                     .bookingIds(bookingIdsToCancel).build());
 

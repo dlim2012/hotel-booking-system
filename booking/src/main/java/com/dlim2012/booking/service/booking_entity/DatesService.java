@@ -11,6 +11,7 @@ import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
+import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.mysql_booking.entity.*;
 import com.dlim2012.clients.mysql_booking.repository.*;
@@ -43,6 +44,7 @@ public class DatesService {
     private final KafkaTemplate<String, DatesUpdateDetails> roomsSearchDatesUpdateKafkaTemplate;
 
     private final Integer MAX_BOOKING_DAYS = 30;
+
 
     /* This is for new reservation */
     public Map<Integer, List<Long>> _removeDatesSameRange(

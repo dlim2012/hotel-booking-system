@@ -1,5 +1,7 @@
 import React from 'react';
 import Navbar from "../../../../../../../components/navbar/Navbar";
+import MailList from "../../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../../components/footer/Footer";
 
 function PaymentCancelled(props) {
     return (
@@ -13,6 +15,8 @@ function PaymentCancelled(props) {
                 <button>Retry Payment</button> <br />
                 <button>Home page</button>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

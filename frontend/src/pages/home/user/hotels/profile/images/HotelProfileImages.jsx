@@ -8,6 +8,8 @@ import login from "../../../user/login/Login";
 import axios from "axios";
 import {useParams} from "react-router-dom";
 import {getWithJwt, postImageWithJwt} from "../../../../../../clients";
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
 
 function HotelProfileImages(props) {
     const { hotelId } = useParams();
@@ -113,6 +115,8 @@ function HotelProfileImages(props) {
                     </div>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

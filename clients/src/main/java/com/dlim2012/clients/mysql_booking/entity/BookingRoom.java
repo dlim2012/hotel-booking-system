@@ -4,6 +4,7 @@ import com.dlim2012.clients.entity.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "booking_room")
-public class BookingRoom {
+public class BookingRoom implements Serializable {
 
 
     @Id

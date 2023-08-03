@@ -107,3 +107,9 @@
   cursor: pointer;
   border-radius: 5px;
 }
+
+.siDetailsBtn{
+  display: flex;
+  justify-content: right;
+  margin: 5px;
+}

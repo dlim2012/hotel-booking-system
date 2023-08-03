@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-search
+  labels:
+    app: hb-search
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: hb-search
+      labels:
+        app: hb-search
+    spec:
+      containers:
+        - name: hb-search
+          image: dlim2012/hb.search:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9007
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-search

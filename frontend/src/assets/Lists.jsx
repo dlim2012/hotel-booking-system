@@ -1,4 +1,6 @@
 
+export const MAX_BOOKING_DAYS = 30;
+
 export const propertyTypesMap = {
     // Others: 0,
     Hotel: 1,
@@ -98,6 +100,15 @@ export const bedsMap = {
     SINGLE: "Single"
 }
 
+export const bedsMap2 = {
+    KING: "King",
+    QUEEN: "Queen",
+    SOFA_BED: "Sofa bed",
+    FULL: "Full",
+    TWIN: "Twin",
+    SINGLE: "Single"
+}
+
 export const statusMap = {
     "Upcoming": ["RESERVED", "BOOKED"],
     "Completed": ["COMPLETED"],
@@ -147,4 +158,10 @@ export function getDefaultRoomAmenitiesMap () {
         roomAmenitiesMap[roomFacilities[i]] = false;
     }
     return roomAmenitiesMap;
+}
+
+export function getMaxAddDate(){
+    var date = new Date();
+    date.setDate(date.getDate() + MAX_BOOKING_DAYS);
+    return date;
 }

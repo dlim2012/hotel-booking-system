@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {useTable} from "react-table";
 import {useNavigate} from "react-router-dom";
+import './hotelMgmtTable.css'
 
 function HotelMgmtTable(props) {
     const navigate = useNavigate();
@@ -52,18 +53,31 @@ function HotelMgmtTable(props) {
     const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = tableInstance;
 
     return (
-        <table {...getTableProps()}>
-            <thead >
+        <table
+            className="hotelMgmtTable"
+            {...getTableProps()}
+        >
+            <thead
+
+            >
             {
                 headerGroups.map(headerGroup => (
-                    <tr {...headerGroup.getHeaderGroupProps()}>
+                    <tr
+                        {...headerGroup.getHeaderGroupProps()}
+                    >
                         {
                             headerGroup.headers.map(column => (
-                                <th {...column.getHeaderProps()}>
+                                <th
+                                    {...column.getHeaderProps()}
+                                    className="hotelMgmtTableHeader"
+                                >
                                     {column.render('Header')}
                                 </th>
                             ))
                         }
+                        <th
+                            className="hotelMgmtTableHeader"
+                        ></th>
                     </tr>
                 ))
             }
@@ -75,14 +89,24 @@ function HotelMgmtTable(props) {
                     return (
                         <tr
                             {...row.getRowProps()}
-                            onClick={() => {navManagement(row.original)}}
+                            // onClick={() => {navManagement(row.original)}}
                         >
                             {
                                 row.cells.map((cell) => (
-                                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                                    <td
+                                        {...cell.getCellProps()}
+                                        className="hotelMgmtTableRow"
+                                    >{cell.render('Cell')}</td>
                                 ))
                             }
+                            <td
+                                className="hotelMgmtTableRow"
+                            ><button
+
+                                onClick={() => {navManagement(row.original)}}
+                            >Main Page</button></td>
                         </tr>
+
 
                     )
                 })

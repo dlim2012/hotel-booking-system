@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class BookingRunner implements CommandLineRunner {
 
 //    private final RedisTemplate<String, Object> redisTemplate;
-    // docker exec -it hotel-booking-redis-server redis-cli
+    // docker exec -it hb-redis-server redis-cli
     private final RoomsEntityService roomsEntityService;
     private final UserService userService;
 //    private final Receiver receiver;

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-user
+spec:
+  selector:
+    app: hb-user
+  ports:
+    - port: 80
+      targetPort: 9002
+  type: LoadBalancer
+
+

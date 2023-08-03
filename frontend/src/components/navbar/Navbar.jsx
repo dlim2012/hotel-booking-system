@@ -7,6 +7,7 @@ import image from '../../assets/Default_pfp.svg.png'
 import {faBed, faUser} from "@fortawesome/free-solid-svg-icons";
 import {useRef} from 'react';
 import Demo from "../demo/Demo";
+import {deleteWithJwt} from "../../clients";
 
 const Navbar = () => {
   const navigate= useNavigate();
@@ -25,9 +26,16 @@ const Navbar = () => {
   }
 
   const handleSignOut = () => {
+    if (localStorage["test-user"]){
+      deleteWithJwt('/api/v1/user/delete')
+          .catch(e => {
+            console.error(e)})
+      localStorage.removeItem("test-user");
+    }
+
     localStorage.removeItem('jwt');
     localStorage.removeItem("firstname");
-    navigate(location.pathname, {state: location.state});
+    navigate(location?.state?.from === undefined ? '/' : location.state.from, {state: location.state});
     // window.location.reload(false);
     // navigate(location.state == null || location.state.from == null ? '/' : location.state.from)
   }
@@ -56,7 +64,7 @@ const Navbar = () => {
 
   return (
   <div className="demoContainer">
-    <Demo />
+    {/*<Demo />*/}
     <div className="navbar">
       <div className="navContainer">
         <span className="logo" onClick={handleLogoClick}>Hotel Booking</span>

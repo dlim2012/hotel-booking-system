@@ -8,11 +8,11 @@ spring:
   banner:
     location: classpath:banner.txt
   zipkin:
-    base-url: http://hotel-booking-zipkin:9411
+    base-url: http://hb-zipkin:9411
 
 eureka:
   instance:
-    hostname: hotel-booking-eureka-server
+    hostname: hb-eureka-server
     port: 9200
     preferIpAddress: true
   client:
@@ -24,7 +24,11 @@ eureka:
 
 custom:
   elasticsearch:
-    server: hotel-booking-elasticsearch:9200
+    host: hb-elasticsearch
+    port: 9200
+    username: elastic
+    password: changeme
+    useSsl: false
   security:
     rsa:
       public-key: classpath:certs/public.pem

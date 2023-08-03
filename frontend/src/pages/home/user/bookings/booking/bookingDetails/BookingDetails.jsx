@@ -4,6 +4,8 @@ import Navbar from "../../../../../../components/navbar/Navbar";
 import {getWithJwt, postWithJwt, putWithJwt} from "../../../../../../clients";
 import {getDate, getDateTime, getTime} from "../../../utils/stringFormatting";
 import './bookingDetails.css'
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
 
 function getEstimatedHour(i){
     if (i === 0){
@@ -31,11 +33,16 @@ function BookingDetails(props) {
     const [edit, setEdit] = useState(""); // { "", "booker", "details" }
     const [edittedInfo, setEdittedInfo] = useState({})
 
-
+    const {user_role} = location.state;
 
     function fetchBookingInfo(){
         setFetching(true);
-        getWithJwt(`/api/v1/booking-management/booking/${bookingId}/active`)
+        if (user_role === "app-user") {
+            var pathname = `/api/v1/booking-management/user/booking/${bookingId}/active`
+        } else if (user_role === "hotel-manager"){
+            var pathname = `/api/v1/booking-management/hotel/booking/${bookingId}/active`
+        }
+        getWithJwt(pathname)
             .then(response=>response.json())
             .then(data => {
                 console.log(data)
@@ -155,9 +162,13 @@ function BookingDetails(props) {
                                 <span>Free Cancellation until {data.freeCancellationUntil}</span> <br/>
                                 </div>
                             }
+                            { user_role === "app-user" &&
+                                <div>
                             <button
                                 onClick={payReservation}
                             >Pay with Paypal</button><br/>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
@@ -310,6 +321,8 @@ function BookingDetails(props) {
                     >Cancel</button>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
 
         </div>
     );

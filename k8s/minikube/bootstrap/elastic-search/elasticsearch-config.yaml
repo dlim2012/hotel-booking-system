@@ -1,0 +1,25 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: hb-elasticsearch
+spec:
+  version: 8.9.0
+  nodeSets:
+    - name: default
+      count: 3
+      config:
+        node.store.allow_mmap: false
+        xpack.ml.enabled: true
+        node.roles: ["master"]
+    - name: data
+      count: 2
+      config:
+        node.store.allow_mmap: false
+        xpack.ml.enabled: true
+        node.roles: ["data", "ml", "transform"]
+    - name: ingest
+      count: 2
+      config:
+        node.store.allow_mmap: false
+        xpack.ml.enabled: true
+        node.roles: ["ingest"]

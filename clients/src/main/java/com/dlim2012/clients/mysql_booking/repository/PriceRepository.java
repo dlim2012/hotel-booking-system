@@ -25,6 +25,7 @@ public interface PriceRepository  extends JpaRepository<Price, Long> {
     Set<Price> findByHotelIdAndDates(Integer hotelId, LocalDate startDate, LocalDate endDate);
 
     @Transactional
+    @Modifying
     void deleteAllByRoomsId(Integer roomsId);
 
     @Query(
@@ -72,4 +73,15 @@ public interface PriceRepository  extends JpaRepository<Price, Long> {
             nativeQuery = true
     )
     void deleteByMaxDate(LocalDate minBookingDate);
+
+
+    @Transactional
+    @Modifying
+    @Query(
+            value = "DELETE p FROM price p " +
+                    "JOIN rooms rs ON p.rooms_id = rs.id " +
+                    "WHERE rs.hotel_id = ?1",
+            nativeQuery = true
+    )
+    void deleteByHotelId(Integer hotelId);
 }

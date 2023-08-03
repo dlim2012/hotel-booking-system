@@ -1,13 +1,18 @@
 import './bookingCard.css';
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 
 function HotelBookingCard(props) {
     const navigate = useNavigate();
     const item = props.item;
 
+    const { hotelId } = useParams();
+    console.log(hotelId)
+
     function onClickDetails(item) {
         if (item.mainStatus === "RESERVED" || item.mainStatus === "BOOKED") {
-            navigate(`/user/bookings/${item.id}`, {state: {item: item}});
+            navigate(`/user/hotel/${hotelId}/bookings/active/${item.id}`, {state: {item: item, user_role: "hotel-manager"}});
+        } else {
+            navigate(`/user/hotel/${hotelId}/bookings/archived/${item.id}`, {state: {item: item, user_role: "hotel-manager"}})
         }
     }
 

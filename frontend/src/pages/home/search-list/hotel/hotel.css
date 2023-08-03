@@ -231,3 +231,55 @@
   position: absolute;
 }
 
+.roomName{
+  font-size: 18px;
+}
+
+.recommendationBox{
+  /*border: gray 1px solid;*/
+}
+
+.recommendedTable{
+  border: lightgray 1px solid;
+
+}
+
+.recommendedTableRow{
+}
+
+.recommendedTableCol1{
+  border-bottom: lightgray 1px solid;
+  /*border-right: gray 1px solid;*/
+  /*border-left: gray 1px solid;*/
+  /*border-top: gray 1px solid;*/
+}
+
+.recommendedTableCol2{
+  border-right: lightgray 1px solid;
+}
+
+.recommendedNote{
+  font-size: 13px;
+}
+.availabilityTable{
+  border: lightgray 1px solid;
+}
+
+.availibilityTableRow > td{
+  border-top: lightgray 1px solid;
+  padding: 7px;
+}
+
+.availabilityTableReserveCol{
+  vertical-align: top;
+}
+
+.reserveBtn{
+  /*padding: 5px;*/
+  margin: 10px;
+  padding: 5px;
+}
+
+.availibilityNote{
+  font-size: 13px;
+}

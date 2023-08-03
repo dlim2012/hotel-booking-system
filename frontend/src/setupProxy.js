@@ -1,13 +1,34 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
+    // app.use(
+    //     '/api/v1/**',
+    //     createProxyMiddleware({
+    //         target: 'http://73.253.48.199:9000',
+    //         changeOrigin: true,
+    //     })
+    // );
     app.use(
         '/api/v1/**',
         createProxyMiddleware({
-            target: 'http://10.0.0.110:9000',
+            target: 'http://73.253.48.199:8001',
             changeOrigin: true,
         })
     );
+    // app.use(
+    //     '/api/v1/**',
+    //     createProxyMiddleware({
+    //         target: 'http://10.0.0.110:8001',
+    //         changeOrigin: true,
+    //     })
+    // );
+    // app.use(
+    //     '/api/v1/**',
+    //     createProxyMiddleware({
+    //         target: 'http://10.0.0.110:9000',
+    //         changeOrigin: true,
+    //     })
+    // );
     // app.use(
     //     '/api/v1/user',
     //     createProxyMiddleware({

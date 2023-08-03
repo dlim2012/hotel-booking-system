@@ -1,6 +1,0 @@
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/repository/BookingArchiveByUserIdRepository.java
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/entity/BookingArchiveRoom.java
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/entity/BookingArchiveByUserId.java
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/config/CassandraConfig.java
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/entity/BookingArchiveByHotelId.java
-/Users/imjeonghun/IdeaProjects/hotelbooking/client_cassandra/src/main/java/com/dlim2012/clients/cassandra/repository/BookingArchiveByHotelIdRepository.java

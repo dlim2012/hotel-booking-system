@@ -1,5 +1,6 @@
 package com.dlim2012.hotel.repository;
 
+import com.dlim2012.hotel.dto.hotel.profile.RoomsNameItem;
 import com.dlim2012.hotel.entity.Rooms;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -36,4 +37,18 @@ public interface RoomsRepository extends JpaRepository<Rooms, Integer> {
             nativeQuery = true
     )
     void deleteByHotelIdAndIdAndHotelManagerId(Integer hotelId, Integer roomsId, Integer hotelManagerId);
+
+    @Query(
+            value = "SELECT r FROM rooms r " +
+                    "JOIN hotel h on r.hotel = h " +
+                    "WHERE h.id = ?1 AND r.id = ?2 AND h.hotelManagerId = ?3 AND r.isActive = ?4"
+    )
+    Optional<Rooms> findByHotelIdAndIdAndHotelManagerIdAndIsActive(Integer hotelId, Integer roomsId, Integer userId, boolean isActive);
+
+    @Query(
+            value = "SELECT r FROM rooms r " +
+                    "JOIN hotel h on r.hotel = h " +
+                    "WHERE h.id = ?1 AND h.hotelManagerId = ?2"
+    )
+    List<Rooms> findByHotelIdAndHotelManagerId(Integer hotelId, Integer userId);
 }

@@ -1,4 +1,13 @@
 .profileContents{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+}
+
+.profileFormItemRow{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.profileFormItemNote{
+    font-size: 13px;
 }

@@ -1,0 +1,52 @@
+
+
+kubectl create secret generic hb-elasticsearch-es-elastic-user --from-literal=elastic=changeme && kubectl apply -f bootstrap/elastic-search/
+=========================================
+
+kubectl create -f https://download.elastic.co/downloads/eck/2.9.0/crds.yaml
+kubectl apply -f https://download.elastic.co/downloads/eck/2.9.0/operator.yaml
+
+kubectl create secret generic hb-elasticsearch-es-elastic-user --from-literal=elastic=changeme
+kubectl apply -f elastic-search
+
+
+
+
+--------------------------------------- (prev)
+
+* create custom crds for elasticsearch
+kubectl create -f https://download.elastic.co/downloads/eck/2.3.0/crds.yaml
+
+kubectl get crd
+
+* install the operator with its RBAC rules
+kubectl apply -f https://download.elastic.co/downloads/eck/2.3.0/operator.yaml
+
+kubectl get all -n elastic-system
+
+
+*
+kubectl apply -f elasticsearch.yaml
+
+kubectl get pods
+kubectl get svc
+kubectl get pvc
+kubectl get pv
+
+* password
+PASSWORD=$(kubectl get secret hb-elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)
+echo $PASSWORD
+
+* kibana
+kubectl apply -f kibana.yaml
+
+* elasticsearch port forwarding
+kubectl port-forward service/hb-elasticsearch-es-http 9200
+PASSWORD=$(kubectl get secret hb-elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)
+curl -u "elastic:$PASSWORD" -k "https://localhost:9200"
+
+* kibana port forwarding
+kubectl port-forward service/hb-elasticsearch-kb-http 5601
+PASSWORD=$(kubectl get secret hb-elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)
+echo $PASSWORD
+

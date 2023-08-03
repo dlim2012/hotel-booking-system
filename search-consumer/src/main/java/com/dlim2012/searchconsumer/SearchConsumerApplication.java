@@ -2,7 +2,7 @@ package com.dlim2012.searchconsumer;
 
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchClientConfiguration;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
-import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
+//import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
 import com.dlim2012.clients.utils.PriceService;
 import org.springframework.boot.SpringApplication;
@@ -16,9 +16,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 @EnableKafka
 @Import(value = {
 		// elastic search
-		ElasticSearchQuery.class,
+//		ElasticSearchQuery.class,
 		ElasticSearchClientConfiguration.class,
 		ElasticSearchUtils.class,
+//		UnsafeX509ExtendedTrustManager.class,
 		// kafka
 		KafkaConsumerConfig.class,
 		// utils

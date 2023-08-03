@@ -112,3 +112,7 @@ input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
 .registerbtn:hover {
     opacity:1;
 }
+
+.signInBtn {
+    border: none
+}

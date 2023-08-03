@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis.conf: |
+    # Redis configuration file example.
+    #
+    # Note that in order to read the configuration file, Redis must be
+    # started with the file path as first argument:
+    #
+    # ./redis-server /path/to/redis.conf
+    #slaveof redis-master-0.redis-master.redis.svc.cluster.local 6379
+    #masterauth password
+    #requirepass password
+    notify-keyspace-events Ex
+    replica-read-only no

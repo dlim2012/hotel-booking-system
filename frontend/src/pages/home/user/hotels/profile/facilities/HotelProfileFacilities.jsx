@@ -1,11 +1,12 @@
+import './hotelProfileFacilities.css'
 import React, {useEffect, useState} from 'react';
 import Navbar from "../../../../../../components/navbar/Navbar";
-import ProfileSidebar from "../../../user/profile/ProfileSidebar";
 import HotelProfileSidebar from "../HotelProfileSidebar";
-import HotelFacilities from "../../register/facilities/HotelFacilities";
 import {hotelFacilities} from "../../../../../../assets/Lists";
 import {getWithJwt, postWithJwt, putWithJwt} from "../../../../../../clients";
 import {useParams} from "react-router-dom";
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
 
 function HotelProfileFacilities(props) {
     const [info, setInfo] = useState({});
@@ -50,16 +51,18 @@ function HotelProfileFacilities(props) {
                 <div className="profileContents">
                     <h1>Facilities</h1>
                     <div>
-                        <div className="facility-list">
+                        <div className="hotelFacilityList">
                             {Object.keys(info).map((item, index) => (
-                                <div key={index}>
+                                <div
+                                    className="hotelFacility"
+                                    key={index}>
                                     <input
                                         type="checkbox"
                                         checked={info[item]}
                                         onClick={e => {
                                             setInfo({...info, [item]: e.target.checked});
                                         }}/>
-                                    <span>{item}</span>
+                                    <label>{item}</label>
                                 </div>
                             ))}
                         </div>
@@ -67,6 +70,8 @@ function HotelProfileFacilities(props) {
                     <button onClick={onSave}>Save</button>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

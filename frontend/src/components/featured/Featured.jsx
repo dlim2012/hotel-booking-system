@@ -33,7 +33,7 @@ const featuredItems = [
         image: chicago,
         state: {
             address: {"city": "Chicago", "state": "Illinois", "country": "United States"},
-            destination: "San Francisco, California, United States",
+            destination: "Chicago, Illinois, United States",
             coordinates: {lat: 41.8781136, lng: -87.6297982},
         },
         name: "Chicago"
@@ -78,6 +78,8 @@ const Featured = (attrs) => {
             payload.push(featuredItem.state.address)
         }
         setFetching(true)
+
+        console.log(payload)
 
         post('/api/v1/search/count/city', payload)
             .then(response => response.json())

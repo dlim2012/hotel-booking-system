@@ -6,9 +6,19 @@
     margin-right: auto;
 }
 
-.hotelInfoContainer{
+.hotelMainItem{
     border: gray 1px solid;
     border-radius: 2px;
     padding: 10px;
     margin: 10px;
+}
+
+.hotelMainItemLabelContainer{
+    display: flex;
+    justify-content: space-between;
+}
+
+.hotelMainItemLabel:hover{
+    cursor: pointer;
+    width: fit-content;
 }

@@ -1,0 +1,79 @@
+.hotelLocationContainer{
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.hotelLocationSearch{
+    display: flex;
+    flex-direction: column;
+    margin: 15px;
+    width: 95%;
+}
+
+.addressItem{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 5px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+.hotelLocationAddress{
+    width: 90%;
+    border: gray 1px solid;
+    border-radius: 5px;
+    margin-right: 30px;
+    padding: 10px 40px 10px 20px;
+}
+
+.hotelLocationAddress > input{
+    width: 100%;
+}
+
+.addressItems{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 10px;
+    justify-content: space-between;
+}
+
+.addressItemsElement{
+    display: flex;
+    width: 100%;
+    justify-items: left;
+    justify-content: space-around;
+    /*align-items: center;*/
+}
+
+.addressItemsElement > label{
+    min-width: 100px;
+    /*margin-left: 10px;*/
+}
+
+.addressItemsElement > input{
+    width: 150px;
+    height: 20px;
+}
+
+.addressItemsElementInput{
+
+}
+
+.addressItemsWarnings{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+
+}
+
+.hotelLocationMap{
+    display: flex;
+    margin: 10px 0 10px 0;
+    flex-direction: column;
+    align-items: center;
+}

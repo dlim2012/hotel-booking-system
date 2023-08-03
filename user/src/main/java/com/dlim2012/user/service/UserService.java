@@ -2,17 +2,20 @@ package com.dlim2012.user.service;
 
 import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
+import com.dlim2012.clients.kafka.dto.user.DeleteUserRequest;
 import com.dlim2012.user.dto.AuthenticationRequest;
 import com.dlim2012.user.dto.UserContactInfoRequest;
 import com.dlim2012.user.dto.UserContactInfoResponse;
 import com.dlim2012.user.dto.UserRegisterRequest;
+import com.dlim2012.user.dto.profile.NewPasswordRequest;
+import com.dlim2012.user.dto.profile.NewPasswordResponse;
 import com.dlim2012.user.dto.profile.UserProfileItem;
 import com.dlim2012.user.entity.Gender;
 import com.dlim2012.user.entity.User;
 import com.dlim2012.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,29 +29,14 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final ModelMapper modelMapper = new ModelMapper();
-
-    @Autowired
-    public UserService(UserRepository userRepository, TokenService tokenService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.tokenService = tokenService;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-
-//        Converter<Gender, String> genderStringConverter = new Converter<Gender, String>() {
-//            @Override
-//            public String convert(MappingContext<Gender, String> mappingContext) {
-//                return mappingContext.getSource() == null ? null : mappingContext.getSource().name();
-//            }
-//        };
-//        modelMapper.addConverter(genderStringConverter);
-    }
+    private final KafkaTemplate<String, DeleteUserRequest> deleteUserDeleteKafkaTemplate;
 
     public String register(UserRegisterRequest userRegisterRequest){
 
@@ -128,13 +116,17 @@ public class UserService {
     public UserProfileItem getProfile(Integer userId, String userEmail) {
         User user = userRepository.findByIdAndEmail(userId, userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        UserProfileItem userProfileItem = modelMapper.map(user, UserProfileItem.class);
-        userProfileItem.setYear(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getYear()));;
-        userProfileItem.setMonth(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getMonthValue()));;
-        userProfileItem.setDay(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getDayOfMonth()));
-        userProfileItem.setGender(user.getGender() == null ? null : user.getGender().name());
-        log.info(userProfileItem.toString());
-        return userProfileItem;
+        return UserProfileItem.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .displayName(user.getDisplayName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .year(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getYear()))
+                .month(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getMonthValue()))
+                .day(user.getDateOfBirth() == null ? null : String.valueOf(user.getDateOfBirth().getDayOfMonth()))
+                .gender(user.getGender() == null ? null : user.getGender().name())
+                .build();
     }
 
     public List<UserContactInfoResponse> getContactInfo(List<UserContactInfoRequest> request) {
@@ -149,16 +141,39 @@ public class UserService {
                 .build()).toList();
     }
 
-//    public UserContactInfo getContactInfo(Integer userId) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-//        UserContactInfo userContactInfo = UserContactInfo.builder()
-//                .id(user.getId())
-//                .firstName(user.getFirstName())
-//                .lastName(user.getLastName())
-//                .email(user.getEmail())
-//                .phoneNumber(user.getPhoneNumber())
-//                .build();
-//        return userContactInfo;
-//    }
+    public void deleteUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        deleteUserDeleteKafkaTemplate.send("delete-user", DeleteUserRequest.builder().userId(userId).build());
+        userRepository.delete(user);
+    }
+
+    public NewPasswordResponse changePassword(Integer userId, NewPasswordRequest newPasswordRequest){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        try{
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        user.getEmail(),
+                        newPasswordRequest.getPrevPassword()
+                )
+        );
+        } catch (Exception e){
+            return new NewPasswordResponse(false, false);
+        }
+
+        if (newPasswordRequest.getNewPassword().length() < 8 || newPasswordRequest.getNewPassword().length() > 20){
+            return new NewPasswordResponse(true, false);
+        }
+
+        try {
+            user.setPassword(passwordEncoder.encode(newPasswordRequest.getNewPassword()));
+            userRepository.save(user);
+        } catch (Exception e) {
+            return new NewPasswordResponse(true, false);
+        }
+
+        return new NewPasswordResponse(true, true);
+    }
+
 }

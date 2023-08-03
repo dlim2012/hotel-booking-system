@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-booking-mgmt
+spec:
+  selector:
+    app: hb-booking-mgmt
+  ports:
+    - port: 80
+      targetPort: 9005
+  type: LoadBalancer
+
+

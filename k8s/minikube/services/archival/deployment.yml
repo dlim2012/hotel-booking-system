@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-archival
+  labels:
+    app: hb-archival
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: hb-archival
+      labels:
+        app: hb-archival
+    spec:
+      containers:
+        - name: hb-archival
+          image: dlim2012/hb.archival:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9004
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+            - name: DB_HOST
+              value: hb-mysql-book
+            - name: DB_NAME
+              value: booking
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: password
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-archival

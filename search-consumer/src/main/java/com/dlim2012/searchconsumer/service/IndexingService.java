@@ -42,11 +42,11 @@ public class IndexingService {
 
     private final HotelRepository hotelRepository;
 
-    private final RestHighLevelClient client = new RestHighLevelClient(
-            RestClient.builder(
-                    new HttpHost("10.0.0.110", 9103, "http")
-            )
-    );
+//    private final RestHighLevelClient client = new RestHighLevelClient(
+//            RestClient.builder(
+//                    new HttpHost("10.0.0.110", 9103, "http")
+//            )
+//    );
 
     private final ElasticSearchUtils elasticSearchUtils;
     private final ObjectMapper objectMapper;
@@ -71,11 +71,11 @@ public class IndexingService {
 
             log.info("Hotel {} saved.", hotel.getId());
 
-            SearchRequest searchRequest = new SearchRequest("hotel");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-            searchRequest.source(searchSourceBuilder);
-            SearchResponse searchResponse1 = client.search(searchRequest, RequestOptions.DEFAULT);
+//            SearchRequest searchRequest = new SearchRequest("hotel");
+//            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+//            searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+//            searchRequest.source(searchSourceBuilder);
+//            SearchResponse searchResponse1 = client.search(searchRequest, RequestOptions.DEFAULT);
 //            System.out.println(searchResponse1);
 //            System.out.println(searchResponse1.getHits().getTotalHits());
 //            System.out.println(searchResponse1.getHits().getHits());

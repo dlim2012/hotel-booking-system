@@ -21,9 +21,11 @@ public class PayPalConfig {
     @Value("${custom.paypal.mode}")
     private String mode;
 
-
     @Value("${custom.paypal.host}")
     public String HOST;
+
+    @Value("${custom.paypal.frontend}")
+    public String FRONTEND;
 
     public static String PATH = "/api/v1/booking";
     public static final String INTENT = "sale";
@@ -47,8 +49,6 @@ public class PayPalConfig {
 
     @Bean
     public OAuthTokenCredential oAuthTokenCredential(){
-        System.out.println(clientId);
-        System.out.println(HOST);
         return new OAuthTokenCredential(clientId, clientSecret, paypalSdkConfig());
     }
 

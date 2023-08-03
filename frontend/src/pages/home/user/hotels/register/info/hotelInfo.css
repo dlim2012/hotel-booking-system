@@ -1,0 +1,39 @@
+.hotelInfoContainer{
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.formItems{
+    width: 95%;
+    display: flex;
+    /*align-items: center;*/
+}
+
+.formItem{
+    display: inline;
+}
+
+.formLabel {
+    min-width: 100px;
+}
+
+
+.formItem >input {
+    margin-top: 10px;
+    border-color: grey;
+    width: 90%;
+}
+
+.formItem >textarea {
+    margin-top: 10px;
+    width: 91%;
+    height: 200px;
+}
+
+.formItem >select {
+    width: 92%;
+    border-color: grey;
+}

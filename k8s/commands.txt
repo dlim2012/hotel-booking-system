@@ -1,0 +1,4 @@
+* mysql-user
+
+kubectl apply -f mysql-user-secret.yaml
+kubectl apply -f mysql-user-storage.yaml

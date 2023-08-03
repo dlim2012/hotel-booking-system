@@ -2,13 +2,16 @@ package com.dlim2012.hotel.service;
 
 import com.dlim2012.clients.entity.Bed;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
+import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingActivateRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
+import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDeleteRequest;
-import com.dlim2012.hotel.dto.hotel.profile.RoomNameItem;
+import com.dlim2012.hotel.dto.hotel.profile.RoomsNameItem;
 import com.dlim2012.hotel.dto.rooms.RoomsInfo;
 import com.dlim2012.hotel.dto.rooms.profile.RoomsFacilityItem;
 import com.dlim2012.hotel.dto.rooms.profile.RoomsGeneralInfoItem;
+import com.dlim2012.hotel.dto.rooms.profile.RoomsIsActiveItem;
 import com.dlim2012.hotel.dto.rooms.registration.BedInfo;
 import com.dlim2012.hotel.dto.rooms.registration.RoomsRegisterRequest;
 import com.dlim2012.hotel.entity.Hotel;
@@ -19,6 +22,7 @@ import com.dlim2012.hotel.repository.HotelRepository;
 import com.dlim2012.hotel.repository.RoomsRepository;
 import com.dlim2012.hotel.repository.facility.RoomFacilityRepository;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -31,6 +35,7 @@ import java.util.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RoomsService {
 
     private final HotelRepository hotelRepository;
@@ -43,22 +48,12 @@ public class RoomsService {
     private final KafkaTemplate<String, RoomsBookingDetails> roomsBookingKafkaTemplate;
     private final KafkaTemplate<String, RoomsBookingDeleteRequest> roomsBookingDeleteKafkaTemplate;
     private final KafkaTemplate<String, RoomsSearchDeleteRequest> roomsSearchDeleteKafkaTemplate;
+    private final KafkaTemplate<String, RoomsBookingInActivateRequest> roomsBookingInActivateKafkaTemplate;
 
     private final ModelMapper modelMapper = new ModelMapper();
     private final EntityManager entityManager;
+    private final Integer MAX_BOOKING_DAYS = 30;
 
-    public RoomsService(HotelRepository hotelRepository, RoomsRepository roomsRepository, RoomFacilityRepository roomFacilityRepository, LocalityService localityService, FacilityService facilityService, KafkaTemplate<String, RoomsBookingDetails> roomsBookingKafkaTemplate, KafkaTemplate<String, RoomsBookingDeleteRequest> roomsBookingDeleteKafkaTemplate, KafkaTemplate<String, RoomsSearchDeleteRequest> roomsSearchDeleteKafkaTemplate, EntityManager entityManager) {
-        this.hotelRepository = hotelRepository;
-        this.roomsRepository = roomsRepository;
-        this.roomFacilityRepository = roomFacilityRepository;
-        this.localityService = localityService;
-        this.facilityService = facilityService;
-        this.roomsBookingKafkaTemplate = roomsBookingKafkaTemplate;
-        this.roomsBookingDeleteKafkaTemplate = roomsBookingDeleteKafkaTemplate;
-        this.roomsSearchDeleteKafkaTemplate = roomsSearchDeleteKafkaTemplate;
-        this.entityManager = entityManager;
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-    }
 
     public List<RoomsInfo> getRoomsInfo(Integer hotelId){
 
@@ -88,19 +83,30 @@ public class RoomsService {
                 .toList();
     }
 
-    public List<RoomNameItem> getRoomNames(Integer hotelId) {
-        return roomsRepository.findByHotelId(hotelId)
-                .stream().map(room -> RoomNameItem.builder()
-                        .id(room.getId())
-                        .displayName(room.getDisplayName())
-                        .isActive(room.getIsActive())
+    public List<RoomsNameItem> getRoomsNames(Integer hotelId, Integer userId) {
+
+        LocalDate today = LocalDate.now();
+        LocalDate maxDay = today.plusDays(MAX_BOOKING_DAYS);
+
+        System.out.println("??????");
+
+
+        System.out.println(roomsRepository.findByHotelIdAndHotelManagerId(hotelId, userId));
+        return roomsRepository.findByHotelIdAndHotelManagerId(hotelId, userId)
+                .stream().map(rooms -> RoomsNameItem.builder()
+                        .id(rooms.getId())
+                        .displayName(rooms.getDisplayName())
+                        .isActive(rooms.getIsActive())
+                        .quantity(rooms.getQuantity())
+                        .availableFrom(rooms.getAvailableFrom().isAfter(today) ? rooms.getAvailableFrom() : today)
+                        .availableUntil(rooms.getAvailableUntil() == null || rooms.getAvailableUntil().isAfter(maxDay) ? maxDay: rooms.getAvailableUntil())
                         .build()
                 ).toList();
     }
 
-    public Rooms postRoom(Integer userId, Integer hotelId, RoomsRegisterRequest registerRequest) {
+    public Rooms postRoom(Integer userId, Integer hotelId, RoomsRegisterRequest request) {
         // todo: shortName cannot have any digits
-        if (registerRequest.getShortName().matches(".*\\d.*")){
+        if (request.getShortName().matches(".*\\d.*")){
             throw new IllegalArgumentException("shortName cannot have any digits");
         }
 
@@ -109,14 +115,29 @@ public class RoomsService {
             throw new ResourceNotFoundException("Hotel not found.");
         }
 
-        Rooms rooms = modelMapper.map(registerRequest, Rooms.class);
-        rooms.setId(null);
-        rooms.setHotel(entityManager.getReference(Hotel.class, hotelId));
-        rooms.setUpdatedTime(LocalDateTime.now());
+        Rooms rooms = Rooms.builder()
+                .hotel(entityManager.getReference(Hotel.class, hotelId))
+                .displayName(request.getDisplayName())
+                .shortName(request.getShortName())
+                .description(request.getDescription())
+                .isActive(request.getIsActive())
+                .maxAdult(request.getMaxAdult())
+                .maxChild(request.getMaxChild())
+                .quantity(request.getQuantity())
+                .priceMin(request.getPriceMin())
+                .priceMax(request.getPriceMax())
+                .checkInTime(request.getCheckInTime())
+                .checkOutTime(request.getCheckOutTime())
+                .availableFrom(request.getAvailableFrom())
+                .availableUntil(request.getAvailableUntil())
+                .freeCancellationDays(request.getFreeCancellationDays())
+                .noPrepaymentDays(request.getNoPrepaymentDays())
+                .updatedTime(LocalDateTime.now())
+                .build();
         rooms = roomsRepository.save(rooms);
 
-        List<RoomsFacility> savedRoomsFacilities = facilityService.saveRoomsFacilities(rooms, registerRequest.getFacilityDisplayNameList());
-        List<RoomsBed> savedRoomsBed = facilityService.saveRoomsBed(rooms, registerRequest.getBedInfoDtoList());
+        List<RoomsFacility> savedRoomsFacilities = facilityService.saveRoomsFacilities(rooms, request.getFacilityDisplayNameList());
+        List<RoomsBed> savedRoomsBed = facilityService.saveRoomsBed(rooms, request.getBedInfoDtoList());
 
 //        rooms = roomsRepository.findById(rooms.getId())
 //                .orElseThrow(() -> new ResourceNotFoundException(""));
@@ -238,6 +259,7 @@ public class RoomsService {
                 .roomsId(rooms.getId())
                 .hotelId(rooms.getHotel().getId())
                 .hotelManagerId(hotelManagerId)
+                .activate(rooms.getIsActive())
                 .displayName(rooms.getDisplayName())
                 .shortName(rooms.getShortName())
                 .maxAdult(rooms.getMaxAdult())
@@ -256,7 +278,7 @@ public class RoomsService {
                 .noPrepaymentDays(rooms.getNoPrepaymentDays())
                 .facilityDto(rooms.getRoomFacilities().stream()
                         .map(entity -> RoomsBookingDetails.FacilityDto.builder()
-                                .id(entity.getId())
+                                .id(entity.getFacility().getId())
                                 .displayName(entity.getFacility().getDisplayName())
                                 .build()).toList())
                 .bedDto(rooms.getRoomsBeds().stream()
@@ -272,9 +294,44 @@ public class RoomsService {
 
     }
 
-    public void deleteRooms(Integer hotelId, Integer roomsId, Integer userId) {
-        roomsRepository.deleteByHotelIdAndIdAndHotelManagerId(hotelId, roomsId, userId);
-        roomsBookingDeleteKafkaTemplate.send("rooms-booking-delete", RoomsBookingDeleteRequest.builder().hotelId(hotelId).roomsId(roomsId).build());
-        roomsSearchDeleteKafkaTemplate.send("rooms-search-delete", RoomsSearchDeleteRequest.builder().hotelId(hotelId).roomsId(roomsId).build());
+    public RoomsIsActiveItem getRoomsIsActive(Integer hotelId, Integer roomsId, Integer userId) {
+        Rooms rooms = roomsRepository.findByHotelIdAndIdAndHotelManagerId(hotelId, roomsId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found"));
+        return RoomsIsActiveItem.builder().isActive(rooms.getIsActive()).build();
     }
+
+    public void activateRooms(Integer hotelId, Integer roomsId, Integer userId) {
+        Rooms rooms = roomsRepository.findByHotelIdAndIdAndHotelManagerIdAndIsActive(hotelId, roomsId, userId, false)
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found"));
+        rooms.setIsActive(true);
+        roomsRepository.save(rooms);
+        postRoomsKafka(rooms, userId);
+//        roomsBookingActivateKafkaTemplate.send("rooms-booking-activate",
+//                RoomsBookingActivateRequest.builder().hotelId(hotelId).roomsId(roomsId).build());
+    }
+
+    public void inActivateRooms(Integer hotelId, Integer roomsId, Integer userId) {
+        Rooms rooms = roomsRepository.findByHotelIdAndIdAndHotelManagerIdAndIsActive(hotelId, roomsId, userId, true)
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found"));
+        rooms.setIsActive(false);
+        roomsRepository.save(rooms);
+        roomsBookingInActivateKafkaTemplate.send("rooms-booking-inactivate",
+                RoomsBookingInActivateRequest.builder().hotelId(hotelId).roomsId(roomsId).build());
+        roomsSearchDeleteKafkaTemplate.send("rooms-search-delete",
+                RoomsSearchDeleteRequest.builder().hotelId(hotelId).roomsId(roomsId).build());
+    }
+
+
+    public void deleteRooms(Integer hotelId, Rooms rooms){
+        roomsRepository.delete(rooms);
+        roomsBookingDeleteKafkaTemplate.send("rooms-booking-delete", RoomsBookingDeleteRequest.builder().hotelId(hotelId).roomsId(rooms.getId()).build());
+        roomsSearchDeleteKafkaTemplate.send("rooms-search-delete", RoomsSearchDeleteRequest.builder().hotelId(hotelId).roomsId(rooms.getId()).build());
+    }
+
+    public void deleteRooms(Integer hotelId, Integer roomsId, Integer userId) {
+        Rooms rooms = roomsRepository.findByHotelIdAndIdAndHotelManagerId(hotelId, roomsId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found"));
+        deleteRooms(hotelId, rooms);
+    }
+
 }

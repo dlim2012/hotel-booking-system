@@ -6,12 +6,16 @@ import jwt_decode from "jwt-decode";
 import {useLocation, useNavigate} from "react-router-dom";
 import './login.css';
 import '../registration/registration.css'
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
 
 function Login(props) {
     const navigate = useNavigate();
     const location = useLocation();
-    const [email, setEmail] = useState("admin@hotel-booking.com");
-    const [password, setPassword] = useState("admin_user_password");
+    // const [email, setEmail] = useState("admin@hb.com");
+    // const [password, setPassword] = useState("admin_user_password");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState(false)
     const [emailError, setEmailError] = useState(false);
 
@@ -99,10 +103,12 @@ function Login(props) {
                         <button className="registerbtn" onClick={register}>Login</button>
                     </div>
                     <div className="container signin">
-                        <p><a href="#">Create a new account.</a></p>
+                        <p><a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/register">Create a new account.</a></p>
                     </div>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

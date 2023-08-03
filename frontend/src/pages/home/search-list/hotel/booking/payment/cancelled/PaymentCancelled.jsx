@@ -1,6 +1,8 @@
 import React from 'react';
 import Navbar from "../../../../../../../components/navbar/Navbar";
 import {useLocation, useParams, useSearchParams} from "react-router-dom";
+import MailList from "../../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../../components/footer/Footer";
 
 function PaymentCancelled(props) {
     const location = useLocation();
@@ -13,13 +15,15 @@ function PaymentCancelled(props) {
         <div>
             <Navbar />
             <div>
-                <h1>Payment Failed</h1>
-                <div className="BookingItemInfo">
-                    (Hotel Name)
+                <h1>Payment failed</h1>
+                <div>
+                    Payment failed due to {status}.
                 </div>
                 <button>Retry Payment</button> <br />
                 <button>Home page</button>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

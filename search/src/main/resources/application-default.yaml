@@ -21,7 +21,6 @@ eureka:
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${eureka.instance.port}/eureka/
 
-
 logging:
   level:
     org:
@@ -30,7 +29,11 @@ logging:
 
 custom:
   elasticsearch:
-    server: 10.0.0.110:9103
+    host: 10.0.0.110
+    port: 9200
+    username: elastic
+    password: changeme
+    useSsl: false
   security:
     rsa:
       public-key: classpath:certs/public.pem

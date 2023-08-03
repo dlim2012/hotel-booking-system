@@ -1,0 +1,12 @@
+.userPasswordItem{
+    margin-top: 5px;
+}
+
+.userPasswordSaveBtn{
+    margin-top: 5px;
+}
+
+.userPasswordWarning{
+    color: red;
+    font-size: 13px;
+}

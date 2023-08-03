@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hb-hotel
+spec:
+  selector:
+    app: hb-hotel
+  ports:
+    - port: 80
+      targetPort: 9001
+  type: LoadBalancer
+
+

@@ -1,3 +1,43 @@
-.bar{
-    background-color: #febb02;
+.form{
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
 }
+
+.hotelRegisterHeader{
+    background-color: white;
+    color: black;
+}
+
+.progressBarContainer{
+    display: flex;
+    margin: auto;
+    padding-right: 100px;
+    width: 90%;
+}
+
+.footer{
+    display: flex;
+    flex-direction: row;
+
+}
+
+.footer > button {
+    padding: 10px;
+}
+
+
+.hotelLocationInputWarning{
+    color: red;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+/*.bar{*/
+/*    background-color: #febb02;*/
+/*    max-width: 800px;*/
+/*    margin-left: auto;*/
+/*    margin-right: auto;*/
+/*}*/

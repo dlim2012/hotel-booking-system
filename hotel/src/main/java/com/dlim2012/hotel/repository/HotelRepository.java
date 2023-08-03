@@ -1,7 +1,9 @@
 package com.dlim2012.hotel.repository;
 
+import com.dlim2012.hotel.dto.query.HotelIsActiveQuery;
 import com.dlim2012.hotel.entity.Hotel;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +25,10 @@ public interface HotelRepository extends JpaRepository<Hotel, Integer> {
 
     Optional<Hotel> findByIdAndHotelManagerId(Integer hotelId, Integer userId);
 
+    Optional<Hotel> findByIdAndHotelManagerIdAndIsActive(Integer hotelId, Integer userId, boolean b);
+
     @Transactional
+    @Modifying
     void deleteByHotelManagerId(Integer userId);
 
     @Query(
@@ -32,4 +37,14 @@ public interface HotelRepository extends JpaRepository<Hotel, Integer> {
             nativeQuery = true
     )
     List<Hotel> findBySavedUserId(Integer userId);
+
+    @Query(
+            value = "SELECT h.is_active as isActive,  sum(if (r.is_active IS TRUE, 1, 0)) as activeRoomsCount "+
+                    "FROM hotel h " +
+                    "JOIN rooms r ON h.id = r.hotel_id " +
+                    "WHERE h.id = ?1 AND h.hotel_manager_id = ?2",
+            nativeQuery = true
+    )
+    HotelIsActiveQuery findIsActiveInfo(Integer hotelId, Integer userId);
+
 }

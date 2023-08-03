@@ -1,6 +1,6 @@
 import './bookingConfirmation.css'
 import Navbar from "../../../../../../components/navbar/Navbar";
-import {useLocation, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import hotel from "../../Hotel";
 import getBedText from "../../../../../../functions/bedText";
 import getDateTextShort, {getDateTextShort2} from "../../../../../../functions/dateTextShort";
@@ -8,6 +8,9 @@ import getDateText from "../../../../../../functions/dateTextLong";
 import {useState} from "react";
 import {gu} from "date-fns/locale";
 import {postWithJwt} from "../../../../../../clients";
+import MailList from "../../../../../../components/mailList/MailList";
+import Footer from "../../../../../../components/footer/Footer";
+import ScrollToTop from "../../../../../../components/scrollToTop/scrollToTop";
 
 const getTimeText = (timeInteger) => {
     var hour = Math.floor(timeInteger / 60);
@@ -28,6 +31,8 @@ function getDaysBefore(date, days){
 
 function BookingConfirmation(props) {
     const location = useLocation();
+    const navigate = useNavigate();
+
     let { hotelId } = useParams();
 
     const searchItem = location.state.searchItem;
@@ -55,8 +60,6 @@ function BookingConfirmation(props) {
     const [arrivalTime, setArrivalTime] = useState("-1");
 
     var dates = Math.round((searchItem.date[0].endDate.getTime() - searchItem.date[0].startDate.getTime()) / 86400000);
-
-    const today = new Date();
 
     function getPayload(){
         var payloadRooms = []
@@ -101,7 +104,7 @@ function BookingConfirmation(props) {
         postWithJwt(`/api/v1/booking/hotel/${hotelId}/reserve`, payload)
             .then(response=>response.json())
             .then(data => {
-                console.log(data)
+                navigate(`/hotels/booking/reserved/${data.bookingId}`, {state: {payload: payload, hotelDetails: hotelDetails}})
             })
             .catch(e => {
                 console.log(e);
@@ -136,6 +139,7 @@ function BookingConfirmation(props) {
 
     return (
         <div>
+            <ScrollToTop/>
             <Navbar />
             <div className="bookingContents">
                 <div className="bookingHotelInfo">
@@ -206,20 +210,20 @@ function BookingConfirmation(props) {
                                         room.breakfast && <span>Breafast included in the price</span>
                                     }
                                     {
-                                        room.prepayUntil !== null && room.prepayUntil.getDate() === searchItem.date[0].startDate.getDate() &&
+                                        room.prepayUntil !== undefined && room.prepayUntil.getDate() === searchItem.date[0].startDate.getDate() &&
                                         <div>
                                             No prepayment needed - pay at the property
                                         </div>
                                     }
                                     {
-                                        room.prepayUntil != null && room.prepayUntil.getDate() !== searchItem.date[0].startDate.getDate() &&
+                                        room.prepayUntil !== undefined && room.prepayUntil.getDate() !== searchItem.date[0].startDate.getDate() &&
                                         <div>
                                             <span>No prepayments required before 11:59 PM on {getDateText(room.prepayUntil)}</span>
                                             <br/>
                                         </div>
                                     }
                                     {
-                                        room.freeCancellationUntil != null && room.prepayUntil.getDate() !== searchItem.date[0].startDate.getDate() &&
+                                        room.freeCancellationUntil !== undefined && room.prepayUntil.getDate() !== searchItem.date[0].startDate.getDate() &&
                                         <div>
                                             <span>Free cancellation before 11:59 PM on {getDateText(room.freeCancellationUntil)}</span>
                                             <br/>
@@ -294,11 +298,13 @@ function BookingConfirmation(props) {
                     <br/>
                     <div className="paypalTestAccount">
                         <span>Paypal test account</span><br/>
-                        <span>name: sb-gf6gq26737491@business.example.com</span><br/>
-                        <span>password: YUFL_7pG</span>
+                        <span>name: sb-gg0wr26334198@business.example.com</span><br/>
+                        <span>password: aP4VNrx6ZH*T</span>
                     </div>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

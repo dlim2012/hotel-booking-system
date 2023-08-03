@@ -3,6 +3,9 @@ import Navbar from "../../../../components/navbar/Navbar";
 import {getWithJwt} from "../../../../clients";
 import {useNavigate} from "react-router-dom";
 import './saved.css'
+import noDataImage from "../../../../assets/images/No data.png"
+import MailList from "../../../../components/mailList/MailList";
+import Footer from "../../../../components/footer/Footer";
 
 function Saved(props) {
 
@@ -44,8 +47,15 @@ function Saved(props) {
     return (
         <div>
             <Navbar/>
-            {savedHotels.length > 0 &&
             <div className="savedHotelsContainer">
+            <h1>Save Hotels</h1>
+            {
+                savedHotels.length === 0 &&
+                <div className="savedHotelsNoData">
+                    <img src={noDataImage} width="200px"/>
+                </div>
+            }
+            {savedHotels.length > 0 &&
                 <table>
                     <tr>
                         <th>Name</th>
@@ -70,8 +80,10 @@ function Saved(props) {
                         })
                     }
                 </table>
-            </div>
             }
+            </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

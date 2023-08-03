@@ -21,15 +21,19 @@ function RoomProfileSidebar(props) {
         navigate(`/user/hotel/${hotelId}/rooms/${roomsId}/facilities`)
     }
 
+    const navSettings = () => {
+        navigate(`/user/hotel/${hotelId}/rooms/${roomsId}/settings`)
+    }
+
     return (
         <div className="profileSidebar">
             <ul className="profileSidebarList">
-                <li
-                    className="profileSidebarItem"
-                    onClick={navBooking}
-                >
-                    Booking
-                </li>
+                {/*<li*/}
+                {/*    className="profileSidebarItem"*/}
+                {/*    onClick={navBooking}*/}
+                {/*>*/}
+                {/*    Booking*/}
+                {/*</li>*/}
                 {/*<li*/}
                 {/*    className="profileSidebarItem"*/}
                 {/*    onClick={navDates}*/}
@@ -47,6 +51,12 @@ function RoomProfileSidebar(props) {
                     onClick={navFacilities}
                 >
                     Facilities
+                </li>
+                <li
+                    className="profileSidebarItem"
+                    onClick={navSettings}
+                >
+                    Settings
                 </li>
             </ul>
         </div>

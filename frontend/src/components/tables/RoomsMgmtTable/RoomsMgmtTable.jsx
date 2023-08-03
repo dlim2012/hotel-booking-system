@@ -12,7 +12,7 @@ function HotelTable(props) {
     const newData = props.data
         .map(v => {
             rowIndex += 1;
-            return {...v, rowIndex: rowIndex, isActive: v["isActive"] ? "O" : "X"}
+            return {...v, rowIndex: rowIndex}
         });
 
 
@@ -40,7 +40,6 @@ function HotelTable(props) {
                                 </th>
                             ))
                         }
-                        <th>Modify</th>
                     </tr>
                 ))
             }
@@ -49,13 +48,12 @@ function HotelTable(props) {
             {
                 rows.map((row) => {
                     prepareRow(row)
-                    console.log(row.original.id)
                     return (
                         <tr {...row.getRowProps()}
-                            onClick={
-                                () =>
-                                    navigate(`${row.original.id}/info`)
-                            }
+                            // onClick={
+                            //     () =>
+                            //         navigate(`${row.original.id}/info`)
+                            // }
                         >
                             {
                                 row.cells.map((cell) => (

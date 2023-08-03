@@ -42,6 +42,7 @@ spring:
     type: redis
     cache-names:
       - booking
+      - hotel
     redis:
       time-to-live: 10000
       cache-null-values: true
@@ -71,3 +72,7 @@ custom:
       - ADMIN
       - HOTEL_MANAGER
       - APP_USER
+  redis:
+    host: 10.0.0.110
+    port: 9105
+  gateway: "http://10.0.0.110:9000"

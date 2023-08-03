@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hb-search-consumer
+  labels:
+    app: hb-search-consumer
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: hb-search-consumer
+      labels:
+        app: hb-search-consumer
+    spec:
+      containers:
+        - name: hb-search-consumer
+          image: dlim2012/hb.search-consumer:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9006
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kube
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: hb-search-consumer

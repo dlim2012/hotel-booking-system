@@ -26,6 +26,8 @@ public class AddToDb {
 
     private final String LoremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
 
+    private Integer MAX_BOOKING_DAYS = 30;
+
     public void run() throws InterruptedException, IOException {
         apiCalls.init();
         addHotelsFromCSV();
@@ -85,6 +87,7 @@ public class AddToDb {
         int roomsCount = 0;
         int roomCount = 0;
         long start = System.currentTimeMillis();
+//        for (int i = 1; i < 2; i++) {
         for (int i = 1; i < csvHotelData.size(); i++) {
             List<String> row = csvHotelData.get(i);
 //            if (!Objects.equals(row.get(3), "New York")) {
@@ -101,7 +104,7 @@ public class AddToDb {
                 }
             }
             long time = System.currentTimeMillis();
-            System.out.println("==========    " + i + "/" + csvHotelData.size() + " , (count: " + count + "/" + countAdded + ", " + String.format("%.2f", ((double) (time - start)) / 1000 / count) + ", total time: " + String.format("%.2f", ((double) time - start) / 1000) + ")    ===================");
+            System.out.println("==========    " + i + "/" + csvHotelData.size() + " , (count: " + count + "/" + countAdded + ", rooms count: " + roomsCount + ", room count: " + roomCount + ", average time: " + String.format("%.2f", ((double) (time - start)) / 1000 / count) + ", total time: " + String.format("%.2f", ((double) time - start) / 1000) + ")    ===================");
 
             countAdded++;
 
@@ -158,13 +161,20 @@ public class AddToDb {
                 int noPrepaymentDays = (int) (Math.random() * 10);
                 int freeCancellationDays = (int) (Math.random() * noPrepaymentDays);
                 int roomNameIndex = (int) Math.floor((Math.random() * roomNames.size() * 0.9999));
+                LocalDate availableFrom = LocalDate.now();
+                LocalDate availableUntil = null;
+//                if (Math.random() > 0.8){
+//                    availableUntil = null;
+//                } else {
+//                    availableUntil = LocalDate.now().plusDays(MAX_BOOKING_DAYS).minusDays((int) (Math.random() * MAX_BOOKING_DAYS / 2));
+//                }
                 String roomName = roomNames.get(roomNameIndex) + String.format(" with %d bed" + (numBeds > 1 ? "s" : ""), numBeds);
 
 
                 List<String> roomFacilities = new ArrayList<>();
                 for (String facility : sharedIds.getRoomFacilityList()) {
-                    if (facility == "Breakfast") {
-                        if (rand.nextDouble() < 0.8) {
+                    if (Objects.equals(facility, "Breakfast")) {
+                        if (rand.nextDouble() < 0.9) {
                             roomFacilities.add(facility);
                         }
                     } else {
@@ -202,7 +212,8 @@ public class AddToDb {
                         .checkOutTime(checkOutTime)
                         .checkInTime(checkInTime)
                         .isActive(true)
-                        .availableFrom(LocalDate.now())
+                        .availableFrom(availableFrom)
+                        .availableUntil(availableUntil)
                         .freeCancellationDays(noPrepaymentDays / 2)
                         .noPrepaymentDays(freeCancellationDays)
                         .facilityDisplayNameList(roomFacilities)
@@ -219,6 +230,7 @@ public class AddToDb {
 //            if (count >= 2){
 //                break;
 //            }
+
         }
     }
 

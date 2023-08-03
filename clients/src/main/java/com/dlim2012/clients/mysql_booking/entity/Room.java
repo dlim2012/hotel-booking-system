@@ -3,6 +3,7 @@ package com.dlim2012.clients.mysql_booking.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Builder
@@ -12,7 +13,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "room")
-public class Room {
+public class Room implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

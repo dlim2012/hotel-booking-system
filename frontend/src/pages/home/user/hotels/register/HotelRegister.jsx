@@ -7,6 +7,10 @@ import ProgressBar from "./ProgressBar";
 import {center_init, hotelFacilities} from "../../../../../assets/Lists";
 import {postWithJwt} from "../../../../../clients";
 import {useNavigate} from "react-router-dom";
+import './hotelRegister.css'
+import MailList from "../../../../../components/mailList/MailList";
+import Footer from "../../../../../components/footer/Footer";
+import {validateEmail} from "../../utils/inputValidation";
 
 
 function HotelRegister(props) {
@@ -32,6 +36,9 @@ function HotelRegister(props) {
 
     const [facilities, setFacilities] = useState(Object.fromEntries(hotelFacilities.map(i => [i, false])));
 
+    var defaultLocationWarnings = {addressline1: false, city: false, country: false}
+    var defaultInfoWarnings = {name: false, phone: false, email: false}
+    const [openWarnings, setOpenWarnings] = useState(defaultLocationWarnings)
 
     const handleSubmit = () => {
         delete address['street_number']
@@ -66,15 +73,38 @@ function HotelRegister(props) {
         <div>
             <Navbar />
             <div className="form">
-                <ProgressBar bgcolor="#febb02" page={page} numPages={FormTitles.length}/>
+                <div className="progressBarContainer">
+                    <ProgressBar bgcolor="#febb02" page={page} numPages={FormTitles.length}/>
+                </div>
                 <div className="form-container">
-                    <div className="header">
+                    <div className="hotelRegisterHeader">
                         <h1>{FormTitles[page]}</h1>
                     </div>
                     <div className="body">
-                        {page === 0 && <HotelLocation address={address} setAddress={setAddress} coordinates={coordinates} setCoordinates={setCoordinates}/>}
-                        {page === 1 && <HotelInfo info={hotelInfo} setInfo={setHotelInfo}/>}
-                        {page === 2 && <HotelFacilities info={facilities} setInfo={setFacilities} />}
+                        {page === 0 &&
+                            <HotelLocation
+                                address={address}
+                                setAddress={setAddress}
+                                coordinates={coordinates}
+                                setCoordinates={setCoordinates}
+                                openWarnings={openWarnings}
+                                setOpenWarnings={setOpenWarnings}
+                            />
+                        }
+                        {page === 1 &&
+                            <HotelInfo
+                                info={hotelInfo}
+                                setInfo={setHotelInfo}
+                                openWarnings={openWarnings}
+                                setOpenWarnings={setOpenWarnings}
+                            />
+                        }
+                        {page === 2 &&
+                            <HotelFacilities
+                                info={facilities}
+                                setInfo={setFacilities}
+                            />
+                        }
                     </div>
                     <div className="footer">
                         <button
@@ -86,11 +116,39 @@ function HotelRegister(props) {
                         { page < FormTitles.length - 1 &&
                         <button
                             onClick={()=>{
-
-                                console.log(address, coordinates, hotelInfo, facilities);
-                            setPage((page) => page + 1
-                            )
-                        }}>Next</button>
+                                if (page === 0){
+                                    var newOpenWarnings = {
+                                        addressLine1: address.addressLine1.length === 0,
+                                        city: address.city.length === 0,
+                                        country: address.country.length === 0
+                                    }
+                                    for (let key of Object.keys(newOpenWarnings)){
+                                        if (newOpenWarnings[key]){
+                                            setOpenWarnings(newOpenWarnings);
+                                            return;
+                                        }
+                                    }
+                                    setOpenWarnings(defaultInfoWarnings);
+                                    setPage((page) => page + 1)
+                                } else if (page === 1) {
+                                    var newOpenWarnings = {
+                                        name: hotelInfo.name.length < 3,
+                                        phone: hotelInfo.phone.length === 0,
+                                        email: !validateEmail(hotelInfo.email)
+                                    }
+                                    console.log(newOpenWarnings)
+                                    for (let key of Object.keys(newOpenWarnings)){
+                                        if (newOpenWarnings[key]){
+                                            setOpenWarnings(newOpenWarnings);
+                                            return;
+                                        }
+                                    }
+                                    setPage((page) => page + 1)
+                                } else {
+                                        setPage((page) => page + 1)
+                                    }
+                                }
+                        }>Next</button>
                         }
                         { page === FormTitles.length - 1 &&
                             <button
@@ -100,6 +158,8 @@ function HotelRegister(props) {
                     </div>
                 </div>
             </div>
+            <MailList/>
+            <Footer/>
         </div>
     );
 }

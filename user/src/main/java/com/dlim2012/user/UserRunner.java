@@ -80,7 +80,7 @@ public class UserRunner implements CommandLineRunner {
                 .id(id)
                 .firstName("admin")
                 .lastName("admin")
-                .email("admin@hotel-booking.com")
+                .email("admin@hb.com")
                 .userCreatedAt(LocalDateTime.now())
                 .locked(false)
                 .userRole(UserRole.ADMIN)
@@ -98,7 +98,7 @@ public class UserRunner implements CommandLineRunner {
 
                 .firstName("James")
                 .lastName("Anderson")
-                .email("appUser@hotel-booking.com")
+                .email("appUser@hb.com")
                 .userCreatedAt(LocalDateTime.now())
                 .locked(false)
                 .userRole(UserRole.APP_USER)

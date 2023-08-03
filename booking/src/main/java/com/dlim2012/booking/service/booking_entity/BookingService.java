@@ -110,8 +110,11 @@ public class BookingService {
         for (Rooms rooms: roomsSet){
             roomSet.addAll(rooms.getRoomSet());
         }
-        Set<Price> priceSet = priceRepository.findByHotelIdAndDates(hotelId, request.getStartDate(), request.getEndDate());
-        Set<Dates> datesSet = datesRepository.findByHotelIdAndDatesContainsWithLock(hotelId, request.getStartDate(), request.getEndDate());
+
+        Set<Price> priceSet = priceRepository.findByHotelIdAndDates(
+                hotelId, request.getStartDate(), request.getEndDate());
+        Set<Dates> datesSet = datesRepository.findByHotelIdAndDatesContainsWithLock(
+                hotelId, request.getStartDate(), request.getEndDate());
 
         Map<Long, Integer> roomsIdMap = new HashMap<>();
         for (Room room: roomSet){
@@ -159,7 +162,6 @@ public class BookingService {
         Map<Integer, List<Long>> roomsIdToroomIds = reserveHotelRooms(hotelId, userId, request, hotel.getRoomsSet(), roomsPrice);
 
         if (roomsIdToroomIds == null){
-            // todo: alert for booking unavailable in frontend
             return null;
         }
 //        datesRepository.saveAll(datesToUpdate);
@@ -309,6 +311,7 @@ public class BookingService {
         BookingResponse bookingResponse = createBookingPayment(booking, description);
         bookingRepository.save(booking);
         cacheService.cacheBookingIdForTTL(booking.getId());
+        System.out.println(bookingResponse);
         return bookingResponse;
     }
 

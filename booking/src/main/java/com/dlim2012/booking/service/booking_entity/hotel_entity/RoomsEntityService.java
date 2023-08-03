@@ -3,8 +3,10 @@ package com.dlim2012.booking.service.booking_entity.hotel_entity;
 import com.dlim2012.booking.dto.internal.DateRange;
 import com.dlim2012.booking.dto.reserve.BookingRequest;
 import com.dlim2012.booking.service.booking_entity.PriceService;
+import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
+import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
 import com.dlim2012.clients.mysql_booking.entity.*;
@@ -17,6 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -30,6 +33,7 @@ public class RoomsEntityService {
     private final RoomRepository roomRepository;
     private final DatesRepository datesRepository;
     private final PriceRepository priceRepository;
+    private final BookingRoomRepository bookingRoomRepository;
 
     private final KafkaTemplate<String, RoomsSearchDetails> roomsSearchKafkaTemplate;
     private final KafkaTemplate<String, RoomsSearchDeleteRequest> roomsSearchDeleteKafkaTemplate;
@@ -40,7 +44,7 @@ public class RoomsEntityService {
 
 
     public void _registerRooms(RoomsBookingDetails details){
-        if (details.getQuantity()<=0){
+        if (details.getQuantity()<=0 || !details.getActivate()){
             return;
         }
         // get start and end dates
@@ -55,6 +59,7 @@ public class RoomsEntityService {
         Rooms rooms = Rooms.builder()
                 .id(details.getRoomsId())
                 .hotel(entityManager.getReference(Hotel.class, details.getHotelId()))
+                .isActive(true)
                 .quantity(details.getQuantity())
                 .displayName(details.getDisplayName())
                 .shortName(details.getShortName())
@@ -73,7 +78,7 @@ public class RoomsEntityService {
         roomsRepository.save(rooms);
 
 
-        // Save 'room' and 'dates' rows
+        // Save 'room' rows
         List<Room> roomList = new ArrayList<>();
         for (int i=0; i<details.getQuantity(); i++){
             Room room = Room.builder()
@@ -83,6 +88,10 @@ public class RoomsEntityService {
             roomList.add(room);
         }
         roomList = roomRepository.saveAll(roomList);
+
+        if (!rooms.getIsActive()){
+            return;
+        }
 
         // save 'dates' table rows
         List<Dates> datesList = new ArrayList<>();
@@ -102,14 +111,15 @@ public class RoomsEntityService {
 
     }
 
-    public Boolean __updateRoomsInfo(RoomsBookingDetails details, List<Room> roomArrayList,
+    public Rooms __updateRoomsInfo(RoomsBookingDetails details, List<Room> roomArrayList,
                                      List<Room> remainingRoomList, RoomsData prevRooms, LocalDate addedUntil){
         Optional<Rooms> optionalRooms = roomsRepository.findById(details.getRoomsId());
         if (optionalRooms.isEmpty()){
-            return false;
+            return null;
         }
         Rooms rooms = optionalRooms.get();
 
+        prevRooms.setIsActive(rooms.getIsActive());
         prevRooms.setAvailableFrom(rooms.getAvailableFrom());
         prevRooms.setAvailableUntil(rooms.getAvailableUntil());
         prevRooms.setPriceMax(rooms.getPriceMax());
@@ -153,79 +163,124 @@ public class RoomsEntityService {
             remainingRoomList.addAll(rooms.getRoomSet());
         }
 
-        roomsRepository.save(rooms);
-        return true;
+        return roomsRepository.save(rooms);
     }
 
-    public void __updateRoomsDates(
-            RoomsBookingDetails details,
+
+
+    public void _updateRoomsDates(
+            Integer roomsId,
             List<Room> remainingRoomList,
             LocalDate prevStartDate,
             LocalDate prevEndDate,
             LocalDate startDate,
             LocalDate endDate
     ){
-        List<Dates> datesToAdd = new ArrayList<>();
-        List<Dates> datesToDelete = new ArrayList<>();
 
-        Set<Dates> datesSet = datesRepository.findByRoomsIdWithLock(details.getRoomsId());
+        Set<Dates> datesSet = datesRepository.findByRoomsIdWithLock(roomsId);
+        datesRepository.deleteAll(datesSet);
 
-        Map<Long, List<Dates>> datesRoomMap = new HashMap<>();
-        for (Dates dates: datesSet){
-            Long roomId = dates.getRoom().getId();
-            List<Dates> datesList = datesRoomMap.getOrDefault(roomId, new ArrayList<>());
-            datesList.add(dates);
-            datesRoomMap.put(roomId, datesList);
-        }
-
+        // Add new days
+        int numDays = (int) ChronoUnit.DAYS.between(startDate, endDate);
+        Map<Long, Boolean[]> roomDateMap = new HashMap<>();
         for (Room room: remainingRoomList){
             Long roomId = room.getId();
-            List<Dates> datesList = datesRoomMap.getOrDefault(roomId, null);
-            if (datesList == null){
-                if (startDate.isBefore(prevStartDate)){
-                    datesToAdd.add(Dates.builder().room(room).startDate(startDate).endDate(prevStartDate).build());
-                }
-                if (endDate.isAfter(prevEndDate)){
-                    datesToAdd.add(Dates.builder().room(room).startDate(prevEndDate).endDate(endDate).build());
-                }
-            } else {
-                datesList.sort((o1, o2) -> o1.getStartDate().compareTo(o2.getStartDate()));
-                if (startDate.isBefore(prevStartDate)){
-                    if (datesList.get(0).getStartDate().isEqual(prevStartDate)){
-                        datesList.get(0).setStartDate(startDate);
-                    } else {
-                        datesToAdd.add(Dates.builder().room(room).startDate(startDate).endDate(prevStartDate).build());
-                    }
-                }
-                if (endDate.isAfter(prevEndDate)){
-                    if (datesList.get(datesList.size()-1).getEndDate().isEqual(prevEndDate)){
-                        datesList.get(datesList.size()-1).setEndDate(endDate);
-                    } else {
-                        datesToAdd.add(Dates.builder().room(room).startDate(prevEndDate).endDate(endDate).build());
-                    }
-                }
-                for (Dates dates: datesSet){
-                    if (!dates.getEndDate().isAfter(startDate)){
-                        datesToDelete.add(dates);
-                        continue;
-                    }
-                    if (!dates.getStartDate().isBefore(endDate)){
-                        datesToDelete.add(dates);
-                        continue;
-                    }
+            Boolean[] boolArray = new Boolean[numDays];
+            Arrays.fill(boolArray, Boolean.FALSE);
 
-                    if (dates.getStartDate().isBefore(startDate)){
-                        dates.setStartDate(startDate);
-                    }
-                    if (dates.getEndDate().isAfter(endDate)){
-                        dates.setEndDate(endDate);
-                    }
+            int i = 0;
+            for (LocalDate date=startDate; date.isBefore(endDate); date = date.plusDays(1)){
+                if (date.isBefore(prevStartDate) || !date.isBefore(prevEndDate)){
+                    boolArray[i] = true;
                 }
+                i += 1;
+            }
+            roomDateMap.put(roomId, boolArray);
+        }
+        for (Map.Entry<Long, Boolean[]> entry: roomDateMap.entrySet()){
+            System.out.println(entry.getKey() + " " + Arrays.toString(entry.getValue()));
+        }
+
+        // Add previous days
+        for (Dates dates: datesSet){
+            Long roomId = dates.getRoom().getId();
+            Boolean[] boolArray = roomDateMap.getOrDefault(roomId, null);
+            for (LocalDate date = dates.getStartDate(); date.isBefore(dates.getEndDate()); date = date.plusDays(1)){
+                int index = (int) ChronoUnit.DAYS.between(startDate, date);
+                if (index >= numDays){
+                    break;
+                }
+                if (index < 0){
+                    continue;
+                }
+                boolArray[index] = true;
             }
         }
-        datesSet.addAll(datesToAdd);
-        datesRepository.saveAll(datesSet);
-        datesRepository.deleteAll(datesToDelete);
+        for (Map.Entry<Long, Boolean[]> entry: roomDateMap.entrySet()){
+            System.out.println(entry.getKey() + " " + Arrays.toString(entry.getValue()));
+        }
+
+        // Remove booked days
+        Set<BookingRoom> bookingRooms = bookingRoomRepository.findByRoomsId(roomsId);
+        for (BookingRoom bookingRoom: bookingRooms){
+            Long roomId = bookingRoom.getRoomId();
+            Boolean[] boolArray = roomDateMap.getOrDefault(roomId, null);
+            if (boolArray == null){
+                continue;
+            }
+            int start = (int) ChronoUnit.DAYS.between(startDate, bookingRoom.getStartDateTime().toLocalDate());
+            int numBookedDays = (int) ChronoUnit.DAYS.between(bookingRoom.getStartDateTime().toLocalDate(), bookingRoom.getEndDateTime().toLocalDate());
+            for (int i = Math.max(start, 0); i<numBookedDays; i++){
+                if (i < 0){
+                    continue;
+                }
+                if (i >=numDays){
+                    break;
+                }
+                boolArray[i] = false;
+            }
+        }
+
+//        for (Map.Entry<Long, Boolean[]> entry: roomDateMap.entrySet()){
+//            System.out.println(entry.getKey() + " " + Arrays.toString(entry.getValue()));
+//        }
+
+        // Make dates
+        List<Dates> newDates = new ArrayList<>();
+        for (Map.Entry<Long, Boolean[]> entry: roomDateMap.entrySet()){
+            Long roomId = entry.getKey();
+            Boolean[] boolArray = entry.getValue();
+            int start = 0;
+            for (int i=0; i<numDays; i++){
+                if (!boolArray[i]) {
+                    if (start < i){
+                        newDates.add(Dates.builder()
+                                .room(entityManager.getReference(Room.class, roomId))
+                                .startDate(startDate.plusDays(start))
+                                .endDate(startDate.plusDays(i))
+                                .build());
+                    }
+                    start = i + 1;
+                }
+            }
+            if (start < numDays) {
+                newDates.add(Dates.builder()
+                        .room(entityManager.getReference(Room.class, roomId))
+                        .startDate(startDate.plusDays(start))
+                        .endDate(startDate.plusDays(numDays))
+                        .build());
+            }
+        }
+
+        newDates = datesRepository.saveAll(newDates);
+    }
+
+    public void _removeDates(Integer hotelId, Integer roomsId){
+        datesRepository.deleteByRoomsId(roomsId);
+    }
+
+    public void _removePrices(Integer hotelId, Integer roomsId){
+        priceRepository.deleteAllByRoomsId(roomsId);
     }
 
     public void _updateRooms(
@@ -245,17 +300,15 @@ public class RoomsEntityService {
                 maxBookingDate : details.getAvailableUntil();
 
         /* 1) save room information */
-        if (!__updateRoomsInfo(details, roomArrayList, remainingRoomList, prevRooms, endDate)){
+        Rooms rooms = __updateRoomsInfo(details, roomArrayList, remainingRoomList, prevRooms, endDate);
+        if (rooms == null){
             _registerRooms(details);
             return;
         }
 
-
         LocalDate prevStartDate = prevRooms.getAvailableFrom().isAfter(minBookingDate) ? prevRooms.getAvailableFrom() : minBookingDate;
         LocalDate prevEndDate = prevRooms.getAvailableUntil() == null || prevRooms.getAvailableUntil().isAfter(maxBookingDate) ?
                 maxBookingDate : prevRooms.getAvailableUntil();
-
-
 
         /* adjust room: remove */
         if (prevRooms.getQuantity() > details.getQuantity()){
@@ -263,20 +316,31 @@ public class RoomsEntityService {
         }
 
         /* 3) reset date ranges while considering booking */
-        __updateRoomsDates(details, remainingRoomList, prevStartDate, prevEndDate, startDate, endDate);
-
+        if (prevRooms.isActive) {
+            _updateRoomsDates(details.getRoomsId(), remainingRoomList, prevStartDate, prevEndDate, startDate, endDate);
+        }
 
         /* adjust room: add */
         if (prevRooms.getQuantity() < details.getQuantity()){
-            roomRepository.saveAll(roomArrayList);
+            roomArrayList = roomRepository.saveAll(roomArrayList);
+            // todo: does this fetch roomIds as well?
+            System.out.println("roomArrayList " + roomArrayList);
+            if (prevRooms.isActive) {
+                activateRoomList(details.getRoomsId(), roomArrayList);
+            }
         }
 
-
         /* 4) update price */
-        priceService.updatePriceNewDateRange(
-                details.getRoomsId(), details.getPriceMin(), details.getPriceMax(),
-                prevStartDate, prevEndDate, startDate, endDate
-        );
+        if (prevRooms.isActive) {
+            priceService.updatePriceNewDateRange(
+                    details.getRoomsId(), details.getPriceMin(), details.getPriceMax(),
+                    prevStartDate, prevEndDate, startDate, endDate
+            );
+        }
+
+        if (!prevRooms.isActive && details.getActivate()){
+            activateRoomList(details.getRoomsId(), null);
+        }
     }
 
 
@@ -298,6 +362,8 @@ public class RoomsEntityService {
             datesMap.put(roomId, roomDatesList);
         }
 
+        System.out.println(rooms.getRoomSet());
+        System.out.println(datesMap);
 
         RoomsSearchDetails roomsSearchDetails = RoomsSearchDetails.builder()
                 .roomsId(details.getRoomsId())
@@ -343,6 +409,91 @@ public class RoomsEntityService {
         roomsSearchKafkaTemplate.send("rooms-search", roomsSearchDetails);
     }
 
+
+    public void inactivateRooms(RoomsBookingInActivateRequest request) {
+        Rooms rooms = roomsRepository.findById(request.getRoomsId())
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found."));
+        _removeDates(request.getHotelId(), request.getRoomsId());
+        _removePrices(request.getHotelId(), request.getRoomsId());
+        rooms.setIsActive(false);
+        roomsRepository.save(rooms);
+    }
+
+    public void activateRoomList(Integer roomsId, List<Room> roomList) {
+        Rooms rooms = roomsRepository.findByIdWithLock(roomsId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rooms not found."));
+        if (roomList == null){
+            roomList = new ArrayList<>(rooms.getRoomSet());
+        }
+
+        // get start and end dates
+        LocalDate minBookingDate = LocalDate.now();
+        LocalDate maxBookingDate = minBookingDate.plusDays(MAX_BOOKING_DAYS);
+
+        LocalDate startDate = rooms.getAvailableFrom().isAfter(minBookingDate) ? rooms.getAvailableFrom() : minBookingDate;
+        LocalDate endDate = rooms.getAvailableUntil() == null || rooms.getAvailableUntil().isAfter(maxBookingDate) ?
+                maxBookingDate : rooms.getAvailableUntil();
+
+        // get booked dates
+        Set<BookingRoom> bookingRooms = bookingRoomRepository.findByRoomsId(roomsId);
+        Map<Long, List<BookingRoom>> bookingRoomMap = new HashMap<>();
+        for (BookingRoom bookingRoom: bookingRooms){
+            Long roomId = bookingRoom.getRoomId();
+            List<BookingRoom> roomsBookingRoomList = bookingRoomMap.getOrDefault(roomId, new ArrayList<>());
+            roomsBookingRoomList.add(bookingRoom);
+            bookingRoomMap.put(roomId, roomsBookingRoomList);
+        }
+
+        List<Dates> datesToAdd = new ArrayList<>();
+        for (Room room: roomList){
+            Long roomId = room.getId();
+            List<BookingRoom> roomsBookingRoomList = bookingRoomMap.getOrDefault(roomId, null);
+            if (roomsBookingRoomList == null){
+                datesToAdd.add(Dates.builder()
+                        .room(room)
+                        .startDate(startDate)
+                        .endDate(endDate)
+                        .build());
+            } else {
+                roomsBookingRoomList.sort((o1, o2) -> o1.getStartDateTime().compareTo(o2.getStartDateTime()));
+                LocalDate date = startDate;
+                for (BookingRoom bookingRoom: roomsBookingRoomList){
+                    LocalDate bookingRoomStartDate = bookingRoom.getStartDateTime().toLocalDate();
+                    LocalDate bookingRoomEndDate  = bookingRoom.getEndDateTime().toLocalDate();
+                    if (!bookingRoomEndDate.isAfter(date)){
+                        continue;
+                    } else if (!bookingRoomStartDate.isAfter(date)){
+                        if (!bookingRoomEndDate.isBefore(endDate)){
+                            date = endDate;
+                            break;
+                        }
+                        date = bookingRoomEndDate;
+                    } else if (!bookingRoomStartDate.isAfter(endDate)){
+                        datesToAdd.add(Dates.builder().room(room).startDate(date).endDate(bookingRoomStartDate).build());
+                        if (!bookingRoomEndDate.isBefore(endDate)){
+                            date = endDate;
+                            break;
+                        }
+                        date = bookingRoomEndDate;
+                    } else {
+                        datesToAdd.add(Dates.builder().room(room).startDate(date).endDate(endDate).build());
+                        date = endDate;
+                        break;
+                    }
+                }
+                if (date.isBefore(endDate)){
+                    datesToAdd.add(Dates.builder().room(room).startDate(date).endDate(endDate).build());
+                }
+            }
+        }
+
+
+        datesRepository.saveAll(datesToAdd);
+
+        rooms.setDatesAddedUntil(maxBookingDate);
+        roomsRepository.save(rooms);
+
+    }
 
 
     public void deleteRooms(RoomsBookingDeleteRequest request) {
@@ -394,17 +545,19 @@ public class RoomsEntityService {
                 return false;
             }
             // todo: consider timezones
-            if (requestRooms.getNoPrepaymentUntil() != null && requestRooms.getNoPrepaymentUntil().isBefore(today.minusDays(rooms.getNoPrepaymentDays()-1))){
+            if (requestRooms.getNoPrepaymentUntil() != null && requestRooms.getNoPrepaymentUntil().isAfter(today.minusDays(rooms.getNoPrepaymentDays()-1))){
+                log.info("No prepayment day is invalid. ({} (requested), {} (actual)", requestRooms.getNoPrepaymentUntil(), today.minusDays(rooms.getNoPrepaymentDays()-1));
                 return false;
             }
-            if (requestRooms.getFreeCancellationUntil() != null && requestRooms.getFreeCancellationUntil().isBefore(today.minusDays(rooms.getFreeCancellationDays()-1))){
+            if (requestRooms.getFreeCancellationUntil() != null && requestRooms.getFreeCancellationUntil().isAfter(today.minusDays(rooms.getFreeCancellationDays()-1))){
+                log.info("Free cancellation day is invalid. ({} (requested), {} (actual)", requestRooms.getFreeCancellationUntil(), today.minusDays(rooms.getFreeCancellationDays()-1));
                 return false;
             }
         }
 
         // check price
         for (Price price: priceSet){
-            System.out.println(price);
+//            System.out.println(price);
             Integer roomsId = price.getRooms().getId();
             roomsPrice.put(roomsId, roomsPrice.getOrDefault(roomsId, 0L) + price.getPriceInCents());
         }
@@ -506,6 +659,7 @@ public class RoomsEntityService {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RoomsData {
+        Boolean isActive;
         LocalDate availableFrom;
         LocalDate availableUntil;
         Integer quantity;

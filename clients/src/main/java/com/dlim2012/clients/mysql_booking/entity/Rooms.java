@@ -3,6 +3,7 @@ package com.dlim2012.clients.mysql_booking.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "rooms")
-public class Rooms {
+public class Rooms implements Serializable {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -22,6 +23,9 @@ public class Rooms {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;

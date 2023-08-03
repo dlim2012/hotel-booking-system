@@ -1,5 +1,6 @@
 package com.dlim2012.clients.cache;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -14,12 +15,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableCaching
 public class CacheConfig {
 
+    @Value("${custom.redis.host}")
+    String host;
+    @Value("${custom.redis.port}")
+    Integer port;
+
     @Bean
     public LettuceConnectionFactory connectionFactory() {
-        RedisProperties properties = properties();
+        System.out.println("LettuceConnectionFactory " + host + " " + port);
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName(properties.getHost());
-        configuration.setPort(properties.getPort());
+        configuration.setHostName(host);
+        configuration.setPort(port);
         return new LettuceConnectionFactory(configuration);
     }
 
@@ -33,11 +39,6 @@ public class CacheConfig {
         return template;
     }
 
-    @Bean
-    @Primary
-    public RedisProperties properties() {
-        return new RedisProperties();
-    }
 
     public static final String bookingIdKeyName = "bookingId";
 
