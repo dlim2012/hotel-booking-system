@@ -1,5 +1,5 @@
 
-export const MAX_BOOKING_DAYS = 30;
+export const MAX_BOOKING_DAYS = 90;
 
 export const propertyTypesMap = {
     // Others: 0,

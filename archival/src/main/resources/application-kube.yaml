@@ -30,7 +30,7 @@ spring:
     cassandra:
       port: 9042
       contact-points: hb-cassandra.default.svc.cluster.local
-      local-datacenter: dc1
+      local-datacenter: datacenter1
       keyspace-name: mykeyspace
       schema-action: CREATE_IF_NOT_EXISTS
   #      entity-base-package: com.dlim2012.archival.entity.cassandra

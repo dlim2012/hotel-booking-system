@@ -5,12 +5,13 @@ import hotel from "../../Hotel";
 import getBedText from "../../../../../../functions/bedText";
 import getDateTextShort, {getDateTextShort2} from "../../../../../../functions/dateTextShort";
 import getDateText from "../../../../../../functions/dateTextLong";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {gu} from "date-fns/locale";
 import {postWithJwt} from "../../../../../../clients";
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
 import ScrollToTop from "../../../../../../components/scrollToTop/scrollToTop";
+import {TailSpin} from "react-loader-spinner";
 
 const getTimeText = (timeInteger) => {
     var hour = Math.floor(timeInteger / 60);
@@ -40,6 +41,8 @@ function BookingConfirmation(props) {
     const hotelDetails = bookingInfo.hotelDetails;
     const rooms = bookingInfo.rooms;
 
+    const [bookingResult, setBookingResult] = useState("");
+
     console.log(rooms)
 
     var defaultGuestInfo = []
@@ -58,6 +61,7 @@ function BookingConfirmation(props) {
     const [guestInfo, setGuestInfo] = useState(defaultGuestInfo);
     const [specialRequests, setSpecialRequests] = useState("specialRequest");
     const [arrivalTime, setArrivalTime] = useState("-1");
+    const [ proceeding, setProceeding ] = useState(false);
 
     var dates = Math.round((searchItem.date[0].endDate.getTime() - searchItem.date[0].startDate.getTime()) / 86400000);
 
@@ -100,18 +104,37 @@ function BookingConfirmation(props) {
     }
 
     function onReserve() {
+        setProceeding(true)
         var payload = getPayload();
         postWithJwt(`/api/v1/booking/hotel/${hotelId}/reserve`, payload)
             .then(response=>response.json())
             .then(data => {
-                navigate(`/hotels/booking/reserved/${data.bookingId}`, {state: {payload: payload, hotelDetails: hotelDetails}})
+                if (data.success) {
+                    navigate(`/hotels/booking/reserved/${data.bookingId}`, {
+                        state: {
+                            payload: payload,
+                            hotelDetails: hotelDetails
+                        }
+                    })
+                } else {
+                    navigate(`/hotels/booking/reserve-failed`, {
+                        state: {
+                            payload: payload,
+                            hotelDetails: hotelDetails
+                        }
+                    })
+                }
             })
             .catch(e => {
                 console.log(e);
             })
+            .finally(() => {
+                setProceeding(false)
+            })
     }
 
     function onBook() {
+        setProceeding(true);
         var payload = getPayload();
         postWithJwt(`/api/v1/booking/hotel/${hotelId}/book`, payload)
             .then(response=>response.json())
@@ -120,21 +143,43 @@ function BookingConfirmation(props) {
                 if (data.reserveSuccess && data.redirectUrl != null && data.redirectUrl.length > 0){
                     console.log(data.redirectUrl)
                     window.location.replace(data.redirectUrl);
+                } else {
+                    if (data.reserveSuccess){
+                        alert("PayPal Sandbox did not respond for some reason. Room reserved.")
+                        navigate(`/hotels/booking/reserved/${data.bookingId}`, {state: {payload: payload, hotelDetails: hotelDetails}})
+                    } else {
+                        alert("Room not available. Please try again.");
+                    }
                 }
             })
             .catch(e => {
                 console.log(e);
             })
+            .finally(() => {
+                setProceeding(false);
+            })
     }
 
-    // for (let room of rooms){
-    //     room.noPrepaymentUntil = getDaysBefore(today, room.noPrepaymentDays)
-    //     room.freeCancellationUntil = getDaysBefore(today, room.freeCancellationDays)
-    // }
+    if (proceeding){
+        return (
+            <div>
+                <ScrollToTop />
+                <div className="loading">
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#0071c2"
+                        ariaLabel="tail-spin-loading"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                        visible={true}
+                    />
+                </div>
 
-
-    console.log(hotelDetails)
-    console.log(rooms)
+            </div>
+        )
+    }
 
 
     return (

@@ -147,3 +147,11 @@
   display: flex;
   justify-content: center;
 }
+
+.loading{
+  margin-top: 200px;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+  justify-content: center;
+}

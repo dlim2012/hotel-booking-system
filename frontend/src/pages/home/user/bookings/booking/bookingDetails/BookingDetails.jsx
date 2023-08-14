@@ -6,6 +6,7 @@ import {getDate, getDateTime, getTime} from "../../../utils/stringFormatting";
 import './bookingDetails.css'
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function getEstimatedHour(i){
     if (i === 0){
@@ -26,7 +27,7 @@ function BookingDetails(props) {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const { bookingId } = useParams();
+    const { hotelId, bookingId } = useParams();
 
     const [data, setData] = useState({});
     const [fetching, setFetching] = useState(false);
@@ -42,11 +43,20 @@ function BookingDetails(props) {
         } else if (user_role === "hotel-manager"){
             var pathname = `/api/v1/booking-management/hotel/booking/${bookingId}/active`
         }
+        console.log(pathname)
         getWithJwt(pathname)
             .then(response=>response.json())
             .then(data => {
                 console.log(data)
-                setData(data);
+                if (data.status === "RESERVED" || data.status === "BOOKED") {
+                    setData(data);
+                } else {
+                    if (user_role === "app_user"){
+                        navigate("/user/bookings")
+                    } else if (user_role === "hotel-manager"){
+                        navigate(`/user/hotel/${hotelId}/bookings`)
+                    }
+                }
             })
             .catch(e => {
                 console.error(e)})
@@ -63,6 +73,8 @@ function BookingDetails(props) {
                 console.log(data)
                 if (data.reserveSuccess && data.redirectUrl != null && data.redirectUrl.length > 0){
                     window.location.replace(data.redirectUrl);
+                } else {
+                    alert("Failed to connect to PayPal Sandbox.")
                 }
             })
             .catch(e => {
@@ -71,45 +83,97 @@ function BookingDetails(props) {
         }
 
     function cancelBooking(){
-        putWithJwt(`/api/v1/booking/booking/${bookingId}/cancel/user`)
-            .catch(e => {
-                console.log(e)})
-            .finally(() => {
-                navigate(`/user/bookings`);
-            })
+        if (user_role === "app-user") {
+            putWithJwt(`/api/v1/booking/booking/${bookingId}/cancel/user`)
+                .catch(e => {
+                    console.log(e)
+                })
+                .finally(() => {
+                    navigate(`/user/bookings`);
+                })
+        } else if (user_role === "hotel-manager") {
+            putWithJwt(`/api/v1/booking/booking/${bookingId}/cancel/hotel`)
+                .catch(e => {
+                    console.log(e)
+                })
+                .finally(() => {
+                    navigate(`/user/hotel/${hotelId}/bookings`);
+                })
+
+        }
     }
 
     function cancelBookingRoom(bookingRoomId){
-        putWithJwt(`/api/v1/booking/booking/${bookingId}/booking-room/${bookingRoomId}/cancel/user`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.bookingCancelled){
-                    navigate(`/user/bookings`);
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            }).finally(() => {
+        if (user_role === "app-user") {
+            putWithJwt(`/api/v1/booking/booking/${bookingId}/booking-room/${bookingRoomId}/cancel/user`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.bookingCancelled) {
+                        navigate(`/user/bookings`);
+                    }
+                })
+                .catch(e => {
+                    console.log(e)
+                }).finally(() => {
                 fetchBookingInfo();
             })
+        } else if (user_role === "hotel-manager") {
+            var payload = {
+                bookingId: bookingId,
+                bookingRoomId: bookingRoomId
+            }
+            putWithJwt(`/api/v1/booking/hotel/${hotelId}/booking/${bookingId}/dates/cancel`, payload)
+                // .then(() => {
+                //     navigate(`/user/hotel/${hotelId}/bookings`);
+                // })
+                .catch(e => {
+                    console.log(e)
+                }).finally(() => {
+                fetchBookingInfo();
+            })
+        }
     }
 
     function onBookerInfoSubmit(){
-        putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/booker`, edittedInfo)
-            .catch(e => {
-                console.error(e)})
-            .finally(()=>{
-                fetchBookingInfo()
-            })
+        if (user_role === "app-user") {
+            putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/booker`, edittedInfo)
+                .catch(e => {
+                    console.error(e)
+                })
+                .finally(() => {
+                    fetchBookingInfo()
+                })
+        } else if (user_role === "hotel-manager") {
+            putWithJwt(`/api/v1/booking-management/hotel/${hotelId}/booking/${bookingId}/active/booker`, edittedInfo)
+                .catch(e => {
+                    console.error(e)
+                })
+                .finally(() => {
+                    fetchBookingInfo()
+                })
+
+        }
     }
 
     function onDetailsInfoSubmit(){
-        putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/details`, edittedInfo)
-            .catch(e => {
-                console.error(e)})
-            .finally(()=>{
-                fetchBookingInfo()
-            })
+        if (user_role === "app-user") {
+            putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/details`, edittedInfo)
+                .catch(e => {
+                    console.error(e)
+                })
+                .finally(() => {
+                    fetchBookingInfo()
+                })
+        } else if (user_role === "hotel-manager") {
+            putWithJwt(`/api/v1/booking-management/hotel/${hotelId}/booking/${bookingId}/active/details`, edittedInfo)
+                .catch(e => {
+                    console.error(e)
+                })
+                .finally(() => {
+                    fetchBookingInfo()
+                })
+
+        }
     }
 
     useEffect(() => {
@@ -117,7 +181,23 @@ function BookingDetails(props) {
     }, [])
 
     if (fetching){
-        return <div><Navbar/></div>;
+        return (
+            <div>
+                <Navbar />
+                <div className="loading">
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#0071c2"
+                        ariaLabel="tail-spin-loading"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                        visible={true}
+                    />
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -135,7 +215,7 @@ function BookingDetails(props) {
                 </div>
                 <div className="bookingDetailsCard">
                     <label>Price Info</label> <br/>
-                    <span>Price: ${data.priceInCents / 100}</span> <br/>
+                    <span>Price: ${(data.priceInCents / 100).toFixed(2)}</span> <br/>
                     { data.invoiceId != null && data.invoiceConfirmTime != null &&
                         <div className="bookingDetailsInvoice">
                             <span>Invoice Id: {data.invoiceId}</span> <br/>
@@ -235,6 +315,7 @@ function BookingDetails(props) {
                 {
                     data.room?.map((room, index) => {
                         return <BookingDetailsGuestInfoCard
+                            user_role={user_role} hotelId={hotelId}
                             cancelBookingRoom = {cancelBookingRoom}
                             room={room} index={index}
                             bookingId={bookingId} fetchBookingInfo={fetchBookingInfo}
@@ -314,12 +395,14 @@ function BookingDetails(props) {
                         </div>
                     }
                 </div>
+                { (data.status === "RESERVED" || data.status === "BOOKED") &&
                 <div className="bookingDetailsCard">
 
-                    <button
-                        onClick={cancelBooking}
-                    >Cancel</button>
+                        <button
+                            onClick={cancelBooking}
+                        >Cancel</button>
                 </div>
+                }
             </div>
             <MailList/>
             <Footer/>
@@ -331,20 +414,31 @@ function BookingDetails(props) {
 
 
 function BookingDetailsGuestInfoCard(props){
-    const { room, index, cancelBookingRoom, bookingId, fetchBookingInfo,
+    const { user_role, hotelId, room, index, cancelBookingRoom, bookingId, fetchBookingInfo,
         edit, setEdit, edittedInfo, setEdittedInfo
     } = props;
 
 
     function onBookingRoomGuestInfoSubmit(){
-        putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/booking-room/${room.bookingRoomId}/guest`,
-            edittedInfo)
-            .catch(e => {
-                console.error(e)})
-            .finally(() => {
-                    fetchBookingInfo();
-                }
-            )
+        if (user_role === "app-user"){
+            putWithJwt(`/api/v1/booking-management/booking/${bookingId}/active/booking-room/${room.bookingRoomId}/guest`,
+                edittedInfo)
+                .catch(e => {
+                    console.error(e)})
+                .finally(() => {
+                        fetchBookingInfo();
+                    }
+                )
+        } else if (user_role === "hotel-manager") {
+            putWithJwt(`/api/v1/booking-management/hotel/${hotelId}/booking/${bookingId}/active/booking-room/${room.bookingRoomId}/guest`,
+                edittedInfo)
+                .catch(e => {
+                    console.error(e)})
+                .finally(() => {
+                        fetchBookingInfo();
+                    }
+                )
+        }
     }
 
     return (
@@ -421,9 +515,11 @@ function BookingDetailsGuestInfoCard(props){
                     }
                 </div>
             </div>
-            <button
-                onClick={() => cancelBookingRoom(room.bookingRoomId)}
-            >Cancel</button>
+            { (room.status === "RESERVED" || room.status === "BOOKED") &&
+                <button
+                    onClick={() => cancelBookingRoom(room.bookingRoomId)}
+                >Cancel</button>
+            }
         </div>
     );
 }

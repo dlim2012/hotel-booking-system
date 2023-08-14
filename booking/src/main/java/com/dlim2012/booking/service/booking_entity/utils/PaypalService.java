@@ -60,6 +60,7 @@ public class PaypalService {
         payment.setId(paymentId);
         PaymentExecution paymentExecution = new PaymentExecution();
         paymentExecution.setPayerId(payerId);
+        log.info("Executing payment (ID: {}, payer ID: {})", paymentId, payerId);
         return payment.execute(apiContext, paymentExecution);
     }
 

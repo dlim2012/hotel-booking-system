@@ -52,7 +52,7 @@ public class RoomsService {
 
     private final ModelMapper modelMapper = new ModelMapper();
     private final EntityManager entityManager;
-    private final Integer MAX_BOOKING_DAYS = 30;
+    private final Integer MAX_BOOKING_DAYS = 90;
 
 
     public List<RoomsInfo> getRoomsInfo(Integer hotelId){
@@ -137,7 +137,7 @@ public class RoomsService {
         rooms = roomsRepository.save(rooms);
 
         List<RoomsFacility> savedRoomsFacilities = facilityService.saveRoomsFacilities(rooms, request.getFacilityDisplayNameList());
-        List<RoomsBed> savedRoomsBed = facilityService.saveRoomsBed(rooms, request.getBedInfoDtoList());
+        Set<RoomsBed> savedRoomsBed = facilityService.saveRoomsBed(rooms, request.getBedInfoDtoList());
 
 //        rooms = roomsRepository.findById(rooms.getId())
 //                .orElseThrow(() -> new ResourceNotFoundException(""));
@@ -168,6 +168,9 @@ public class RoomsService {
         }
         Rooms rooms = roomsRepository.findByHotelIdAndIdAndHotelManagerId(hotelId, roomsId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rooms not found."));
+        System.out.println(rooms);
+        System.out.println(infoItem);
+
         rooms.setDisplayName(infoItem.getDisplayName());
         rooms.setDescription(infoItem.getDescription());
         rooms.setMaxAdult(infoItem.getMaxAdult());
@@ -188,16 +191,24 @@ public class RoomsService {
         for (RoomsGeneralInfoItem.BedInfoItem bedInfoItem: infoItem.getRoomsBeds()){
             bedMap.put(Bed.valueOf(bedInfoItem.getBed()),bedInfoItem.getQuantity());
         }
+        System.out.println(rooms.getRoomsBeds());
+        System.out.println(bedMap);
+        System.out.println("???");
 
+        List<RoomsBed> roomsBedsToRemove = new ArrayList<>();
         for (RoomsBed roomsBed: rooms.getRoomsBeds()){
             if (!bedMap.containsKey(roomsBed.getBed())){
-                rooms.getRoomsBeds().remove(roomsBed);
+                roomsBedsToRemove.add(roomsBed);
+//                rooms.getRoomsBeds().remove(roomsBed);
             } else {
                 roomsBed.setQuantity(bedMap.get(roomsBed.getBed()));
                 bedMap.remove(roomsBed.getBed());
             }
         }
 
+        roomsBedsToRemove.forEach(rooms.getRoomsBeds()::remove);
+
+        System.out.println(bedMap);
         for (Map.Entry<Bed, Integer> entry: bedMap.entrySet()){
             rooms.getRoomsBeds().add(RoomsBed.builder()
                             .rooms(rooms)
@@ -205,6 +216,7 @@ public class RoomsService {
                             .quantity(entry.getValue())
                     .build());
         }
+        System.out.println(rooms);
         roomsRepository.save(rooms);
 
         postRoomsKafka(rooms, userId);

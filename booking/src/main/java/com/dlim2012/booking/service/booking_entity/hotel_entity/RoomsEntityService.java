@@ -9,6 +9,7 @@ import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
+import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchVersion;
 import com.dlim2012.clients.mysql_booking.entity.*;
 import com.dlim2012.clients.mysql_booking.repository.*;
 import jakarta.persistence.EntityManager;
@@ -28,6 +29,7 @@ import java.util.*;
 public class RoomsEntityService {
 
     private final PriceService priceService;
+    private final HotelEntityService hotelEntityService;
 
     private final RoomsRepository roomsRepository;
     private final RoomRepository roomRepository;
@@ -37,8 +39,9 @@ public class RoomsEntityService {
 
     private final KafkaTemplate<String, RoomsSearchDetails> roomsSearchKafkaTemplate;
     private final KafkaTemplate<String, RoomsSearchDeleteRequest> roomsSearchDeleteKafkaTemplate;
+    private final KafkaTemplate<String, RoomsSearchVersion> roomsSearchVersionKafkaTemplate;
 
-    private final Integer MAX_BOOKING_DAYS = 30;
+    private final Integer MAX_BOOKING_DAYS = 90;
     private final ModelMapper modelMapper = new ModelMapper();
     private final EntityManager entityManager;
 
@@ -343,7 +346,6 @@ public class RoomsEntityService {
         }
     }
 
-
     public void updateRooms(RoomsBookingDetails details) {
         // todo: input validation (startDate < endDate)
 
@@ -362,12 +364,13 @@ public class RoomsEntityService {
             datesMap.put(roomId, roomDatesList);
         }
 
-        System.out.println(rooms.getRoomSet());
-        System.out.println(datesMap);
+//        System.out.println(rooms.getRoomSet());
+//        System.out.println(datesMap);
 
         RoomsSearchDetails roomsSearchDetails = RoomsSearchDetails.builder()
                 .roomsId(details.getRoomsId())
                 .hotelId(details.getHotelId())
+                .version(hotelEntityService.getNewHotelVersion(details.getHotelId()))
                 .displayName(details.getDisplayName())
                 .maxAdult(details.getMaxAdult())
                 .maxChild(details.getMaxChild())
@@ -500,15 +503,67 @@ public class RoomsEntityService {
         roomsRepository.deleteById(request.getRoomsId());
     }
 
-    public boolean validateBookingRequest(
+    public void roomsVersionUp(Integer hotelId, Set<Integer> roomsIds, Map<Integer, Rooms> roomsMap){
+        Long hotelVersion = hotelEntityService.getNewHotelVersion(hotelId);
+
+        List<Dates> datesList = datesRepository.findByHotelIdWithLock(hotelId);
+        Map<Long, List<Dates>> roomDatesMap = new HashMap<>();
+        for (Dates dates: datesList){
+            Long roomId = dates.getRoom().getId();
+            List<Dates> roomDatesList = roomDatesMap.getOrDefault(roomId, new ArrayList<>());
+            roomDatesList.add(dates);
+            roomDatesMap.put(roomId, roomDatesList);
+        }
+
+        List<Rooms> roomsToUpdate = new ArrayList<>();
+        List<RoomsSearchVersion> roomsSearchVersionList = new ArrayList<>();
+        for (Integer roomsId: roomsIds){
+            Rooms rooms = roomsMap.getOrDefault(roomsId, null);
+            if (rooms == null){
+                log.error("Rooms not found during roomsVersionUp. (hotel {}, rooms {})", hotelId, roomsId);
+            }
+            roomsToUpdate.add(rooms);
+            RoomsSearchVersion roomsSearchVersion = RoomsSearchVersion.builder()
+                    .roomsId(roomsId)
+                    .hotelId(hotelId)
+                    .version(hotelVersion)
+                    .freeCancellationDays(rooms.getFreeCancellationDays())
+                    .noPrepaymentDays(rooms.getNoPrepaymentDays())
+                    .priceDto(priceRepository.findByRoomsId(roomsId)
+                            .stream()
+                            .map(price -> RoomsSearchVersion.PriceDto.builder()
+                                    .priceId(price.getId())
+                                    .priceInCents(price.getPriceInCents())
+                                    .date(price.getDate())
+                                    .build())
+                            .toList()
+                    )
+                    .roomDto(rooms.getRoomSet().stream()
+                            .map(room -> RoomsSearchVersion.RoomDto.builder()
+                                    .roomId(room.getId())
+                                    .datesDtoList(
+                                            roomDatesMap.get(room.getId()).stream()
+                                                    .map(dates -> modelMapper.map(dates, RoomsSearchDetails.DatesDto.class))
+                                                    .toList()
+                                    )
+                                    .build())
+                            .toList())
+                    .build();
+            roomsSearchVersionList.add(roomsSearchVersion);
+        }
+        roomsRepository.saveAll(roomsToUpdate);
+        for (RoomsSearchVersion roomsSearchVersion: roomsSearchVersionList){
+            roomsSearchVersionKafkaTemplate.send("rooms-search-version", roomsSearchVersion);
+        }
+
+    }
+
+    public Set<Integer> validateBookingRequest(
             Map<Integer, Integer> roomNumMap, BookingRequest request,
-            Set<Rooms> roomsSet, Map<Long, Integer> roomsIdMap, Set<Dates> datesSet, Set<Price> priceSet,
+            Map<Integer, Rooms> roomsMap, Map<Long, Integer> roomsIdMap, Set<Dates> datesSet, Set<Price> priceSet,
             Map<Integer, Long> roomsPrice
     ){
-        Map<Integer, Rooms> roomsMap = new HashMap<>();
-        for (Rooms rooms: roomsSet){
-            roomsMap.put(rooms.getId(), rooms);
-        }
+        Set<Integer> mismatchRoomsId = new HashSet<>();
 
         // check available room number
         Map<Integer, Integer> roomNumCount = new HashMap<>();
@@ -519,20 +574,21 @@ public class RoomsEntityService {
         for (Map.Entry<Integer, Integer> entry: roomNumMap.entrySet()){
             if (!roomNumCount.containsKey(entry.getKey()) || entry.getValue() > roomNumCount.get(entry.getKey())){
                 log.info("Booking request invalid not enough room left.");
-                return false;
+                mismatchRoomsId.add(entry.getKey());
             }
         }
 
         // check check-in/check-out time
-        for (Rooms rooms: roomsSet){
+        for (Map.Entry<Integer, Rooms> entry: roomsMap.entrySet()){
+            Rooms rooms = entry.getValue();
             if (roomNumMap.containsKey(rooms.getId())){
                 if (rooms.getCheckInTime() > request.getCheckInTime()){
                     log.info("Booking request invalid check-in time");
-                    return false;
+                    mismatchRoomsId.add(rooms.getId());
                 }
                 if (rooms.getCheckOutTime() < request.getCheckOutTime()){
                     log.info("Booking request invalid check-out time");
-                    return false;
+                    mismatchRoomsId.add(rooms.getId());
                 }
             }
         }
@@ -542,16 +598,16 @@ public class RoomsEntityService {
             Rooms rooms = roomsMap.getOrDefault(requestRooms.getRoomsId(), null);
             if (rooms == null){
                 log.info("Rooms not found.");
-                return false;
+                return mismatchRoomsId;
             }
             // todo: consider timezones
             if (requestRooms.getNoPrepaymentUntil() != null && requestRooms.getNoPrepaymentUntil().isAfter(today.minusDays(rooms.getNoPrepaymentDays()-1))){
                 log.info("No prepayment day is invalid. ({} (requested), {} (actual)", requestRooms.getNoPrepaymentUntil(), today.minusDays(rooms.getNoPrepaymentDays()-1));
-                return false;
+                mismatchRoomsId.add(rooms.getId());
             }
             if (requestRooms.getFreeCancellationUntil() != null && requestRooms.getFreeCancellationUntil().isAfter(today.minusDays(rooms.getFreeCancellationDays()-1))){
                 log.info("Free cancellation day is invalid. ({} (requested), {} (actual)", requestRooms.getFreeCancellationUntil(), today.minusDays(rooms.getFreeCancellationDays()-1));
-                return false;
+                mismatchRoomsId.add(rooms.getId());
             }
         }
 
@@ -568,10 +624,13 @@ public class RoomsEntityService {
         if (!totalPrice.equals(request.getPriceInCents())){
 //            System.out.println(roomsPrice);
             log.info("Booking request invalid due to price mismatch. ({calculated: {}} != {requested: {}})", totalPrice, request.getPriceInCents());
-            return false;
+            for (BookingRequest.BookingRequestRooms rooms: request.getRooms()){
+                mismatchRoomsId.add(rooms.getRoomsId());
+            }
+            return mismatchRoomsId;
         }
 
-        return true;
+        return null;
     }
 
     public DateRange getRoomsAvailableDateRange(Rooms rooms){
@@ -604,6 +663,15 @@ public class RoomsEntityService {
                 .endDate(endDate)
                 .build();
     }
+
+//    public Map<Integer, Long> getRoomsVersions(Integer hotelId){
+//        Set<Rooms> roomsList = roomsRepository.findByHotelId(hotelId);
+//        Map<Integer, Long> roomsVersions = new HashMap<>();
+//        for (Rooms rooms: roomsList){
+//            roomsVersions.put(rooms.getId(), rooms.getVersion());
+//        }
+//        return roomsVersions;
+//    }
 
 
 //    public HotelAvailabilityResponse getRoomInfo(

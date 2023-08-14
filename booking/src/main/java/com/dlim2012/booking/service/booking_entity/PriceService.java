@@ -1,11 +1,14 @@
 package com.dlim2012.booking.service.booking_entity;
 
 import com.dlim2012.booking.dto.profile.RoomsPriceItem;
+import com.dlim2012.booking.service.booking_entity.hotel_entity.HotelEntityService;
+import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.kafka.dto.search.price.PriceDto;
 import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
 import com.dlim2012.clients.mysql_booking.entity.Price;
 import com.dlim2012.clients.mysql_booking.entity.Rooms;
 import com.dlim2012.clients.mysql_booking.repository.PriceRepository;
+import com.dlim2012.clients.mysql_booking.repository.RoomsRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +26,10 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class PriceService {
 
+    private HotelEntityService hotelEntityService;
+
     private final PriceRepository priceRepository;
+    private final RoomsRepository roomsRepository;
 
     private final KafkaTemplate<String, PriceUpdateDetails> roomsSearchPriceUpdateKafkaTemplate;
 
@@ -130,6 +136,7 @@ public class PriceService {
         PriceUpdateDetails priceUpdateDetails = PriceUpdateDetails.builder()
                 .hotelId(hotelId)
                 .roomsId(roomsId)
+                .version(hotelEntityService.getNewHotelVersion(hotelId))
                 .priceDtoList(priceList.stream()
                         .map(price -> PriceDto.builder()
                                 .priceId(price.getId())

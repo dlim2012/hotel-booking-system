@@ -34,6 +34,7 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
       setPriceRange
   }  = attrs;
 
+
   // const priceRange = undefined;
   // const propertyType = undefined;
   // const propertyRating = undefined;
@@ -56,7 +57,7 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
   };
 
   const handleSearch = () => {
-    // console.log(address, destination, coordinates, date, options);
+    console.log(address, destination, coordinates, date, options);
     // console.log(priceRange, propertyType, cancellationPolicy, hotelFacilities, roomAmenities, propertyRating)
     if (Object.keys(address).length === 0){
       setOpenNoAddress(true);
@@ -100,7 +101,7 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
 
   useEffect(() => initAutocomplete())
 
-  const handleLogin = () => {
+  const handleGenerateTestUser = () => {
     setFetching(true);
     post("/api/v1/user/test-user")
         .then(response => response.json())
@@ -119,12 +120,16 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
         })
   }
 
+  const handleLogin = () => {
+    navigate("/user/login");
+  }
+
   if (fetching){
     return;
   }
 
-  console.log(date)
-  console.log(options)
+
+
 
   return (
     <div className="header">
@@ -168,10 +173,11 @@ const Header = ({ type, attrs, fetching, setFetching }) => {
             </p>
 
             { (localStorage["test-user"] == null || !localStorage["test-user"]) &&
-            <button className="headerBtn" onClick={handleLogin}>Generate test user</button>
+            <button className="headerBtn" onClick={handleGenerateTestUser}>Generate test user</button>
+            }{
+              localStorage["jwt"] == null &&
+              <button className="headerBtn" onClick={handleLogin}>Sign in / Register</button>
             }
-            {/*<button className="headerBtn" onClick={handleLogin}>Sign in / Register</button>*/}
-
           </>
             )}
         <>

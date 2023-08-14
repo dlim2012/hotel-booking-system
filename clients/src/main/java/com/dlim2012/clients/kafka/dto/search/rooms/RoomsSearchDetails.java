@@ -19,6 +19,7 @@ import java.util.List;
 public class RoomsSearchDetails {
     private Integer roomsId;
     private Integer hotelId;
+    private Long version;
 //    private HotelSearchDetails hotelSearchDetails;
     private String displayName;
     private Integer maxAdult;
@@ -46,6 +47,7 @@ public class RoomsSearchDetails {
     @AllArgsConstructor
     public static class RoomDto {
         Long roomId;
+        Long version;
         List<DatesDto> datesDtoList;
     }
 

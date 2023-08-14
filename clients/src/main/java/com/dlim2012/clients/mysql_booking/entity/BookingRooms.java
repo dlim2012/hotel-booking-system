@@ -46,6 +46,7 @@ public class BookingRooms implements Serializable {
     @OneToMany(mappedBy = "bookingRooms", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<BookingRoom> bookingRoomList;
 
+
     @Override
     public String toString() {
         return "BookingRooms{" +

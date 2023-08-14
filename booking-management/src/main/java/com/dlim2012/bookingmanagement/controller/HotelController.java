@@ -5,6 +5,9 @@ import com.dlim2012.bookingmanagement.dto.booking.ActiveBookingItem;
 import com.dlim2012.bookingmanagement.dto.booking.ArchivedBookingByUserSearchInfo;
 import com.dlim2012.bookingmanagement.dto.booking.BookingArchiveItem;
 import com.dlim2012.bookingmanagement.dto.booking.BookingMainGuestInfo;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingBookerInfo;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingDetailsInfo;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingRoomGuestInfo;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelDatesInfoResponse;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelMainInfoResponse;
 import com.dlim2012.bookingmanagement.service.HotelService;
@@ -81,6 +84,39 @@ public class HotelController {
         Integer userId = jwtService.getId();
         log.info("Archived booking {} requested by hotel-manager {}", bookingId, userId);
         return hotelService.getArchivedBookingItemByHotel(hotelId, userId, bookingId, request);
+    }
+
+    @PutMapping("/hotel/{hotelId}/booking/{bookingId}/active/booker")
+    public void putBookerInfo(
+            @PathVariable("bookingId") Long bookingId,
+            @RequestBody BookingBookerInfo request
+
+    ){
+        Integer userId = jwtService.getId();
+        log.info("Booking {} booker info edit requested by hotelManager {}", bookingId, userId);
+        hotelService.putBookerInfo(bookingId, userId, request);
+    }
+
+    @PutMapping("/hotel/{hotelId}/booking/{bookingId}/active/details")
+    public void putDetails(
+            @PathVariable("bookingId") Long bookingId,
+            @RequestBody BookingDetailsInfo request
+    ){
+        Integer userId = jwtService.getId();
+        log.info("Booking {} details info edit requested from user {}", userId, bookingId);
+        hotelService.putDetailsInfo(bookingId, userId, request);
+    }
+
+    @PutMapping("/hotel/{hotelId}/booking/{bookingId}/active/booking-room/{bookingRoomId}/guest")
+    public void putGuestInfo(
+            @PathVariable("bookingId") Long bookingId,
+            @PathVariable("bookingRoomId") Long bookingRoomId,
+            @RequestBody BookingRoomGuestInfo request
+    ){
+        Integer userId = jwtService.getId();
+        log.info("Booking {} guest info edit requested from hotelManager {}: booking room {}",
+                userId, bookingId, bookingRoomId);
+        hotelService.putGuestInfo(bookingId, bookingRoomId, userId, request);
     }
 
 }

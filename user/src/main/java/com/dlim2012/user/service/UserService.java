@@ -62,12 +62,16 @@ public class UserService {
     }
 
     public String authenticate(AuthenticationRequest authenticationRequest){
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        authenticationRequest.getEmail(),
-                        authenticationRequest.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            authenticationRequest.getEmail(),
+                            authenticationRequest.getPassword()
+                    )
+            );
+        } catch (Exception e){
+            throw new IllegalArgumentException("Authentication failed.");
+        }
 
         // user is manually set into SecurityContextHolder during authentication
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

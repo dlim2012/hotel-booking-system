@@ -1,6 +1,6 @@
 import "./paymentSuccess.css"
 import Navbar from "../../../../../../../components/navbar/Navbar";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useEffect} from "react";
 import {post, postWithJwt} from "../../../../../../../clients";
 import login from "../../../../../user/user/login/Login";
@@ -8,6 +8,7 @@ import MailList from "../../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../../components/footer/Footer";
 
 function PaymentSuccess(props) {
+    const navigate = useNavigate();
 
     const {bookingId,  } = useParams();
     const queryParameters = new URLSearchParams(window.location.search)
@@ -40,8 +41,9 @@ function PaymentSuccess(props) {
                 <div className="paymentSuccessfulTitle">
                     <h1>Payment Successful</h1>
                 </div>
-                A confirmation email has been sent to () <br/>
-                <button >Home page</button>
+                {/*A confirmation email has been sent to () <br/>*/}
+                <button onClick={() => {navigate("/")}}>Home page</button>
+                <button onClick={() => {navigate("/user/bookings")}}>Results</button>
             </div>
             <MailList/>
             <Footer/>

@@ -29,4 +29,13 @@ public class RoomsBed {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
+    @Override
+    public String toString() {
+        return "RoomsBed{" +
+                "id=" + id +
+                ", rooms=" + (rooms == null ? null : rooms.getId()) +
+                ", bed=" + bed +
+                ", quantity=" + quantity +
+                '}';
+    }
 }

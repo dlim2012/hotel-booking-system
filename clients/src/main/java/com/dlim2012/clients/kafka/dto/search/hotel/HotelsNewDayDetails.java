@@ -18,6 +18,7 @@ public class HotelsNewDayDetails {
 
     Integer startId;
     Integer endId;
+    Map<Integer, Long> hotelVersionMap;
     Map<Integer, DatesUpdateDetails> datesUpdateDetailsMap; // { hotelId: datesUpdateDetails }
     Map<Integer, Map<Integer, List<PriceDto>>> priceUpdateDetailsMap; // { hotelId: { roomsId: [price] } }
 //    Map<Integer, >

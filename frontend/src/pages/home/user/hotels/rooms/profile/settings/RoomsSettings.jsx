@@ -5,6 +5,7 @@ import {deleteWithJwt, getWithJwt, putWithJwt} from "../../../../../../../client
 import {useNavigate, useParams} from "react-router-dom";
 import MailList from "../../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function RoomsSettings(props) {
     const navigate = useNavigate();
@@ -74,7 +75,22 @@ function RoomsSettings(props) {
     if (fetching){
         return (
             <div>
-                <Navbar/>
+                <Navbar />
+                <div className="profileContainer">
+                    <RoomProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
             </div>
         )
     }

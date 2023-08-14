@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {propertyTypesMap, propertyRatings} from "../../../../../../assets/Lists";
 import login from "../../../user/login/Login";
 import './hotelInfo.css'
+import {validateEmail} from "../../../utils/inputValidation";
 
 function HotelInfo(props) {
 
@@ -16,9 +17,14 @@ function HotelInfo(props) {
                     <input
                         type="text"
                         value={info["name"]}
-                        onChange={e => setInfo({...info, ["name"]: e.target.value})}
+                        onChange={e => {
+                            setInfo({...info, ["name"]: e.target.value})
+                            if (e.target.value.length >= 3) {
+                                setOpenWarnings({...openWarnings, ["name"]: false})
+                            }
+                        }}
                     />
-                    { openWarnings.phone &&
+                    { openWarnings.name &&
                         <div className="hotelLocationInputWarning">
                             Please enter the property name. (min length: 3)
                         </div>
@@ -84,7 +90,9 @@ function HotelInfo(props) {
                         type="text"
                         value={info["email"]}
                         onChange={e => {
-                            setOpenWarnings({...openWarnings, phone: false})
+                            if (validateEmail(e.target.value)) {
+                                setOpenWarnings({...openWarnings, email: false})
+                            }
                             setInfo({...info, ["email"]: e.target.value})
                         }}/>
                     { openWarnings.email &&

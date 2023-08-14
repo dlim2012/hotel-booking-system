@@ -23,6 +23,9 @@ public class Room {
 //    @Field(type = FieldType.Long, name = "room_id")
 //    Long roomId;
 
+//    @Field(type = FieldType.Long, name="version")
+//    Long version; // version for dates update
+
     @Field(type = FieldType.Nested)
     Set<Dates> dates;
 

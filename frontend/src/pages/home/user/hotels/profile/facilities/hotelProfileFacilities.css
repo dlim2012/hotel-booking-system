@@ -16,3 +16,7 @@
 .hotelFacility > label{
     margin-left: 5px;
 }
+
+.hotelProfileFacilitiesSaved{
+    color: green;
+}

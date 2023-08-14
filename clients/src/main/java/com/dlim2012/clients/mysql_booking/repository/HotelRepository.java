@@ -34,4 +34,10 @@ public interface HotelRepository extends JpaRepository<Hotel, Integer> {
             @Param("i1") int i1,
             @Param("i2") int i2);
 
+    @Transactional
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            value = "SELECT h FROM Hotel h WHERE h.id = ?1"
+    )
+    Optional<Hotel> findByIdWithLock(Integer hotelId);
 }

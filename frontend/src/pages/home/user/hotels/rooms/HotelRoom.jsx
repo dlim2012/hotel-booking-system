@@ -1,3 +1,4 @@
+import './HotelRoom.css'
 import React, {useEffect, useState} from 'react';
 import Navbar from "../../../../../components/navbar/Navbar";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
@@ -6,10 +7,10 @@ import Table from "../../../../../templates/Table";
 import RoomTable from "../../../../../components/tables/RoomsMgmtTable/RoomsMgmtTable";
 import HotelProfileSidebar from "../profile/HotelProfileSidebar";
 import noDataImage from "../../../../../assets/images/No data.png";
-import './HotelRoom.css'
 import {getMaxAddDate} from "../../../../../assets/Lists";
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function HotelRoom(props) {
 
@@ -80,6 +81,31 @@ function HotelRoom(props) {
             accessor: 'info'
         }
     ]
+
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="profileContainer">
+                    <HotelProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
 
     return (
         <div>

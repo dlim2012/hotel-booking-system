@@ -77,5 +77,7 @@ public class Hotel {
     @GeoPointField
     private GeoPoint geoPoint;
 
+    @Field(type = FieldType.Long)
+    private Long version;
 
 }

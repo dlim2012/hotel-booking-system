@@ -1,3 +1,4 @@
+import './roomsProfileFacilities.css'
 import React, {useEffect, useState} from 'react';
 import Navbar from "../../../../../../../components/navbar/Navbar";
 import RoomProfileSidebar from "../RoomProfileSidebar";
@@ -7,15 +8,18 @@ import {getWithJwt, putWithJwt} from "../../../../../../../clients";
 import {useParams} from "react-router-dom";
 import MailList from "../../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../../components/footer/Footer";
-import './roomsProfileFacilities.css'
+import {TailSpin} from "react-loader-spinner";
 
 function RoomsProfileFacilities(props) {
 
     const { hotelId, roomsId } = useParams();
 
     const [info, setInfo] = useState({});
+    const [saved, setSaved] = useState(false);
+    const [fetching, setFetching] = useState(false);
 
     function fetchRoomsFacilities(){
+        setFetching(true);
         getWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/facility`)
             .then(response=>response.json())
             .then(data => {
@@ -27,6 +31,9 @@ function RoomsProfileFacilities(props) {
                 setInfo(newFacilities)
             })
             .catch(e => {console.error(e)})
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     function onSave(){
@@ -37,12 +44,45 @@ function RoomsProfileFacilities(props) {
             }
         }
         var payload = { 'facility': payloadFacilities }
-        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/facility`, payload);
+        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/facility`, payload)
+            .then(() => {
+                setSaved(true)
+            })
+            .catch(e => {
+                console.error(e)
+            })
+            .finally(() => {
+                    fetchRoomsFacilities();
+            })
+        ;
     }
 
     useEffect(() => {
         fetchRoomsFacilities()
     }, [])
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="profileContainer">
+                    <RoomProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div>
@@ -63,6 +103,7 @@ function RoomsProfileFacilities(props) {
                                         type="checkbox"
                                         checked={info[item]}
                                         onChange={e => {
+                                            setSaved(false);
                                             setInfo({...info, [item]: e.target.checked});
                                         }}/>
                                     <label>{item}</label>
@@ -71,6 +112,7 @@ function RoomsProfileFacilities(props) {
                         </div>
                     </div>
                     <button onClick={onSave}>Save</button>
+                    {saved && <p className="roomsFacilitySaved">Saved!</p>}
                 </div>
             </div>
             <MailList/>

@@ -18,10 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -201,9 +199,12 @@ public class FacilityService {
     }
 
 
-    public List<RoomsBed> saveRoomsBed(Rooms rooms, List<BedInfo> bedInfoDtoList){
+    public Set<RoomsBed> saveRoomsBed(Rooms rooms, List<BedInfo> bedInfoDtoList){
         List<RoomsBed> roomsBedToSave = new ArrayList<>();
         for (BedInfo bedInfo : bedInfoDtoList){
+            if (bedInfo.getQuantity() == 0){
+                continue;
+            }
             RoomsBed roomsBed = RoomsBed.builder()
                     .rooms(rooms)
                     .bed(Bed.valueOf(bedInfo.getSize()))
@@ -211,7 +212,7 @@ public class FacilityService {
                     .build();
             roomsBedToSave.add(roomsBed);
         }
-        return roomsBedRepository.saveAll(roomsBedToSave);
+        return new HashSet<>(roomsBedRepository.saveAll(roomsBedToSave));
     }
 
     public void saveFacilities(

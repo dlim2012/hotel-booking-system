@@ -10,6 +10,7 @@ import {useParams} from "react-router-dom";
 import {getWithJwt, postImageWithJwt} from "../../../../../../clients";
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function HotelProfileImages(props) {
     const { hotelId } = useParams();
@@ -18,16 +19,19 @@ function HotelProfileImages(props) {
     const [imagePreview, setImagePreview] = useState(emptyImage);
     const [imageData, setImageData] = useState(null);
     const [imageName, setImageName] = useState("");
+    const [fetching, setFetching] = useState(false);
 
     const fetchImages = () => {
-
+        setFetching(true);
         getWithJwt(`/api/v1/hotel/hotel/${hotelId}/images`)
             .then(response => response.json())
             .then(data => {
                 setImageUrls(data);
             })
             .catch(e => console.error(e))
-            .finally()
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     const onImageChange = event => {
@@ -58,6 +62,31 @@ function HotelProfileImages(props) {
     useEffect(() => {
         fetchImages()
     }, [])
+
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="profileContainer">
+                    <HotelProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
 
     return (
         <div>

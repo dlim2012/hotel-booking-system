@@ -1,3 +1,4 @@
+import "./home.css";
 import Featured from "../../components/featured/Featured";
 import FeaturedProperties from "../../components/featuredProperties/FeaturedProperties";
 import Footer from "../../components/footer/Footer";
@@ -5,7 +6,6 @@ import Header from "../../components/header/Header";
 import MailList from "../../components/mailList/MailList";
 import Navbar from "../../components/navbar/Navbar";
 import PropertyList from "../../components/propertyList/PropertyList";
-import "./home.css";
 import {getDefaultHeaderAttributes} from "../../components/header/HeaderAttributes";
 import {useEffect, useState} from "react";
 import {useLocation} from "react-router-dom";
@@ -36,14 +36,15 @@ const Home = () => {
     );
     // const [coordinates, setCoordinates] = useState(location.state?.coordinates);
     const [coordinates, setCoordinates] = useState({
-        'lat': 42.3732216, "lng": -72.5198537
+        'lat': 37.7749295, "lng": -122.4194155
     });
     const [openDate, setOpenDate] = useState(false);
     var today = new Date();
     var tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
+
     const [date, setDate] = useState(
-        (location.state == null ?
+        (location.state?.date == null ?
             [
                 {
                     startDate: today,
@@ -52,9 +53,10 @@ const Home = () => {
                 },]
             : location.state.date)
     );
+
     const [openOptions, setOpenOptions] = useState(false);
     const [options, setOptions] = useState(
-        location.state == null ?
+        location.state?.date == null ?
             {
                 adult: 1,
                 children: 0,
@@ -69,6 +71,7 @@ const Home = () => {
         destination, setDestination, address, setAddress, coordinates, setCoordinates,
         openDate, setOpenDate, date, setDate, openOptions, setOpenOptions, options, setOptions
     }
+
 
 
     if (fetchingUser){

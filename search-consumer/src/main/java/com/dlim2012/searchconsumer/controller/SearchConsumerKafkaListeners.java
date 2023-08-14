@@ -9,6 +9,7 @@ import com.dlim2012.clients.kafka.dto.search.hotel.HotelsNewDayDetails;
 import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
+import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchVersion;
 import com.dlim2012.searchconsumer.repository.HotelRepository;
 import com.dlim2012.searchconsumer.repository.RoomsRepository;
 import com.dlim2012.searchconsumer.service.DateService;
@@ -73,6 +74,14 @@ public class  SearchConsumerKafkaListeners {
 //        System.out.println(hotelRepository.findById(roomDetails.getHotelId().toString()));
     }
 
+    @KafkaListener(topics="rooms-search-version", containerFactory = "roomsSearchVersionKafkaListenerContainerFactory", groupId="rooms-version-searchconsumer")
+    void roomsVersionListener(RoomsSearchVersion roomsSearchVersion) throws IOException, InterruptedException {
+        log.info("Kafka listener received: \"rooms-search-version\" with id {}", roomsSearchVersion.getRoomsId());
+//        System.out.println(roomsSearchVersion);
+        dateService.updateRoomsVersion(roomsSearchVersion);
+
+    }
+
     @KafkaListener(topics="rooms-search-delete", containerFactory = "roomsSearchDeleteKafkaListenerContainerFactory", groupId = "rooms-delete-searchconsumer")
     void roomsDeleteListener(RoomsSearchDeleteRequest request) throws IOException, InterruptedException {
         log.info("Kafka listener received: \"rooms-search-delete\" with id {}", request.getRoomsId());
@@ -85,7 +94,6 @@ public class  SearchConsumerKafkaListeners {
 //        System.out.println(datesUpdateDetails);
         dateService.updateDates(datesUpdateDetails);
 //        System.out.println(hotelRepository.findById(datesUpdateDetails.getHotelId().toString()));
-
     }
 
     @KafkaListener(topics="rooms-search-price-update", containerFactory = "roomsSearchPriceKafkaListenerContainerFactory", groupId = "price-searchconsumer")

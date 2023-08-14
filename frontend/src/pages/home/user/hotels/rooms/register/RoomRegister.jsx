@@ -72,9 +72,7 @@ function RoomRegister(props) {
         }
 
         var bedInfoDtoList = [];
-        console.log("bedInfo", bedInfo)
         for (let bed of Object.keys(bedInfo)){
-            console.log(bed)
             bedInfoDtoList.push({
                 size: bed,
                 quantity: bedInfo[bed]
@@ -154,6 +152,7 @@ function RoomRegister(props) {
                                             numBed: numBed === 0,
                                             priceMax: generalInfo.priceMin === "0.00",
                                             priceMin: generalInfo.priceMax === "0.00",
+                                            priceOrder: generalInfo.priceMax < generalInfo.priceMin,
                                             timeOrder: generalInfo.checkOutTime > generalInfo.checkInTime,
                                             dateOrder: generalInfo.availableFrom > generalInfo.availableUntil
                                         }

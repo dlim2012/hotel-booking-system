@@ -30,6 +30,9 @@ public class Room implements Serializable {
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Dates> datesSet;
 
+//    @Column(name = "version", nullable = false)
+//    private Integer version;
+
     @Override
     public String toString() {
         return "Room{" +
@@ -37,6 +40,7 @@ public class Room implements Serializable {
                 ", rooms=" + (rooms == null ? null : rooms.getId()) +
                 ", roomNumber=" + roomNumber +
                 ", datesSet=" + "?" +
+//                ", version=" + version +
                 '}';
     }
 }

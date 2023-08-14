@@ -26,6 +26,9 @@ public class RedisExpirationListener implements MessageListener {
         String channel = new String(message.getChannel());
         log.info("Received task timeout event: {} for key: {}", body, channel);
 
+        if (!body.startsWith(bookingIdKeyName)){
+            return;
+        }
         Long bookingId = Long.valueOf(body.substring(beginIndex));
         bookingService.processPaymentCancelledIfStatusReservedForTimeOut(bookingId, BookingStatus.CANCELLED_PAYMENT_TIME_EXPIRED);
 //        Booking booking;

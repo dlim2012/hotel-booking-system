@@ -41,7 +41,10 @@ spring:
   cache:
     type: redis
     cache-names:
+      - hotel-booking
+      - user-booking
       - booking
+      - booking-room
       - hotel
     redis:
       time-to-live: 10000

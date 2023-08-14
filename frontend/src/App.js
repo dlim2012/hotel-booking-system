@@ -41,6 +41,7 @@ import BookingArchived from "./pages/home/user/bookings/booking/bookingArchived/
 import HotelProfileSettings from "./pages/home/user/hotels/profile/settings/HotelProfileSettings";
 import RoomsSettings from "./pages/home/user/hotels/rooms/profile/settings/RoomsSettings";
 import Reserved from "./pages/home/search-list/hotel/booking/payment/reserved/Reserved";
+import ReserveFailed from "./pages/home/search-list/hotel/booking/payment/reserveFailed/ReserveFailed";
 
 // const dataProvider = restProvider('http://localhost:9000');
 
@@ -84,8 +85,9 @@ function App() {
               <Route path="/hotels" element={<SearchList/>}/>
               <Route path="/hotels/:hotelId" element={<Hotel/>}/>
               <Route path="/hotels/:hotelId/booking" element={<BookingConfirmation/>}/>
-              <Route path="/hotels/booking/reserved/:bookingId" element={<Reserved/>}/>/
-              <Route path="/hotels/booking/payment/success/:bookingId" element={<PaymentSuccess/>}/>/
+              <Route path="/hotels/booking/reserved/:bookingId" element={<Reserved/>}/>
+              <Route path="/hotels/booking/reserve-failed" element={<ReserveFailed />}/>
+              <Route path="/hotels/booking/payment/success/:bookingId" element={<PaymentSuccess/>}/>
               <Route path="/hotels/booking/payment/cancel/:bookingId" element={<PaymentCancelled/>}/>
               {/*<Route path="/hotels/booking/payment/error/:bookingId" element={<PaymentError/>}/>*/}
           </Routes>

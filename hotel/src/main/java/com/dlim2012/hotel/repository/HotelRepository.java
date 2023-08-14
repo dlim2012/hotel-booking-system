@@ -33,7 +33,9 @@ public interface HotelRepository extends JpaRepository<Hotel, Integer> {
 
     @Query(
             value = "SELECT h.* FROM hotel h " +
-                    "JOIN saved_user u ON h.id = u.hotel_id",
+                    "JOIN saved_user u ON h.id = u.hotel_id " +
+                    "WHERE u.user_id = ?1"
+            ,
             nativeQuery = true
     )
     List<Hotel> findBySavedUserId(Integer userId);

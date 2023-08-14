@@ -22,9 +22,11 @@ public class Hotel implements Serializable {
     @Column(name = "hotel_manager_id", nullable = false)
     private Integer hotelManagerId;
 
-
     @OneToMany(mappedBy = "hotel", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Rooms> roomsSet;
+
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     @Override
     public String toString() {
@@ -32,6 +34,7 @@ public class Hotel implements Serializable {
                 "id=" + id +
                 ", hotelManagerId=" + hotelManagerId +
                 ", roomsSet=" + roomsSet +
+                ", version=" + version +
                 '}';
     }
 }

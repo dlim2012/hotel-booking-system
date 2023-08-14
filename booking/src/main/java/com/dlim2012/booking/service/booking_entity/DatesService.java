@@ -4,6 +4,7 @@ import com.dlim2012.booking.dto.dates.booking.AddBookingRoomRequest;
 import com.dlim2012.booking.dto.dates.booking.EditBookingRoomRequest;
 import com.dlim2012.booking.dto.internal.DateRange;
 import com.dlim2012.booking.dto.reserve.BookingRequest;
+import com.dlim2012.booking.service.CacheService;
 import com.dlim2012.booking.service.booking_entity.hotel_entity.HotelEntityService;
 import com.dlim2012.booking.service.booking_entity.hotel_entity.RoomsEntityService;
 import com.dlim2012.booking.service.booking_entity.utils.BookingUtilsService;
@@ -11,7 +12,6 @@ import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
-import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.mysql_booking.entity.*;
 import com.dlim2012.clients.mysql_booking.repository.*;
@@ -34,7 +34,7 @@ public class DatesService {
     private final BookingUtilsService bookingUtilsService;
     private final HotelEntityService hotelEntityService;
     private final RoomsEntityService roomsEntityService;
-
+    private final CacheService cacheService;
 
     private final RoomsRepository roomsRepository;
     private final DatesRepository datesRepository;
@@ -42,9 +42,6 @@ public class DatesService {
     private final BookingRoomRepository bookingRoomRepository;
     private final EntityManager entityManager;
     private final KafkaTemplate<String, DatesUpdateDetails> roomsSearchDatesUpdateKafkaTemplate;
-
-    private final Integer MAX_BOOKING_DAYS = 30;
-
 
     /* This is for new reservation */
     public Map<Integer, List<Long>> _removeDatesSameRange(
@@ -373,8 +370,10 @@ public class DatesService {
         Set<Dates> datesSet = null;
         if (userRole.equals(UserRole.HOTEL_MANAGER)){
             datesSet = datesRepository.findByRoomIdAndHotelManagerIdWithLock(roomId, userId);
-        } else if (userRole.equals(UserRole.APP_USER)){
+        } else if (userRole.equals(UserRole.APP_USER)) {
             throw new RuntimeException();
+        } else if (userRole.equals(UserRole.ADMIN)){
+            datesSet = datesRepository.findByRoomIdWithLock(roomId);
         } else {
             throw new IllegalArgumentException("");
         }
@@ -391,7 +390,7 @@ public class DatesService {
             LocalDate startDate, LocalDate endDate
             ) {
 
-        Set<Dates> datesSet = null;
+        Set<Dates> datesSet;
         if (userRole.equals(UserRole.HOTEL_MANAGER)){
             datesSet = datesRepository.findByRoomIdAndHotelManagerIdWithLock(roomId, userId);
         } else if (userRole.equals(UserRole.APP_USER)){
@@ -439,12 +438,15 @@ public class DatesService {
         }
 
         // send results to Kafka
-        DatesUpdateDetails datesUpdateDetails = DatesUpdateDetails.builder()
-                .hotelId(hotelId)
-                .datesToUpdate(new HashMap<>())
-                .datesIdsToDelete(getDatesIdsToDelete(List.of(Dates.builder().id(datesId).build())))
-                .build();
-        roomsSearchDatesUpdateKafkaTemplate.send("rooms-search-dates-update", datesUpdateDetails);
+        updateDates(hotelId, new ArrayList<>(), new ArrayList<>(), List.of(Dates.builder().id(datesId).build()));
+//        DatesUpdateDetails datesUpdateDetails = DatesUpdateDetails.builder()
+//                .hotelId(hotelId)
+//                .hotelVersion(hotelEntityService.getNewHotelVersion(hotelId))
+////                .roomsVersions(roomsEntityService.getRoomsVersions(hotelId))
+//                .datesToUpdate(new HashMap<>())
+//                .datesIdsToDelete(getDatesIdsToDelete(List.of(Dates.builder().id(datesId).build())))
+//                .build();
+//        roomsSearchDatesUpdateKafkaTemplate.send("rooms-search-dates-update", datesUpdateDetails);
     }
 
 
@@ -454,6 +456,8 @@ public class DatesService {
             Integer hotelId, Long bookingId,
             AddBookingRoomRequest request
     ) {
+
+
         Set<Dates> datesSet = null;
         Booking booking = null;
         BookingRooms bookingRooms = null;
@@ -500,6 +504,7 @@ public class DatesService {
         // save results and release lock
         updateDates(hotelId, datesSet, datesToUpdate, datesToDelete);
 
+        cacheService.putBooking(booking);
         bookingUtilsService.recalculateBookingPriceTimeAndSave(booking);
     }
 
@@ -508,11 +513,26 @@ public class DatesService {
             Integer hotelId,
             EditBookingRoomRequest request
     ) {
+        Booking booking = null;
         BookingRoom bookingRoom = null;
         if (userRole.equals(UserRole.HOTEL_MANAGER)){
-            bookingRoom = bookingRoomRepository.findByIdAndHotelManagerId(
-                    request.getBookingRoomId(), userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Booking room not found."));
+            booking = bookingRepository.findByIdAndHotelManagerIdWithLock(request.getBookingId(), userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Booking not found."));
+
+            for (BookingRooms bookingRooms: booking.getBookingRooms()){
+                for (BookingRoom bookingRoom1: bookingRooms.getBookingRoomList()){
+                    if (bookingRoom1.getId() == request.getBookingRoomId()){
+                        bookingRoom = bookingRoom1;
+                        break;
+                    }
+                }
+            }
+            if (bookingRoom == null){
+                throw new ResourceNotFoundException("Booking room not found.");
+            }
+//            bookingRoom = bookingRoomRepository.findByIdAndHotelManagerId(
+//                    request.getBookingRoomId(), userId)
+//                    .orElseThrow(() -> new ResourceNotFoundException("Booking room not found."));
         } else {
             throw new RuntimeException("Not implmented.");
         }
@@ -650,7 +670,10 @@ public class DatesService {
         bookingRoom.setRoomId(request.getRoomId());
         bookingRoom.setStartDateTime(request.getStartDate().atTime(checkInTimeHour, checkInTimeMinute));
         bookingRoom.setEndDateTime(request.getEndDate().atTime(checkOutTimeHour, checkOutTimeMinute));
-        bookingRoomRepository.save(bookingRoom);
+
+        bookingRepository.save(booking);
+
+        cacheService.putBooking(booking);
     }
 
     public boolean cancelBookingRoom(
@@ -677,7 +700,6 @@ public class DatesService {
         for (BookingRooms bookingRooms1: booking.getBookingRooms()){
             for (BookingRoom bookingRoom1: bookingRooms1.getBookingRoomList()){
                 if (bookingRoom1.getId().equals(bookingRoomId)){
-                    bookingRooms1.getBookingRoomList().remove(bookingRoom1);
                     bookingRooms = bookingRooms1;
                     bookingRoom = bookingRoom1;
                     break;
@@ -687,18 +709,23 @@ public class DatesService {
                 break;
             }
         }
+        if (bookingRoom == null){
+            throw new ResourceNotFoundException("Booking room not found.");
+        }
 
         /* add time availability  */
-        Set<Dates> datesSet = datesRepository.findByRoomIdWithLock(
-                bookingRoom.getRoomId());;
+        try {
+            Set<Dates> datesSet = datesRepository.findByRoomIdWithLock(
+                    bookingRoom.getRoomId());
+            List<Dates> datesToDelete = new ArrayList<>();
+            List<Dates> datesToUpdate = new ArrayList<>();
+            _addDateRange(datesSet, datesToDelete, datesToUpdate,
+                    bookingRoom.getRoomId(), bookingRoom.getStartDateTime().toLocalDate(), bookingRoom.getEndDateTime().toLocalDate());
 
-        List<Dates> datesToDelete = new ArrayList<>();
-        List<Dates> datesToUpdate = new ArrayList<>();
-        _addDateRange(datesSet, datesToDelete, datesToUpdate,
-                bookingRoom.getRoomId(), bookingRoom.getStartDateTime().toLocalDate(), bookingRoom.getEndDateTime().toLocalDate());
-
-        updateDates(booking.getHotelId(), datesSet, datesToUpdate, datesToDelete);
-
+            updateDates(booking.getHotelId(), datesSet, datesToUpdate, datesToDelete);
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
 
         bookingRoom.setStatus(newBookingStatus);
 
@@ -707,8 +734,47 @@ public class DatesService {
             booking.setStatus(newBookingStatus);
         }
 
+        cacheService.putBooking(booking);
         bookingUtilsService.recalculateBookingPriceTimeAndSave(booking);
+
+
         return booking.getMainStatus().equals(BookingMainStatus.CANCELLED);
+    }
+
+
+
+    public DatesUpdateDetails getDatesUpdateDetailsWithOutVersion(
+            Integer hotelId,
+            List<Dates> updatedDates,
+            List<Dates> deletedDates
+    ){
+        Set<Long> roomIds = new HashSet<>();
+        for (Dates dates: updatedDates){
+            roomIds.add(dates.getRoom().getId());
+        }
+        for (Dates dates: deletedDates){
+            roomIds.add(dates.getRoom().getId());
+        }
+
+        List<Dates> datesList = datesRepository.findByRoomIds(roomIds);
+
+        Map<Long, List<DatesUpdateDetails.DatesDto>> datesMap = new HashMap<>();
+        for (Dates dates: datesList){
+            Long roomId = dates.getRoom().getId();
+            List<DatesUpdateDetails.DatesDto> roomDatesList = datesMap.getOrDefault(roomId, new ArrayList<>());
+            roomDatesList.add(DatesUpdateDetails.DatesDto.builder()
+                    .Id(dates.getId())
+                    .startDate(dates.getStartDate())
+                    .endDate(dates.getEndDate())
+                    .build());
+            datesMap.put(dates.getRoom().getId(), roomDatesList);
+        }
+
+        return DatesUpdateDetails.builder()
+                .hotelId(hotelId)
+                .datesMap(datesMap)
+                .build();
+
     }
 
     public void updateDates(
@@ -729,12 +795,24 @@ public class DatesService {
                 updatedDates.add(dates);
             }
         }
-        DatesUpdateDetails datesUpdateDetails = DatesUpdateDetails.builder()
-                .hotelId(hotelId)
-                .datesToUpdate(getDatesToUpdate(updatedDates))
-                .datesIdsToDelete(getDatesIdsToDelete(datesToDelete))
-                .build();
+
+        DatesUpdateDetails datesUpdateDetails = getDatesUpdateDetailsWithOutVersion(
+                hotelId,
+                updatedDates,
+                datesToDelete
+        );
+        datesUpdateDetails.setHotelVersion(hotelEntityService.getNewHotelVersion(hotelId));
         roomsSearchDatesUpdateKafkaTemplate.send("rooms-search-dates-update", datesUpdateDetails);
+
+
+//        DatesUpdateDetails datesUpdateDetails = DatesUpdateDetails.builder()
+//                .hotelId(hotelId)
+//                .hotelVersion(hotelEntityService.getNewHotelVersion(hotelId))
+////                .roomsVersions(roomsEntityService.getRoomsVersions(hotelId))
+//                .datesToUpdate(getDatesToUpdate(updatedDates))
+//                .datesIdsToDelete(getDatesIdsToDelete(datesToDelete))
+//                .build();
+//        roomsSearchDatesUpdateKafkaTemplate.send("rooms-search-dates-update", datesUpdateDetails);
     }
 
 
@@ -761,30 +839,30 @@ public class DatesService {
 //        datesToUpdate.put(roomsId, datesDtoRoomsMap);
 //    }
 
-    Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> getDatesToUpdate(List<Dates> datesUpdated){
-        Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> datesToUpdate = new HashMap<>();
-        for (Dates dates: datesUpdated){
-            Long roomId = dates.getRoom().getId();
-            Map<Long, DatesUpdateDetails.DatesDto> datesDtoMap = datesToUpdate.getOrDefault(roomId, new HashMap<>());
-            datesDtoMap.put(dates.getId(), DatesUpdateDetails.DatesDto.builder()
-                    .startDate(dates.getStartDate())
-                    .endDate(dates.getEndDate())
-                    .build());
-            datesToUpdate.put(roomId, datesDtoMap);
-        }
-        return datesToUpdate;
-    }
+//    Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> getDatesToUpdate(List<Dates> datesUpdated){
+//        Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> datesToUpdate = new HashMap<>();
+//        for (Dates dates: datesUpdated){
+//            Long roomId = dates.getRoom().getId();
+//            Map<Long, DatesUpdateDetails.DatesDto> datesDtoMap = datesToUpdate.getOrDefault(roomId, new HashMap<>());
+//            datesDtoMap.put(dates.getId(), DatesUpdateDetails.DatesDto.builder()
+//                    .startDate(dates.getStartDate())
+//                    .endDate(dates.getEndDate())
+//                    .build());
+//            datesToUpdate.put(roomId, datesDtoMap);
+//        }
+//        return datesToUpdate;
+//    }
 
-    Map<Long, Set<Long>> getDatesIdsToDelete(List<Dates> deletedDatesList){
-        Map<Long, Set<Long>> datesIdsToDelete = new HashMap<>();
-        for (Dates dates: deletedDatesList){
-            Long roomId = dates.getRoom().getId();
-            Set<Long> datesIdsSet = datesIdsToDelete.getOrDefault(roomId, new HashSet<>());
-            datesIdsSet.add(dates.getId());
-            datesIdsToDelete.put(roomId, datesIdsSet);
-        }
-        return datesIdsToDelete;
-    }
+//    Map<Long, Set<Long>> getDatesIdsToDelete(List<Dates> deletedDatesList){
+//        Map<Long, Set<Long>> datesIdsToDelete = new HashMap<>();
+//        for (Dates dates: deletedDatesList){
+//            Long roomId = dates.getRoom().getId();
+//            Set<Long> datesIdsSet = datesIdsToDelete.getOrDefault(roomId, new HashSet<>());
+//            datesIdsSet.add(dates.getId());
+//            datesIdsToDelete.put(roomId, datesIdsSet);
+//        }
+//        return datesIdsToDelete;
+//    }
 //
 //    void addToDetailsMapDelete(
 //            Long roomId, Dates dates,

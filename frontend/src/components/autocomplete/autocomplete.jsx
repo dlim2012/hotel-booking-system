@@ -70,7 +70,7 @@ export const extractAddress = (place, cities=false) => {
         }
     });
 
-    if (cities){
+    if (!cities){
         newAddress.addressLine1 = newAddress.street_number === "" ?
             newAddress.route : newAddress.street_number + " " + newAddress.route;
     }

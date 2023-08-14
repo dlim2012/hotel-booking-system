@@ -100,6 +100,7 @@ public class HotelService {
         } catch (Exception e){
 
         }
+        System.out.println(saved);
 
 
         HotelRoomsInfoResponse hotelRoomsInfoResponse = HotelRoomsInfoResponse.builder()
@@ -400,5 +401,6 @@ public class HotelService {
                     HotelBookingDeleteRequest.builder().hotelId(hotel.getId()).build());
         }
         hotelRepository.deleteAll(hotelList);
+        savedUserRepository.deleteAllByUserId(userId);
     }
 }

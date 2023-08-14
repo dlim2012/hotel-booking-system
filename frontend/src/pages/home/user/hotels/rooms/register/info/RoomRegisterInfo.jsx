@@ -18,9 +18,9 @@ function RoomRegisterInfo(props) {
                         value={info["displayName"]}
                         onChange={e => {
                             if (e.target.value.length >= 5) {
-                                setInfo({...info, ["displayName"]: e.target.value})
+                                setOpenWarnings({...openWarnings, ["displayName"]: false})
                             }
-                            setOpenWarnings({...openWarnings, ["displayName"]: false})
+                            setInfo({...info, ["displayName"]: e.target.value})
                         }
                         }
                      />
@@ -58,7 +58,7 @@ function RoomRegisterInfo(props) {
             </div>
             <div className="roomRegisterTopic">
                 <h2>Description</h2>
-                <span className="roomRegisterInfoNote">The description will be displayed on the hotel view page.</span>
+                {/*<span className="roomRegisterInfoNote">The description will be displayed on the hotel view page.</span>*/}
                  <div className="roomRegisterFormItem">
                      {/*<label className="formLabel">Description</label>*/}
                      <textarea
@@ -111,7 +111,7 @@ function RoomRegisterInfo(props) {
                     {/*<div className="roomRegisterTopicItem">*/}
                     {
                         Object.keys(bedsMap2).map((item, index) => {
-                            console.log("bedsMap2 ", item)
+                            // console.log("bedsMap2 ", item)
                             return (
                                 <div className="roomRegisterTopicItem">
                                     <label className="formLabel">{bedsMap2[item]}</label>
@@ -181,15 +181,19 @@ function RoomRegisterInfo(props) {
                         min="0.00"
                         value={info["priceMin"]}
                         onChange={e => {
-                            if (e.target.value !== "0.00") {
-                                setOpenWarnings({...openWarnings, ["priceMin"]: false})
-                            }
+                            var priceMin = e.target.value === "0.00" && openWarnings.priceMin;
+                            var priceOrder = e.target.value > info["priceMax"] && openWarnings.priceOrder;
+                            setOpenWarnings({...openWarnings, ["priceMin"]: priceMin, ["priceOrder"]: priceOrder})
                             setInfo({...info, ["priceMin"]: e.target.value})
                         }
                         }
                     /></span><br/>
                     {openWarnings.priceMin &&
-                        <span className="roomRegisterInfoWarning">Please set a price bigger than $0.00.</span>
+                        <span className="roomRegisterInfoWarning">Please set the minimum price bigger than $0.00.</span>
+                    }
+                    { openWarnings.priceMin && openWarnings.priceOrder && <br/>}
+                    {openWarnings.priceOrder &&
+                        <span className="roomRegisterInfoWarning">Maximum price is lower than minimum price</span>
                     }
                 </div>
                 <div className="roomRegisterTopicItem">
@@ -208,7 +212,7 @@ function RoomRegisterInfo(props) {
                      }}
                  /></span><br/>
                     {openWarnings.priceMax &&
-                        <span className="roomRegisterInfoWarning">Please set a price bigger than $0.00.</span>
+                        <span className="roomRegisterInfoWarning">Please set the maximum price bigger than $0.00.</span>
                     }
                 </div>
 

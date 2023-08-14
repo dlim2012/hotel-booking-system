@@ -33,7 +33,6 @@ function HotelRegister(props) {
     const [hotelInfo, setHotelInfo ] = useState({
         name: "", description: "", propertyType: "Hotel", phone: "", fax: "", website: "", email: "", stars: ""
     });
-
     const [facilities, setFacilities] = useState(Object.fromEntries(hotelFacilities.map(i => [i, false])));
 
     var defaultLocationWarnings = {addressline1: false, city: false, country: false}

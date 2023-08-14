@@ -24,7 +24,9 @@
 }
 
 .logo{
-  font-weight: 500;
+  /*font-size: 25px;*/
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .navButton{
@@ -76,6 +78,7 @@
   z-index: 100;
   /*display: flex;*/
 }
+
 
 /* dropdown */
 .dropdown-menu{

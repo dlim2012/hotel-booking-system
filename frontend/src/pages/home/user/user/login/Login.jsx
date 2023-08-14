@@ -1,11 +1,10 @@
+import './login.css';
 import React, {useState} from 'react';
 import Navbar from "../../../../../components/navbar/Navbar";
 import { validEmail } from "../../utils/inputValidation";
 import {post} from "../../../../../clients";
 import jwt_decode from "jwt-decode";
 import {useLocation, useNavigate} from "react-router-dom";
-import './login.css';
-import '../registration/registration.css'
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
 
@@ -16,18 +15,25 @@ function Login(props) {
     // const [password, setPassword] = useState("admin_user_password");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(false)
-    const [emailError, setEmailError] = useState(false);
-
+    const [warning, setWarning] = useState({});
+    const [error, setError] = useState("");
 
 
     const register = () => {
-        setEmailError(!validEmail(email));
-        if (emailError || password.length < 1
-        ){
-            setError(true);
-            return;
+        setError("")
+        var newWarning = {
+            "emptyEmail": email.length === 0,
+            "shortPassword": password.length < 8,
+            "invalidEmail": email.length !== 0 && !validEmail(email)
         }
+
+        setWarning(newWarning);
+        for (let key of Object.keys(newWarning)){
+            if (newWarning[key]){
+                return;
+            }
+        }
+
         var path = '/api/v1/user/login'
         // var path = 'http://localhost/api/v1/user/register'
         var payload = {
@@ -38,24 +44,27 @@ function Login(props) {
         post(path, payload)
             .then(response => response.json())
             .then(data => {
+                if (data.errorMessage.length > 0){
+                    setError(data.errorMessage);
+                    return;
+                }
                 console.log(data)
+
                 const jwt = data.jwt;
                 const decoded = jwt_decode(jwt)
                 localStorage.setItem("firstname", decoded.sub)
                 localStorage.setItem("jwt", jwt);
+                if (location?.state?.from != null){
+                    console.log(location.state.from)
+                    navigate(location.state.from, {state: location.state.state});
+                } else {
+
+                    navigate("/")
+                }
             })
             .catch(error =>{
                 console.log(error);
             }).finally( () => {
-                if (location.state.from != null){
-                    if (location.state.from.substring(0, 8) === "/hotels/") {
-                        console.log("location", location)
-                        console.log(location.state.from)
-                        navigate(location.state.from, {state: location.state.state});
-                        return;
-                    }
-                }
-                navigate("/")
             })
 
 
@@ -77,11 +86,19 @@ function Login(props) {
                             type="email"
                             maxLength="100"
                             onChange = {e => {
-                                setEmail(e.target.value); setEmailError(!validEmail(e.target.value));
+                                if (warning.emptyEmail && e.target.value.length > 0){
+                                    setWarning({...warning, ["emptyEmail"]: false})
+                                } else if (warning.invalidEmail && validEmail(e.target.value)){
+                                    setWarning({...warning, ["invalidEmail"]: false})
+                                }
+                                setEmail(e.target.value);
                             }}
                             required />
                     </div>
-                    {   emailError && error &&
+                    { warning.emptyEmail &&
+                        <label className="validationLabel">Please enter the registered email.</label>
+                    }
+                    {   warning.invalidEmail &&
                         <label className="validationLabel">Email is invalid!</label>
                     }
                     <div className="formItem">
@@ -91,10 +108,14 @@ function Login(props) {
                             type="password"
                             maxLength="30"
                             onChange = {e => {
-                                setPassword(e.target.value)}}
+                                if (warning.shortPassword && e.target.value.length >= 8){
+                                    setWarning({...warning, ["shortPassword"]: false})
+                                }
+                                setPassword(e.target.value)
+                            }}
                             required />
                     </div>
-                    {   password.length < 8 && error &&
+                    {   warning.shortPassword &&
                         <label className="validationLabel">Too short password! (minimum 8)</label>
                     }
 
@@ -102,8 +123,17 @@ function Login(props) {
                     <div className="formItem">
                         <button className="registerbtn" onClick={register}>Login</button>
                     </div>
+                    {
+                        error.length > 0 &&
+                        <label className="validationLabel">Authentication failed.</label>
+                    }
                     <div className="container signin">
-                        <p><a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/register">Create a new account.</a></p>
+                        <button
+                            className="navUserRegisterBtn"
+                            onClick={() => {
+                                navigate("/user/register", {state: location.state})
+                            }}>Create a new account.</button>
+                        {/*<p><a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/register">Create a new account.</a></p>*/}
                     </div>
                 </div>
             </div>

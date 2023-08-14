@@ -37,8 +37,12 @@ public class PriceService {
                 Hotel hotel = hotelRepository.findById(details.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
 
+                if (hotel.getVersion() > details.getVersion()){
+                    return;
+                }
+
                 if (hotel.getSeqNoPrimaryTerm() == null){
-                    throw new ResourceNotFoundException("Hotel {} found without SeqNoPrimaryTerm");
+                    throw new ResourceNotFoundException("Hotel found without SeqNoPrimaryTerm");
                 }
 
                 if (hotel.getRooms() != null){

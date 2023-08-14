@@ -36,6 +36,9 @@ public class Dates {
     @Field(type = FieldType.Integer)
     private Integer maxChild;
 
+    @Field(type = FieldType.Integer)
+    private Integer numBed;
+
     @Field(type = FieldType.Integer_Range)
     private DateRange dateRange;
 

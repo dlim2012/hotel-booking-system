@@ -6,11 +6,14 @@ import './userBooking.css';
 import UserBookingCard from "./BookingCard";
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
+import RoomProfileSidebar from "../../hotels/rooms/profile/RoomProfileSidebar";
+import {TailSpin} from "react-loader-spinner";
 
 
 function UserBookings(props) {
     const [status, setStatus] = useState("Upcoming");
     const [bookings, setBookings] = useState([]);
+    const [fetching, setFetching] = useState(false);
 
 
     const fetchBookings = (status) => {
@@ -27,6 +30,7 @@ function UserBookings(props) {
         }
         console.log(payload)
 
+        setFetching(true);
         postWithJwt("/api/v1/booking-management/user/booking", payload)
             .then(response => response.json())
             .then(data => {
@@ -43,6 +47,9 @@ function UserBookings(props) {
             .catch(e => {
                 console.error(e)
             })
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     const onStatusButtonClick = (newStatus) => {
@@ -56,6 +63,29 @@ function UserBookings(props) {
         fetchBookings(status);
     }, [])
 
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="bookingsContainer">
+                    <h1>Booking History</h1>
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
 
     return (

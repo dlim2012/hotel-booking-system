@@ -5,6 +5,7 @@ import './hotelMain.css'
 import {getWithJwt} from "../../../../../clients";
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 
 
@@ -13,6 +14,7 @@ function HotelMain(props) {
     const location = useLocation();
     const navigate = useNavigate();
     const [info, setInfo] = useState({});
+    const [fetching, setFetching] = useState(false);
 
     const hotel = location.state.hotel;
 
@@ -35,17 +37,44 @@ function HotelMain(props) {
 
 
     function fetchHotelMainInfo(){
+        setFetching(true);
         getWithJwt(`/api/v1/booking-management/hotel/${hotel.id}/main`)
             .then(response => response.json())
             .then(data => {
                 console.log(data)
                 setInfo(data);
             })
+            .catch(e => {
+                console.error(e)
+            })
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     useEffect(() => {
         fetchHotelMainInfo()
     }, [])
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="loading">
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#0071c2"
+                        ariaLabel="tail-spin-loading"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                        visible={true}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     if (Object.keys(info).length === 0){
         return;

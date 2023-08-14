@@ -49,17 +49,25 @@ public class UserController {
     @PostMapping("/register")
     public AuthenticationToken register(@RequestBody UserRegisterRequest userRegisterRequest){
         log.info("Register requested with email '{}'", userRegisterRequest.getEmail());
-        String jwt = userService.register(userRegisterRequest);
-        log.info("User registered with email '{}' ", userRegisterRequest.getEmail());
-        return new AuthenticationToken(jwt);
+        try {
+            String jwt = userService.register(userRegisterRequest);
+            log.info("User registered with email '{}' ", userRegisterRequest.getEmail());
+            return new AuthenticationToken("", jwt);
+        } catch (IllegalArgumentException e){
+            return new AuthenticationToken(e.getMessage(), "");
+        }
     }
 
     @PostMapping("/login")
     public AuthenticationToken login(@RequestBody AuthenticationRequest authenticationRequest){
         log.info("Login requested from user '{}'", authenticationRequest.getEmail());
-        String jwt = userService.authenticate(authenticationRequest);
-        log.info("Login authorized to user '{}'", authenticationRequest.getEmail());
-        return new AuthenticationToken(jwt);
+        try {
+            String jwt = userService.authenticate(authenticationRequest);
+            log.info("Login authorized to user '{}'", authenticationRequest.getEmail());
+            return new AuthenticationToken("", jwt);
+        } catch (IllegalArgumentException e){
+            return new AuthenticationToken(e.getMessage(), "");
+        }
 
     }
 

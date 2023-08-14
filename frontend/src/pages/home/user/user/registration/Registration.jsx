@@ -1,7 +1,5 @@
-import Navbar from "../../../../../components/navbar/Navbar";
 import './registration.css'
-import {format} from "date-fns";
-import {DateRange} from "react-date-range";
+import Navbar from "../../../../../components/navbar/Navbar";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useState} from "react";
 import {post, getWithJwt} from "../../../../../clients";
@@ -26,21 +24,28 @@ function Registration() {
     // const [email, setEmail] = useState("");
     // const [password, setPassword] = useState("");
     // const [password2, setPassword2] = useState("");
-    const [error, setError] = useState(false)
-    const [emailError, setEmailError] = useState(false);
+    const [warning, setWarning] = useState(false)
+    const [error, setError] = useState("");
 
-
+    console.log(location)
 
     const register = () => {
-        setEmailError(!validEmail(email));
-        if (emailError
-            || firstName.length === 0
-            || lastName.length === 0
-            || password !== password2
-        ){
-            setError(true);
-            return;
+        setError("")
+        var newWarning = {
+            "emptyFirstName": firstName.length === 0,
+            "emptyLastName": lastName.length === 0,
+            "shortPassword": password.length < 8,
+            "passwordMismatch": password !== password2,
+            "invalidEmail": !validEmail(email)
+        };
+        console.log(newWarning)
+        setWarning(newWarning);
+        for (let key of Object.keys(newWarning)){
+            if (newWarning[key]){
+                return;
+            }
         }
+
         var path = '/api/v1/user/register'
         // var path = 'http://localhost/api/v1/user/register'
         var payload = {
@@ -53,17 +58,18 @@ function Registration() {
         post(path, payload)
             .then(response => response.json())
             .then(data => {
+                if (data.errorMessage.length > 0){
+                    setError(data.errorMessage);
+                    return;
+                }
                 console.log(data)
                 const jwt = data.jwt;
                 const decoded = jwt_decode(jwt)
                 localStorage.setItem("firstname", decoded.sub)
                 localStorage.setItem("jwt", jwt);
-                try{
-                    if (location.state.from != null){
-                        navigate(location.state.from);
-                    }
-                } catch (e){
-                } finally {
+                if (location.state.from != null){
+                    navigate(location.state.from, {state: location.state.state});
+                } else {
                     navigate("/");
                 }
             })
@@ -87,10 +93,15 @@ function Registration() {
                         placeholder="Enter first name"
                         type="text"
                         maxLength="50"
-                        onChange = {e => {setFirstName(e.target.value)}}
+                        onChange = {e => {
+                            if (e.target.value.length > 0) {
+                                setWarning({...warning, ["emptyFirstName"]: false});
+                            }
+                            setFirstName(e.target.value)
+                        }}
                     />
                 </div>
-                {   firstName.length === 0 && error &&
+                {   warning.emptyFirstName &&
                     <label className="validationLabel">First name can't be empty!</label>
                 }
                 <div className="formItem">
@@ -100,10 +111,15 @@ function Registration() {
                         type="text"
                         required
                         maxLength="50"
-                        onChange = {e => {setLastName(e.target.value)}}
+                        onChange = {e => {
+                            if (e.target.value.length > 0) {
+                                setWarning({...warning, ["emptyLastName"]: false});
+                            }
+                            setLastName(e.target.value)
+                        }}
                     />
                 </div>
-                {   lastName.length === 0 && error &&
+                {   warning.emptyLastName &&
                     <label className="validationLabel">Last name can't be empty!</label>
                 }
 
@@ -114,11 +130,14 @@ function Registration() {
                         type="email"
                         maxLength="100"
                         onChange = {e => {
-                            setEmail(e.target.value); setEmailError(!validEmail(e.target.value));
+                            if (validEmail(e.target.value)) {
+                                setWarning({...warning, ["invalidEmail"]: false});
+                            }
+                            setEmail(e.target.value);
                         }}
                         required />
                 </div>
-                {   emailError && error &&
+                {   warning.invalidEmail &&
                     <label className="validationLabel">Email is invalid!</label>
                 }
                 <div className="formItem">
@@ -128,10 +147,14 @@ function Registration() {
                         type="password"
                         maxLength="30"
                         onChange = {e => {
-                            setPassword(e.target.value)}}
+                            if (e.target.value.length >= 8){
+                                setWarning({...warning, ["shortPassword"]: false});
+                            }
+                            setPassword(e.target.value)
+                        }}
                         required />
                 </div>
-                {   password.length < 8 && error &&
+                {   warning.shortPassword &&
                     <label className="validationLabel">Too short password! (minimum 8)</label>
                 }
 
@@ -141,18 +164,27 @@ function Registration() {
                         placeholder="Repeat password"
                         type="password"
                         maxLength="30"
-                        onChange = {e => {setPassword2(e.target.value)}}
+                        onChange = {e => {
+                            setWarning({...warning, ["passwordMismatch"]: false})
+                            setPassword2(e.target.value)
+                        }}
                         required />
                 </div>
-                {   password !== password2 && error &&
+                {   warning.passwordMismatch &&
                     <label className="validationLabel">Passwords don't match!</label>
                 }
 
                 <div className="formItem">
                     <button className="registerbtn" onClick={register}>Register</button>
                 </div>
-                <div className="container signin">
-                    <p>Already have an account? <a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/login">Sign in</a>.</p>
+                { error.length > 0 && <label className="validationLabel">{error}</label>}
+                <div className="signin">
+                    <p>Already have an account? <button className="navLoginBtn" onClick={
+                        () => {
+                            navigate("/user/login", {state: location.state})
+                    }}
+                    >Sign in</button> </p>
+                    {/*<p>Already have an account?<a href="http://ec2-35-171-6-79.compute-1.amazonaws.com/user/login">Sign in</a>.</p>*/}
                 </div>
             </div>
         </div>

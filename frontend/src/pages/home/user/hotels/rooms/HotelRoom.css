@@ -12,3 +12,7 @@ button {
     display: flex;
     margin-top: 80px;
 }
+
+table, th, td{
+    border: lightgray 1px solid;
+}

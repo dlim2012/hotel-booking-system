@@ -41,12 +41,12 @@ public class UserController {
         );
     }
 
-    @GetMapping("/booking/{bookingId}/active")
+    @GetMapping("/user/booking/{bookingId}/active")
     public ActiveBookingItem getActiveBookingItem(
             @PathVariable("bookingId") Long bookingId
     ){
         Integer userId = jwtService.getId();
-        log.info("Booking {} requested by user {}", bookingId, userId);
+        log.info("Booking {} (active) requested by user {}", bookingId, userId);
         return userService.getActiveBookingItemByAppUser(bookingId, userId);
     }
 
@@ -89,7 +89,7 @@ public class UserController {
             @RequestBody ArchivedBookingByUserSearchInfo request
     ){
         Integer userId = jwtService.getId();
-        log.info("Booking {} requested by user {}", bookingId, userId);
+        log.info("Booking {} (archived) requested by user {}", bookingId, userId);
         return userService.getArchivedBookingItemByAppUser(bookingId, userId, request);
     }
 

@@ -9,8 +9,11 @@ function HotelMgmtTable(props) {
 
 
     const navManagement = (v) => {
-        console.log(v)
         navigate(`/user/hotel/${v.id}`, {state: { hotel: v }})
+    }
+
+    const navHotelRoom = (v) => {
+        navigate(`/user/hotel/${v.id}/rooms`)
     }
 
     let rowIndex = 0;
@@ -104,7 +107,11 @@ function HotelMgmtTable(props) {
                             ><button
 
                                 onClick={() => {navManagement(row.original)}}
-                            >Main Page</button></td>
+                            >Main</button>
+                            <button
+                                onClick={() => {navHotelRoom(row.original)}}
+                            >Rooms</button>
+                            </td>
                         </tr>
 
 

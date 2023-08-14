@@ -1,3 +1,4 @@
+import './roomsProfileInfo.css'
 import React, {useEffect, useState} from 'react';
 import Navbar from "../../../../../../../components/navbar/Navbar";
 import HotelProfileSidebar from "../../../profile/HotelProfileSidebar";
@@ -8,7 +9,7 @@ import {useParams} from "react-router-dom";
 import {bedsMap} from "../../../../../../../assets/Lists";
 import MailList from "../../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../../components/footer/Footer";
-import './roomsProfileInfo.css'
+import {TailSpin} from "react-loader-spinner";
 
 function RoomsProfileInfo(props) {
     const [info, setInfo] = useState({});
@@ -24,8 +25,11 @@ function RoomsProfileInfo(props) {
         dateOrder: false,
     }
     const [openWarnings, setOpenWarnings] = useState(defaultRoomInfoWarning);
+    const [fetching, setFetching] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     function fetchRoomsProfile() {
+        setFetching(true);
         getWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/info`)
             .then(response=>response.json())
             .then(data =>{
@@ -37,10 +41,16 @@ function RoomsProfileInfo(props) {
                 }
                 data.roomsBeds = roomsBeds;
 
+                data.priceMin = data.priceMin / 100;
+                data.priceMax = data.priceMax / 100;
+
                 setInfo(data);
             })
             .catch(e => {
                 console.error(e)})
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     function onSave() {
@@ -71,8 +81,15 @@ function RoomsProfileInfo(props) {
                 return;
             }
         }
+        var payload = {...info, ["roomsBeds"]: roomsBeds}
+        for (let key of ["priceMin", "priceMax"]){
+            payload[key] = Math.round(parseFloat(payload[key]) * 100)
+        }
 
-        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/info`, {...info, ["roomsBeds"]: roomsBeds})
+        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/rooms/${roomsId}/info`, payload)
+            .then(() => {
+                setSaved(true);
+            })
             .catch(e => {
                 console.error(e)})
     }
@@ -80,6 +97,32 @@ function RoomsProfileInfo(props) {
     useEffect(()=> {
         fetchRoomsProfile();
     }, [])
+
+
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="profileContainer">
+                    <RoomProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
 
     return (
         <div>
@@ -97,10 +140,11 @@ function RoomsProfileInfo(props) {
                                 value={info["displayName"]}
                                 onChange={e =>
                                 {
+                                    setSaved(false);
                                     if (e.target.value.length >= 5) {
-                                        setInfo({...info, ["displayName"]: e.target.value})
+                                        setOpenWarnings({...openWarnings, ["displayName"]: false})
                                     }
-                                    setOpenWarnings({...openWarnings, ["displayName"]: false})
+                                    setInfo({...info, ["displayName"]: e.target.value})
                                 }
                             }
                             />
@@ -115,6 +159,7 @@ function RoomsProfileInfo(props) {
                                 maxLength="10"
                                 onChange={e =>
                                 {
+                                    setSaved(false);
                                     if (e.target.value.length > 0) {
                                         if (/\d/.test(e.target.value)) {
                                             setOpenWarnings({...openWarnings, ["shortNameEmpty"]: false, ["shortNameNumber"]: false})
@@ -137,9 +182,12 @@ function RoomsProfileInfo(props) {
                         </div>
                         <div className="profileFormItem">
                             <label className="formLabel">Description</label>
-                            <input
+                            <textarea
                                 value={info["description"]}
-                                onChange={e => setInfo({...info, ["description"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["description"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -149,7 +197,10 @@ function RoomsProfileInfo(props) {
                                 min="1"
                                 max="1000"
                                 value={info["quantity"]}
-                                onChange={e => setInfo({...info, ["quantity"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["quantity"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -159,7 +210,10 @@ function RoomsProfileInfo(props) {
                                 min="1"
                                 max="1000"
                                 value={info["maxAdult"]}
-                                onChange={e => setInfo({...info, ["maxAdult"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["maxAdult"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -169,7 +223,10 @@ function RoomsProfileInfo(props) {
                                 min="0"
                                 max="1000"
                                 value={info["maxChild"]}
-                                onChange={e => setInfo({...info, ["maxChild"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["maxChild"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -186,11 +243,17 @@ function RoomsProfileInfo(props) {
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    max="1000"
+                                                    max="100"
                                                     value={info.roomsBeds[item] == null ? 0 : info.roomsBeds[item]}
+                                                    onKeyDown={e => {
+                                                        if (!/[0-9\\/]+/.test(e.key)){
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
                                                     onChange={e => {
+                                                        setSaved(false);
                                                         setOpenWarnings({...openWarnings, ["numBed"]: false})
-                                                        setInfo({...info, ["roomsBeds"]: {...info.roomsBeds, [item]: e.target.value}})}
+                                                        setInfo({...info, ["roomsBeds"]: {...info.roomsBeds, [item]: Math.min(100, e.target.value)}})}
                                                     }
                                                 />
                                             </div>
@@ -203,13 +266,14 @@ function RoomsProfileInfo(props) {
                             }
                         </div>
                         <div className="profileFormItem">
-                            <label className="formLabel">Minimum Price</label>
+                            <label className="formLabel">Minimum Price (Unit: dollars)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 min="0.00"
                                 value={info["priceMin"]}
                                 onChange={e => {
+                                    setSaved(false);
                                     if (e.target.value !== "0.00") {
                                         setOpenWarnings({...openWarnings, ["priceMin"]: false})
                                     }
@@ -222,13 +286,14 @@ function RoomsProfileInfo(props) {
                             }
                         </div>
                         <div className="profileFormItem">
-                            <label className="formLabel">Maximum Price</label>
+                            <label className="formLabel">Maximum Price (Unit: dollars)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 min="0.00"
                                 value={info["priceMax"]}
                                 onChange={e => {
+                                    setSaved(false);
                                     if (e.target.value !== "0.00") {
                                         setOpenWarnings({...openWarnings, ["priceMax"]: false})
                                     }
@@ -245,8 +310,16 @@ function RoomsProfileInfo(props) {
                                 type="number"
                                 step="1"
                                 min="0"
+                                onKeyDown={e => {
+                                    if (!/[0-9\\/]+/.test(e.key)){
+                                        e.preventDefault();
+                                    }
+                                }}
                                 value={info["noPrepaymentDays"]}
-                                onChange={e => setInfo({...info, ["noPrepaymentDays"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["noPrepaymentDays"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -256,7 +329,15 @@ function RoomsProfileInfo(props) {
                                 step="1"
                                 min="0"
                                 value={info["freeCancellationDays"]}
-                                onChange={e => setInfo({...info, ["freeCancellationDays"]: e.target.value})}
+                                onKeyDown={e => {
+                                    if (!/[0-9\\/]+/.test(e.key)){
+                                        e.preventDefault();
+                                    }
+                                }}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["freeCancellationDays"]: e.target.value})
+                                }}
                             />
                         </div>
                         <div className="profileFormItem">
@@ -265,6 +346,7 @@ function RoomsProfileInfo(props) {
                                 type="time"
                                 value = {info["checkOutTime"]}
                                 onChange={e =>{
+                                    setSaved(false);
                                     if (e.target.value <= info.checkInTime) {
                                         setOpenWarnings({...openWarnings, ["timeOrder"]: false})
                                     }
@@ -278,6 +360,7 @@ function RoomsProfileInfo(props) {
                                 type="time"
                                 value = {info["checkInTime"]}
                                 onChange={e => {
+                                    setSaved(false);
                                     if (e.target.value >= info.checkOutTime) {
                                         setOpenWarnings({...openWarnings, ["timeOrder"]: false})
                                     }
@@ -303,6 +386,7 @@ function RoomsProfileInfo(props) {
                                     type="date"
                                     value = {info["availableFrom"]}
                                     onChange={e => {
+                                        setSaved(false);
                                         if (e.target.value < info.availableUntil) {
                                             setOpenWarnings({...openWarnings, ["dateOrder"]: false})
                                         }
@@ -318,6 +402,7 @@ function RoomsProfileInfo(props) {
                                     type="date"
                                     value = {info["availableUntil"]}
                                     onChange={e => {
+                                        setSaved(false);
                                         if (info.availableFrom < e.target.value) {
                                             setOpenWarnings({...openWarnings, ["dateOrder"]: false})
                                         }
@@ -332,6 +417,7 @@ function RoomsProfileInfo(props) {
                     </div>
                     <span className="profileFormItemNote">Note: Existing reservation/bookings will not be affected due to quantity and available dates changes.</span>
                     <button onClick={onSave}>Save</button>
+                    {saved && <p className="roomsProfileInfoSaved">Saved!</p> }
                 </div>
             </div>
             <MailList/>

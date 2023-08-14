@@ -12,23 +12,33 @@ import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.mysql_booking.entity.Booking;
 import com.dlim2012.clients.mysql_booking.entity.BookingRoom;
-import lombok.RequiredArgsConstructor;
+import com.dlim2012.clients.mysql_booking.entity.BookingRooms;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
+import org.springframework.cache.Cache;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserService {
 
     private final CassandraService cassandraService;
     private final MySqlService mySqlService;
     private final RecordMapper recordMapper;
+    private final CacheManager cacheManager;
+    private final Cache bookingCache;
+
+    public UserService(CassandraService cassandraService, MySqlService mySqlService, RecordMapper recordMapper, CacheManager cacheManager) {
+        this.cassandraService = cassandraService;
+        this.mySqlService = mySqlService;
+        this.recordMapper = recordMapper;
+        this.cacheManager = cacheManager;
+        this.bookingCache = cacheManager.getCache("booking");
+    }
 
     public List<BookingArchiveItem> getBookingsByUserId(Integer userId, ListByUserRequest request){
         // status has only two options: CANCELLED, COMPLETED
@@ -96,6 +106,7 @@ public class UserService {
 
     public ActiveBookingItem getActiveBookingItemByAppUser(Long bookingId, Integer userId) {
         Booking booking = mySqlService.getBookingByAppUser(bookingId, userId);
+        System.out.println(booking);
         return recordMapper.bookingToActiveBookingItemMapper(booking);
     }
 
@@ -104,21 +115,28 @@ public class UserService {
         booking.setFirstName(request.getFirstName());
         booking.setLastName(request.getLastName());
         booking.setEmail(request.getEmail());
-        mySqlService.saveBooking(booking);
+        mySqlService.saveBookingByAppUser(booking);
     }
 
     public void putDetailsInfo(Long bookingId, Integer userId, BookingDetailsInfo request) {
         Booking booking = mySqlService.getBookingByAppUser(bookingId, userId);
         booking.setSpecialRequests(request.getSpecialRequests());
         booking.setEstimatedArrivalHour(request.getEstimatedArrivalHour());
-        mySqlService.saveBooking(booking);
+        mySqlService.saveBookingByAppUser(booking);
     }
 
     public void putGuestInfo(Long bookingId, Long bookingRoomId, Integer userId, BookingRoomGuestInfo request) {
-        BookingRoom bookingRoom = mySqlService.getBookingRoomByAppUser(bookingId, bookingRoomId, userId);
-        bookingRoom.setGuestName(request.getGuestName());
-        bookingRoom.setGuestEmail(request.getGuestEmail());
-        mySqlService.saveBookingRoom(bookingRoom);
+        Booking booking = mySqlService.getBookingByAppUser(bookingId, userId);
+        for (BookingRooms bookingRooms: booking.getBookingRooms()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+                if (bookingRoom.getId().equals(bookingRoomId)){
+                    bookingRoom.setGuestName(request.getGuestName());
+                    bookingRoom.setGuestEmail(request.getGuestEmail());
+                    break;
+                }
+            }
+        }
+        mySqlService.saveBookingByAppUser(booking);
     }
 
     public BookingArchiveByUserId getArchivedBookingItemByAppUser(Long bookingId, Integer userId, ArchivedBookingByUserSearchInfo request) {

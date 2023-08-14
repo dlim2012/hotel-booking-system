@@ -23,6 +23,15 @@ public interface BookingRoomRepository extends JpaRepository<BookingRoom, Long> 
     )
     Optional<BookingRoom> findByIdAndBookingIdAndUserId(Long bookingRoomId, Long bookingId, Integer userId);
 
+
+    @Query(
+            value = "SELECT br FROM BookingRoom br " +
+                    "JOIN BookingRooms brs ON br.bookingRooms = brs " +
+                    "JOIN Booking b ON brs.booking = b " +
+                    "WHERE br.id = ?1 AND b.id =?2 AND b.hotelManagerId = ?3"
+    )
+    Optional<BookingRoom> findByIdAndBookingIdAndHotelManagerId(Long bookingRoomId, Long bookingId, Integer userId);
+
     @Query(
             value = "SELECT br.id, br.booking_rooms_id, br.room_id, br.guest_name, br.guest_email " +
                     "FROM booking_room br " +
@@ -87,4 +96,5 @@ public interface BookingRoomRepository extends JpaRepository<BookingRoom, Long> 
     )
     List<BookingRoom> findByRoomsIdWithLock(
             @Param("roomsId") Integer roomsId);
+
 }

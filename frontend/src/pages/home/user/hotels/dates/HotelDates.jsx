@@ -17,6 +17,7 @@ import booking from "../../../search-list/hotel/booking/booking/BookingConfirmat
 import {MAX_BOOKING_DAYS} from "../../../../../assets/Lists";
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 const dateDashFormat = (date) => {
     var getYear = date.toLocaleString("default", { year: "numeric" });
@@ -42,6 +43,7 @@ var keys = {
 var bgColors = {
     "AVAILABLE": 'rgba(0, 112, 224, 0.6)',
     "RESERVED": 'rgba(100, 112, 30, 0.6)',
+    "RESERVED_FOR_TIMEOUT": 'rgba(150, 150, 150, 0.6)',
     "BOOKED": 'rgba(100, 0, 30, 0.6)',
     'OUT_OF_DATE': 'rgba(200, 0, 0, 0.6)'
 }
@@ -49,8 +51,9 @@ var bgColors = {
 var selectedBgColors = {
     "AVAILABLE": 'rgba(247,124,177,1)',
     "RESERVED": 'rgba(247,124,177,1)',
+    "RESERVED_FOR_TIMEOUT": 'rgba(247,124,177,1)',
     "BOOKED": 'rgba(247,124,177,1)',
-    'OUT_OF_DATE': 'rgba(200, 0, 0, 0.6)'
+    'OUT_OF_DATE': 'rgba(247,124,177,1)'
 }
 
 
@@ -61,14 +64,6 @@ var selectedColors = {
     'OUT_OF_DATE': 'red'
 }
 
-const defaultTimeStart = moment()
-    .startOf("day")
-    .add(0, "day")
-    .toDate();
-const defaultTimeEnd = moment()
-    .startOf("day")
-    .add(MAX_BOOKING_DAYS, "day")
-    .toDate();
 
 
 const handleItemMove = (itemId, dragTime, newGroupOrder) => {
@@ -183,7 +178,6 @@ function HotelDates(props) {
                                 checkOutTime: checkOutTime
                             }
                         })
-                        console.log(checkInTime, checkOutTime)
                         roomItemIds.push(itemId);
                         if (dates.bookingId != null){
                             if (dates.bookingId in newBookingMap){
@@ -549,8 +543,8 @@ function HotelDates(props) {
             .finally(() => {
                 fetchDates()
             })
-
     }
+
     const onClickCancelBookingRoomSubmit = () => {
         if (selectedItemIds.length === 0){
             return;
@@ -567,21 +561,55 @@ function HotelDates(props) {
             })
     }
 
-    var defaultStartTime = new Date();
-    var defaultEndTime = new Date();
-    defaultStartTime.setHours(0, 0, 0, 0);
-    defaultEndTime.setDate(defaultEndTime.getDate()+MAX_BOOKING_DAYS);
-    defaultEndTime.setHours(0, 0, 0, 0);
 
-    if (fetching ){
+    if (fetching){
         return (
             <div>
                 <Navbar/>
+                <div className="loading">
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#0071c2"
+                        ariaLabel="tail-spin-loading"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                        visible={true}
+                    />
+                </div>
             </div>
         );
     }
 
+    var defaultStartTime = new Date();
+    var defaultEndTime = new Date();
+
+
+    defaultStartTime.setDate(defaultStartTime.getDate() + 1)
+    for (let item of items){
+        if (item.title !== 'AVAILABLE'){
+            continue;
+        }
+        if (item.start < defaultStartTime){
+            defaultStartTime.setTime(item.start.getTime());
+        }
+    }
+    if (defaultStartTime < defaultEndTime){
+        defaultStartTime.setDate(defaultEndTime.getDate())
+    }
+
+    defaultStartTime.setHours(0, 0, 0, 0);
+
+
+    defaultEndTime.setDate(defaultStartTime.getDate()+30);
+    defaultEndTime.setHours(0, 0, 0, 0);
+
     console.log(itemMap[selectedItemIds[0]])
+    console.log(groups)
+    console.log(items)
+    console.log(defaultStartTime)
+    console.log(defaultEndTime)
 
     return (
         <div>

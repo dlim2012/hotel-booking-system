@@ -75,6 +75,9 @@ public class Rooms implements Serializable {
     @OneToMany(mappedBy = "rooms", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Price> priceList;
 
+//    @Column(name = "version", nullable = false)
+//    private Long version; // version for prices update to ElasticSearch
+
     @Override
     public String toString() {
         return "Rooms{" +
@@ -94,6 +97,7 @@ public class Rooms implements Serializable {
                 ", datesAddedUntil=" + datesAddedUntil +
                 ", roomSet=" + roomSet +
                 ", priceList=" + "?" +
+//                ", version=" + version +
                 '}';
     }
 }

@@ -26,6 +26,9 @@ public class SavedUserService {
     private final EntityManager entityManager;
 
     public void save(Integer userId, HotelIdItem item) {
+        if (savedUserRepository.existsByHotelIdAndUserId(item.getHotelId(), userId)){
+            log.info("Hotel {} is already saved for user {}", item.getHotelId(), userId);
+        }
         SavedUser savedUser = SavedUser.builder()
                 .userId(userId)
                 .hotel(entityManager.getReference(Hotel.class, item.getHotelId()))

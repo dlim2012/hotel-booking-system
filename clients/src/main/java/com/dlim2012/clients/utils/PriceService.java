@@ -11,7 +11,7 @@ import static java.lang.Math.min;
 @Service
 public class PriceService {
 
-    private final Integer MAX_BOOKING_DAYS = 30;
+    private final Integer MAX_BOOKING_DAYS = 90;
 
     public Long getPriceSumInCents(LocalDate startDate, LocalDate endDate, Long priceMax, Long priceMin, Integer quantity){
         Long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;

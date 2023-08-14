@@ -29,6 +29,7 @@ import {DateRangePicker} from "@syncfusion/ej2-react-calendars";
 import {bedsMap, MAX_BOOKING_DAYS} from "../../../../assets/Lists";
 import {GoogleMap, Marker} from "@react-google-maps/api";
 import ScrollToTop from "../../../../components/scrollToTop/scrollToTop";
+import {TailSpin} from "react-loader-spinner";
 
 
 const photos = [
@@ -51,7 +52,7 @@ const Hotel = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-    console.log(localStorage)
+    // console.log(localStorage)
 
     var today = new Date();
     var tomorrow = new Date();
@@ -79,7 +80,7 @@ const Hotel = () => {
   const [availability, setAvailability] = useState({})
   const [roomSelection, setRoomSelection] = useState(
       location?.state?.roomSelection == null ? {}: location.state.roomSelection);
-  const [saved, setSaved] = useState(false);
+  const [savedByUser, setSavedByUser] = useState(false);
 
   const [center, setCenter] = useState({})
 
@@ -147,9 +148,10 @@ const Hotel = () => {
                 }
             }
             setCenter({lat: data.latitude, lng: data.longitude})
-
             setHotelDetails(data);
-            setSaved(data.saved)
+            setSavedByUser(data.saved)
+
+            console.log(data)
         })
         .catch(e => {
           console.error(e)})
@@ -269,7 +271,7 @@ const Hotel = () => {
       }
 
 
-    var newSaved = !saved;
+    var newSaved = !savedByUser;
     var payload = {
       hotelId: hotelId
     }
@@ -282,7 +284,7 @@ const Hotel = () => {
           .catch(e => {
             console.error(e)})
     }
-    setSaved(newSaved);
+    setSavedByUser(newSaved);
   }
 
     useEffect(() => {
@@ -306,11 +308,24 @@ const Hotel = () => {
       // || Object.keys(hotelDetails).length === 0 || Object.keys(availability).length === 0
   ){
     return (
-        <div><Navbar/></div>
+        <div>
+            <Navbar/>
+            <div className="loading">
+                <TailSpin
+                    height="80"
+                    width="80"
+                    color="#0071c2"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                    visible={true}
+                />
+            </div>
+        </div>
     )
   }
 
-    console.log(availability)
 
     var dates = Math.round((date[0].endDate.getTime() - date[0].startDate.getTime()) / 86400000);
     var numRoomsSelected = 0
@@ -318,9 +333,10 @@ const Hotel = () => {
     for (let key in roomSelection){
         var numRoom = parseInt(roomSelection[key]);
         numRoomsSelected += numRoom;
-        totalPrice += numRoom * availability[key].price
+        totalPrice += numRoom * availability[key]?.price
     }
 
+    var firstAvailable = true;
 
   return (
     <div>
@@ -353,13 +369,13 @@ const Hotel = () => {
         <div className="hotelWrapper">
           {/*<button className="bookNow">Reserve or Book Now!</button>*/}
             <div className="savedContainer">
-                  { !saved &&
+                  { !savedByUser &&
                     <button
                         className="saved"
                         onClick={onClickSaved}
                     ><FontAwesomeIcon icon={faStar} /></button>
                   }
-                  { saved &&
+                  { savedByUser &&
                     <button
                         className="saved"
                         onClick={onClickSaved}
@@ -439,7 +455,7 @@ const Hotel = () => {
           }
 
           <div className="hotelDetailsTexts">
-            <h2 className="hotelTitle">Stay in the heart of City</h2>
+            <h2 className="hotelTitle">Description</h2>
             <span className="hotelDesc">
               {hotelDetails.description}
             </span>
@@ -506,6 +522,8 @@ const Hotel = () => {
                           return;
                       }
                     var avail = availability[info.id]
+                      var addButton = firstAvailable;
+                      firstAvailable = false;
                       // console.log(info.prepayUntil, info.prepayUntil == null)
                     return (
                         <tr className="availibilityTableRow">
@@ -572,7 +590,7 @@ const Hotel = () => {
                               </select>
                             </div>
                           </td>
-                          {index === 0 &&
+                          {addButton &&
                               <td
                                   rowSpan={hotelDetails.roomsInfoList.length}
                                   className="availabilityTableReserveCol"

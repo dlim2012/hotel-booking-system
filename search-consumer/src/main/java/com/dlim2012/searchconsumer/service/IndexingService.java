@@ -15,14 +15,6 @@ import com.dlim2012.searchconsumer.repository.HotelRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -67,6 +59,8 @@ public class IndexingService {
 
             hotel.setRooms(new ArrayList<>());
             hotel.setGeoPoint(new GeoPoint(hotelDetails.getLatitude(), hotelDetails.getLongitude()));
+            hotel.setVersion(0L);
+
             hotel = hotelRepository.save(hotel);
 
             log.info("Hotel {} saved.", hotel.getId());
@@ -120,13 +114,26 @@ public class IndexingService {
         hotelRepository.deleteById(request.getHotelId().toString());
     }
 
+    /* bulk update dates and price */
     public void bulkUpdate(HotelsNewDayDetails request) throws InterruptedException {
         Set<Hotel> hotelList = hotelRepository.findByIdBetween(request.getStartId(), request.getEndId()-1);
+
 
         Integer today = elasticSearchUtils.toInteger(LocalDate.now());
         for (int i=0; i<NUM_RETRY_UPDATE; i++){
             try{
                 for (Hotel hotel: hotelList){
+                    Long newVersion = request.getHotelVersionMap().getOrDefault(Integer.valueOf(hotel.getId()), null);
+                    if (newVersion == null){
+                        log.error("Hotel {} new version not found.", hotel.getId());
+                        continue;
+                    }
+
+                    if (hotel.getVersion() > newVersion){
+                        continue;
+                    }
+                    hotel.setVersion(newVersion);
+
                     if (hotel.getSeqNoPrimaryTerm() == null){
                         log.error("Hotel {} found without SeqNoPrimaryTerm", hotel.getId());
                     }
@@ -135,7 +142,7 @@ public class IndexingService {
                             .getDatesUpdateDetailsMap()
                             .getOrDefault(Integer.valueOf(hotel.getId()), null);
                     if (details != null){
-                        dateService.updateRoomsDates(hotel, details);
+                        dateService.updateHotelDates(hotel, details);
                     }
 
 

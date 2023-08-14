@@ -6,15 +6,13 @@ import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
+import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchVersion;
 import com.dlim2012.clients.utils.PriceService;
 import com.dlim2012.searchconsumer.repository.DateRepository;
 import com.dlim2012.searchconsumer.repository.HotelRepository;
 import com.dlim2012.searchconsumer.repository.RoomsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -93,6 +91,7 @@ public class DateService {
         rooms.setRoom(details.getRoomDto().stream()
                 .map(room -> Room.builder()
                         .roomId(room.getRoomId().toString())
+//                        .version(room.getVersion())
                         .dates(room.getDatesDtoList().stream()
                                 .map(datesDto -> Dates.builder()
                                         .id(datesDto.getDatesId().toString())
@@ -101,6 +100,7 @@ public class DateService {
                                         .roomId(room.getRoomId())
                                         .maxAdult(details.getMaxAdult())
                                         .maxChild(details.getMaxChild())
+                                        .numBed(details.getBedDto().stream().map(RoomsSearchDetails.BedInfoDto::getQuantity).reduce(0, Integer::sum))
                                         .dateRange(Dates.DateRange.builder()
                                                 .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
                                                 .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
@@ -132,6 +132,7 @@ public class DateService {
     }
 
 
+
     public void updateRooms(RoomsSearchDetails details) throws IOException, InterruptedException {
 
 //        GetRequest getRequest = new GetRequest("hotel", details.getHotelId().toString());
@@ -142,6 +143,12 @@ public class DateService {
                 // fetch hotel
                 Hotel hotel = hotelRepository.findById(details.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
+
+                if (hotel.getVersion() > details.getVersion()){
+                    TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
+                    continue;
+                }
+                hotel.setVersion(details.getVersion());
 
                 if (hotel.getSeqNoPrimaryTerm() == null){
                     throw new ResourceNotFoundException("Hotel {} found without SeqNoPrimaryTerm");
@@ -166,13 +173,88 @@ public class DateService {
                 return;
             } catch (OptimisticLockingFailureException | ResourceNotFoundException e){
                 log.error(e.getMessage());
-                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 1000));
+                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
             } catch (Exception e){
                 log.error(e.getMessage());
                 return;
             }
         }
         log.error("Add Rooms for hotel {} failed after {} retries.", details.getHotelId(), NUM_RETRY_UPDATE);
+    }
+
+
+    public void updateRoomsVersion(RoomsSearchVersion newVersionDetails) throws IOException, InterruptedException {
+
+//        GetRequest getRequest = new GetRequest("hotel", details.getHotelId().toString());
+//        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+
+        for (int i=0; i<NUM_RETRY_UPDATE; i++){
+            try {
+                // fetch hotel
+                Hotel hotel = hotelRepository.findById(newVersionDetails.getHotelId().toString())
+                        .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
+
+                if (hotel.getVersion() > newVersionDetails.getVersion()){
+                    return;
+                }
+                hotel.setVersion(newVersionDetails.getVersion());
+
+                if (hotel.getSeqNoPrimaryTerm() == null){
+                    throw new ResourceNotFoundException("Hotel {} found without SeqNoPrimaryTerm");
+                }
+
+                // update rooms
+                if (hotel.getRooms() != null){
+                    List<Rooms> roomsList = hotel.getRooms();
+                    for (Rooms rooms: roomsList){
+                        if (rooms.getRoomsId().equals(newVersionDetails.getRoomsId())){
+                            rooms.setFreeCancellationDays(newVersionDetails.getFreeCancellationDays());
+                            rooms.setNoPrepaymentDays(rooms.getNoPrepaymentDays());
+                            rooms.setRoom(newVersionDetails.getRoomDto().stream()
+                                    .map(room -> Room.builder()
+                                                    .roomId(room.getRoomId().toString())
+                                                    .dates(room.getDatesDtoList().stream()
+                                                            .map(datesDto -> Dates.builder()
+                                                                    .id(datesDto.getDatesId().toString())
+                                                                    .hotelId(newVersionDetails.getHotelId())
+                                                                    .roomsId(newVersionDetails.getRoomsId())
+                                                                    .roomId(room.getRoomId())
+                                                                    .maxAdult(rooms.getMaxAdult())
+                                                                    .maxChild(rooms.getMaxChild())
+                                                                    .numBed(rooms.getNumBeds())
+                                                                    .dateRange(Dates.DateRange.builder()
+                                                                            .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
+                                                                            .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
+                                                                            .build())
+                                                                    .build())
+                                                            .collect(Collectors.toSet())
+                                                    )
+                                                    .build()
+                                    )
+                                    .toList());
+                            rooms.setPrice(newVersionDetails.getPriceDto().stream()
+                                    .map(priceDto -> Price.builder()
+                                            .id(priceDto.getPriceId().toString())
+                                            .date(elasticSearchUtils.toInteger(priceDto.getDate()))
+                                            .roomsId(newVersionDetails.getRoomsId())
+                                            .priceInCents(priceDto.getPriceInCents())
+                                            .build()
+                                    ).toList());
+                        }
+                    }
+                }
+
+                hotelRepository.save(hotel);
+                return;
+            } catch (OptimisticLockingFailureException | ResourceNotFoundException e){
+                log.error(e.getMessage());
+                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
+            } catch (Exception e){
+                log.error(e.getMessage());
+                return;
+            }
+        }
+        log.error("Add Rooms for hotel {} failed after {} retries.", newVersionDetails.getHotelId(), NUM_RETRY_UPDATE);
     }
 
 
@@ -205,7 +287,7 @@ public class DateService {
                 return;
             } catch (OptimisticLockingFailureException | ResourceNotFoundException e){
                 log.error(e.getMessage());
-                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 1000));
+                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
             } catch (Exception e){
                 log.error(e.getMessage());
                 return;
@@ -214,71 +296,51 @@ public class DateService {
         log.error("Delete Rooms {} for hotel {} failed after {} retries.", request.getRoomsId(), request.getHotelId(), NUM_RETRY_UPDATE);
     }
 
-    public void updateRoomsDates(Hotel hotel, DatesUpdateDetails details){
+    public void updateHotelDates(Hotel hotel, DatesUpdateDetails details){
         if (details == null){
             return;
         }
 
-        if (hotel.getRooms() != null){
-            List<Rooms> roomsList = hotel.getRooms();
 
-            for (Rooms rooms: roomsList){
-                Integer roomsId = rooms.getRoomsId();
+        if (hotel.getVersion() > details.getHotelVersion()){
+            log.error("Out-dated version provided.");
+            return;
+        }
 
-                for (Room room: rooms.getRoom()){
-                    Long roomId = Long.valueOf(room.getRoomId());
-                    Map<Long, DatesUpdateDetails.DatesDto> datesDtoRoomMap = details.getDatesToUpdate().getOrDefault(Long.valueOf(room.getRoomId()), null);
-                    if (datesDtoRoomMap == null){
-                        continue;
-                    }
+        hotel.setVersion(details.getHotelVersion());
 
-                    // update date range
-                    for (Dates date: room.getDates()){
-                        Long dateId = Long.valueOf(date.getId());
-                        DatesUpdateDetails.DatesDto datesDto = datesDtoRoomMap.getOrDefault(dateId, null);
-                        if (datesDto == null){
-                            continue;
-                        }
-                        date.setDateRange(Dates.DateRange.builder()
-                                .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
-                                .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
-                                .build());
-                        datesDtoRoomMap.remove(roomId);
-                    }
+        if (hotel.getSeqNoPrimaryTerm() == null){
+            log.error("Hotel {} found without SeqNoPrimaryTerm", hotel.getId());
+        }
 
-                    // add dates
-                    for (Map.Entry<Long, DatesUpdateDetails.DatesDto> entry: datesDtoRoomMap.entrySet()){
-                        room.getDates().add(Dates.builder()
-                                .id(entry.getKey().toString())
+        // update rooms dates availabilities
+        for (Rooms rooms: hotel.getRooms()){
+            for (Room room: rooms.getRoom()){
+                Long roomId = Long.valueOf(room.getRoomId());
+                List<DatesUpdateDetails.DatesDto> datesList = details.getDatesMap().getOrDefault(roomId, null);
+                if (datesList == null){
+                    continue;
+                }
+                room.setDates(datesList.stream().map(
+                        datesDto -> Dates.builder()
+                                .id(datesDto.getId().toString())
                                 .hotelId(details.getHotelId())
-                                .roomsId(roomsId)
                                 .roomId(roomId)
                                 .maxAdult(rooms.getMaxAdult())
                                 .maxChild(rooms.getMaxChild())
-                                .dateRange(Dates.DateRange.builder()
-                                        .gte(elasticSearchUtils.toInteger(entry.getValue().getStartDate()))
-                                        .lte(elasticSearchUtils.toInteger(entry.getValue().getEndDate()))
-                                        .build()
+                                .numBed(rooms.getNumBeds())
+                                .dateRange(
+                                        Dates.DateRange.builder()
+                                                .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
+                                                .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
+                                                .build()
                                 )
-                                .build());
-                    }
-                }
-            }
-
-            for (Rooms rooms: roomsList){
-                for (Room room: rooms.getRoom()){
-                    Set<Long> datesIdToDeleteSet = details.getDatesIdsToDelete().getOrDefault(Long.valueOf(room.getRoomId()), null);
-                    if (datesIdToDeleteSet == null){
-                        continue;
-                    }
-                    for (Dates date: room.getDates()){
-                        if (datesIdToDeleteSet.contains(Long.valueOf(date.getId()))){
-                            room.getDates().remove(date);
-                        }
-                    }
-                }
+                                .build()
+                ).collect(Collectors.toSet()));
             }
         }
+
+        hotelRepository.save(hotel);
     }
 
     public void updateDates(DatesUpdateDetails details) throws InterruptedException {
@@ -289,18 +351,13 @@ public class DateService {
                 Hotel hotel = hotelRepository.findById(details.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
 
-                if (hotel.getSeqNoPrimaryTerm() == null){
-                    log.error("Hotel {} found without SeqNoPrimaryTerm", hotel.getId());
-                }
-
-                // update rooms dates availabilities
-                updateRoomsDates(hotel, details);
+                updateHotelDates(hotel, details);
 
                 hotelRepository.save(hotel);
                 return;
             } catch (OptimisticLockingFailureException | ResourceNotFoundException e){
                 log.error(e.getMessage());
-                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 1000));
+                TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
             } catch (Exception e){
                 log.error(e.getMessage());
                 return;

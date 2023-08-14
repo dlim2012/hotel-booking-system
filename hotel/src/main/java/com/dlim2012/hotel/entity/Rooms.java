@@ -9,7 +9,9 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -90,7 +92,7 @@ public class Rooms {
 
     // Beds
     @OneToMany(mappedBy = "rooms", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<RoomsBed> roomsBeds = new ArrayList<>();
+    private Set<RoomsBed> roomsBeds = new HashSet<>();
 
     @Override
     public String toString() {

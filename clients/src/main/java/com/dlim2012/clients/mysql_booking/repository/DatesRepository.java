@@ -51,6 +51,17 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
     )
     List<Dates> findByHotelId(Integer hotelId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query(
+            value = "SELECT d " +
+                    "FROM Dates d " +
+                    "JOIN room r ON d.room = r " +
+                    "JOIN rooms rs ON r.rooms = rs " +
+                    "WHERE rs.hotel.id = ?1 "
+    )
+    List<Dates> findByHotelIdWithLock(Integer hotelId);
+
     @Query(
             value = "SELECT d.id as id, d.room_id as room_id, d.start_date as start_date, d.end_date as end_date " +
                     "FROM dates d " +
@@ -199,6 +210,13 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
     )
     void deleteByHotelId(
             @Param("hotelId") Integer hotelId);
+
+    @Query(
+            value = "SELECT d " +
+                    "FROM Dates d " +
+                    "WHERE d.room.id in ?1 "
+    )
+    List<Dates> findByRoomIds(Set<Long> roomIds);
 
 
 //    @Transactional

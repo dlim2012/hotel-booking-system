@@ -1,3 +1,4 @@
+import './hotelProfileInfo.css'
 import React, {useEffect, useState} from 'react';
 import Navbar from "../../../../../../components/navbar/Navbar";
 import HotelProfileSidebar from "../HotelProfileSidebar";
@@ -5,15 +6,16 @@ import HotelInfo from "../../register/info/HotelInfo";
 import {getWithJwt, putWithJwt} from "../../../../../../clients";
 import {useParams} from "react-router-dom";
 import {propertyRatings, propertyTypesMap} from "../../../../../../assets/Lists";
-import './hotelProfileInfo.css'
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
 import {validateEmail} from "../../../utils/inputValidation";
+import {TailSpin} from "react-loader-spinner";
 
 
 function HotelProfileInfo(props) {
     const [info, setInfo] = useState({});
     const { hotelId } = useParams()
+    const [fetching, setFetching] = useState(false);
     const [saved, setSaved] = useState(false);
 
     var defaultOpenWarnings = {
@@ -24,7 +26,7 @@ function HotelProfileInfo(props) {
     const [ openWarnings, setOpenWarnings ] = useState(defaultOpenWarnings)
 
     function fetchGeneralInfo(){
-        console.log("fetching...")
+        setFetching(true)
         getWithJwt(`/api/v1/hotel/hotel/${hotelId}/info`)
             .then(response => response.json())
             .then(data => {
@@ -33,6 +35,9 @@ function HotelProfileInfo(props) {
             })
             .catch(e => {
                 console.error(e)
+            })
+            .finally(() => {
+                setFetching(false);
             })
     }
 
@@ -54,14 +59,14 @@ function HotelProfileInfo(props) {
 
         putWithJwt(`/api/v1/hotel/hotel/${hotelId}/info`, info)
             .then(() => {
-                alert("Hotel information saved!")
+                // alert("Hotel information saved!")
+                setSaved(true)
             })
             .catch(e => {
                 console.error(e)})
             .finally(() => {
                 fetchGeneralInfo();
                 setOpenWarnings(defaultOpenWarnings)
-                setSaved(true)
             })
     }
 
@@ -70,8 +75,28 @@ function HotelProfileInfo(props) {
         setOpenWarnings(defaultOpenWarnings)
     }, [])
 
-    if (Object.keys(info).length === 0){
-        return;
+    if (fetching){
+        return (
+
+            <div>
+                <Navbar />
+                <div className="profileContainer">
+                    <HotelProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -88,7 +113,10 @@ function HotelProfileInfo(props) {
                             <label className="formLabel">Name</label>
                             <input
                                 value={info?.name}
-                                onChange={e => setInfo({...info, ["name"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["name"]: e.target.value})
+                                }}
                                 maxLength="20"
                             />
                             {
@@ -102,13 +130,19 @@ function HotelProfileInfo(props) {
                             <label className="formLabel">Description</label>
                             <input
                                 value={info?.description}
-                                onChange={e => setInfo({...info, ["description"]: e.target.value})}/>
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["description"]: e.target.value})
+                                }}/>
                         </div>
                         <div className="profileFormItem">
                             <label className="formLabel">Property type</label>
                             <select
                                 value={info?.propertyType}
-                                onChange={e => setInfo({...info, ["propertyType"]: e.target.value})}
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["propertyType"]: e.target.value})
+                                }}
                             >
                                 {
                                     Object.keys(propertyTypesMap).map((key, index) => <option value={key}>{key}</option>)
@@ -119,25 +153,37 @@ function HotelProfileInfo(props) {
                             <label className="formLabel">Phone</label>
                             <input
                                 value={info?.phone}
-                                onChange={e => setInfo({...info, ["phone"]: e.target.value})}/>
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["phone"]: e.target.value})
+                                }}/>
                         </div>
                         <div className="profileFormItem">
                             <label className="formLabel">Fax</label>
                             <input
                                 value={info?.fax}
-                                onChange={e => setInfo({...info, ["fax"]: e.target.value})}/>
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["fax"]: e.target.value})
+                                }}/>
                         </div>
                         <div className="profileFormItem">
                             <label className="formLabel">Website</label>
                             <input
                                 value={info?.website}
-                                onChange={e => setInfo({...info, ["website"]: e.target.value})}/>
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["website"]: e.target.value})
+                                }}/>
                         </div>
                         <div className="profileFormItem">
                             <label className="formLabel">Email</label>
                             <input
                                 value={info?.email}
-                                onChange={e => setInfo({...info, ["email"]: e.target.value})}/>
+                                onChange={e => {
+                                    setSaved(false);
+                                    setInfo({...info, ["email"]: e.target.value})
+                                }}/>
                             { openWarnings.invalidEmail &&
                                 <span className="profileContentsWarning">
                                     The email is invalid. (min length: 3)
@@ -148,9 +194,10 @@ function HotelProfileInfo(props) {
                             <select
                                 value={info?.propertyRating}
                                 onChange={
-                                    e => setInfo({...info, ["propertyRating"]: e.target.selectedIndex})
-
-                                }
+                                    e => {
+                                        setSaved(false);
+                                        setInfo({...info, ["propertyRating"]: e.target.selectedIndex})
+                                }}
                                 onSelect={e => {
                                     console.log(e)
                                     // onChange("propertyRating", e.target)
@@ -162,6 +209,7 @@ function HotelProfileInfo(props) {
                             </select>
                         </div>
                         <button onClick={onSave}>Save</button>
+                        { saved && <p className="hotelGeneralInfoSaved">Saved!</p>}
                     </div>
                 </div>
             </div>

@@ -75,11 +75,10 @@ public class TestUserController {
         }
 
 //        testUserService.asyncMethod();
-        System.out.println(jwt);
         testUserService.function(jwt);
 
         log.info("Test User registered with email {}", user.getEmail());
-        return new AuthenticationToken(jwt);
+        return new AuthenticationToken("", jwt);
     }
 
 

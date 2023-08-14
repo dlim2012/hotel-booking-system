@@ -1,9 +1,10 @@
 import './personalDetails.css';
 import Navbar from "../../../../../../components/navbar/Navbar";
 import Header from "../../../../../../components/header/Header";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import ProfileSidebar from "../ProfileSidebar";
 import {getWithJwt, postWithJwt} from "../../../../../../clients";
+import {TailSpin} from "react-loader-spinner";
 
 const genderMap = {
     DEFAULT: "Select your gender",
@@ -57,6 +58,24 @@ function PersonalDetails(props) {
         "fetchedData": fetchedData,
         "setFetchedData": setFetchedData,
         "fetchProfile": fetchProfile
+    }
+
+    if (fetching){
+        return (
+
+            <div className="loading">
+                <TailSpin
+                    height="80"
+                    width="80"
+                    color="#0071c2"
+                    ariaLabel="tail-spin-loading"
+                    radius="1"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                    visible={true}
+                />
+            </div>
+        )
     }
 
     return (

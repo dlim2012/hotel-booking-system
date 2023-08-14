@@ -4,7 +4,7 @@ metadata:
   name: redis
 spec:
   serviceName: redis
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: redis

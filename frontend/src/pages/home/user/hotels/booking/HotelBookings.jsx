@@ -8,6 +8,7 @@ import {statusMap} from "../../../../../assets/Lists";
 import {useParams} from "react-router-dom";
 import MailList from "../../../../../components/mailList/MailList";
 import Footer from "../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 
 function HotelBookings(props) {
@@ -15,9 +16,12 @@ function HotelBookings(props) {
 
     const [status, setStatus] = useState("Upcoming");
     const [bookings, setBookings] = useState([]);
+    const [fetching, setFetching] = useState(false);
+
 
 
     const fetchBookings = (status) => {
+
         var startDate = new Date();
         var endDate = new Date();
         startDate.setDate( startDate.getDate() - 100)
@@ -31,6 +35,7 @@ function HotelBookings(props) {
         }
         console.log(payload)
 
+        setFetching(true);
         postWithJwt(`/api/v1/booking-management/hotel/${hotelId}/booking`, payload)
             .then(response => response.json())
             .then(data => {
@@ -47,6 +52,9 @@ function HotelBookings(props) {
             .catch(e => {
                 console.error(e)
             })
+            .finally(() => {
+                setFetching(false);
+            })
     }
 
     const onStatusButtonClick = (newStatus) => {
@@ -59,6 +67,30 @@ function HotelBookings(props) {
     useEffect(() => {
         fetchBookings(status);
     }, [])
+
+    if (fetching){
+        return (
+            <div>
+                <Navbar />
+                <div className="bookingsContainer">
+                    <h1>Booking History</h1>
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div>
             <Navbar />

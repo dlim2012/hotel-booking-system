@@ -10,4 +10,4 @@ spring:
 
 #
 #custom:
-#  gatewayAddress: "http://10.0.0.110:8001"
+#  gatewayAddress: "http://10.0.0.110:9000"

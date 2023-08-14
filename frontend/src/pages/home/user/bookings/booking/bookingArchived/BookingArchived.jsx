@@ -6,6 +6,7 @@ import {getDateTime} from "../../../utils/stringFormatting";
 import './bookingArchived.css'
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function BookingArchived(props) {
 
@@ -47,11 +48,23 @@ function BookingArchived(props) {
         fetchArchived();
     }, [])
 
+
     if (fetching){
         return (
             <div>
-                <Navbar/>
-
+                <Navbar />
+                <div className="loading">
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#0071c2"
+                        ariaLabel="tail-spin-loading"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                        visible={true}
+                    />
+                </div>
             </div>
         )
     }

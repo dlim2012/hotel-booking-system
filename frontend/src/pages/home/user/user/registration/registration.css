@@ -1,5 +1,5 @@
 :root{
-    --max-width: 384px;
+    --max-width: 420px;
     --border-radius: 3px;
 }
 
@@ -26,10 +26,10 @@
 }
 
 .formTitle{
-    font-size: 20px;
+    font-size: 30px;
     color: #555;
-    margin-top: 20px;
-    /*margin-bottom: 10px;*/
+    /*margin-top: 20px;*/
+    margin-bottom: 10px;
 }
 
 .formList{
@@ -37,8 +37,9 @@
     width: var(--max-width);
     display: inline-block;
     align-items: center;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 20px;
+    /*margin-left: auto;*/
+    /*margin-right: auto;*/
 }
 
 .formItem{
@@ -46,10 +47,10 @@
 
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-top: 15px;
-    margin-left: auto;
-    margin-right: auto;
+    /*gap: 5px;*/
+    margin-top: 5px;
+    /*margin-left: auto;*/
+    /*margin-right: auto;*/
     align-items: center;
 }
 
@@ -89,13 +90,15 @@ input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
 
 .registerbtn {
     /*background-color: #04AA6D;*/
+    width: 100%;
     background-color: #3C6CE4;
     color: white;
-    padding: 16px 20px;
+    padding: 12px 20px;
     margin-top: 10px;
+
     border: none;
     cursor: pointer;
-    width: 100%;
+    /*width: 100%;*/
     max-width: 512px;
     opacity: 0.9;
     border-radius: var(--border-radius);
@@ -103,6 +106,7 @@ input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
 }
 
 .signin {
+    width: 95%;
     background-color: #f1f1f1;
     text-align: center;
     padding: 10px;
@@ -115,4 +119,14 @@ input[type=text]:focus, input[type=password]:focus, input[type=email]:focus {
 
 .signInBtn {
     border: none
+}
+
+.navUserRegisterBtn{
+    border:none;
+    cursor: pointer;
+}
+
+.navLoginBtn{
+    border:none;
+    cursor: pointer;
 }

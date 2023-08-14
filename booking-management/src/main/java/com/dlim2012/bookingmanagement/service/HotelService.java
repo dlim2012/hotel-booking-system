@@ -2,10 +2,12 @@ package com.dlim2012.bookingmanagement.service;
 
 import com.dlim2012.bookingmanagement.dto.ListByHotelRequest;
 import com.dlim2012.bookingmanagement.dto.booking.*;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingBookerInfo;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingDetailsInfo;
+import com.dlim2012.bookingmanagement.dto.booking.put.BookingRoomGuestInfo;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelDatesInfoResponse;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelMainInfoResponse;
 import com.dlim2012.clients.cassandra.entity.BookingArchiveByHotelId;
-import com.dlim2012.clients.cassandra.entity.BookingArchiveByUserId;
 import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.mysql_booking.entity.*;
@@ -42,6 +44,7 @@ public class HotelService {
                 responseItemList.addAll(
                         mySqlService.asyncBookingByHotelIdAndKeys(hotelId, bookingMainStatus, request.getStartDate(), request.getEndDate()).stream()
                                 .filter(booking -> booking.getHotelManagerId().equals(hotelManagerId))
+                                .filter(booking -> !booking.getStatus().equals(BookingStatus.RESERVED_FOR_TIMEOUT))
                                 .map(recordMapper::bookingToArchiveItem).toList()
                 );
             }
@@ -215,7 +218,7 @@ public class HotelService {
                             .datesId(null)
                             .bookingRoomsId(bookingRooms.getId())
                             .bookingRoomId(bookingRoom.getId())
-                            .status(booking.getMainStatus().name())
+                            .status(booking.getStatus().equals(BookingStatus.RESERVED_FOR_TIMEOUT) ? "RESERVED_FOR_TIMEOUT" : booking.getMainStatus().name())
                             .startDateTime(bookingRoom.getStartDateTime())
                             .endDateTime(bookingRoom.getEndDateTime())
                             .build());
@@ -250,5 +253,35 @@ public class HotelService {
     public BookingArchiveByHotelId getArchivedBookingItemByHotel(Integer hotelId, Integer userId, Long bookingId, ArchivedBookingByUserSearchInfo request) {
         return cassandraService.getBookingArchiveByHotelId(
                 hotelId, BookingMainStatus.valueOf(request.getBookingMainStatus()), request.getEndDate(), bookingId, userId);
+    }
+
+    public void putBookerInfo(Long bookingId, Integer userId, BookingBookerInfo request) {
+        Booking booking = mySqlService.getBookingByHotel(bookingId, userId);
+        booking.setFirstName(request.getFirstName());
+        booking.setLastName(request.getLastName());
+        booking.setEmail(request.getEmail());
+        mySqlService.saveBookingByHotelManager(booking);
+
+    }
+
+    public void putDetailsInfo(Long bookingId, Integer userId, BookingDetailsInfo request) {
+        Booking booking = mySqlService.getBookingByHotel(bookingId, userId);
+        booking.setSpecialRequests(request.getSpecialRequests());
+        booking.setEstimatedArrivalHour(request.getEstimatedArrivalHour());
+        mySqlService.saveBookingByHotelManager(booking);
+    }
+
+    public void putGuestInfo(Long bookingId, Long bookingRoomId, Integer userId, BookingRoomGuestInfo request) {
+        Booking booking = mySqlService.getBookingByHotel(bookingId, userId);
+        for (BookingRooms bookingRooms: booking.getBookingRooms()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+                if (bookingRoom.getId().equals(bookingRoomId)){
+                    bookingRoom.setGuestName(request.getGuestName());
+                    bookingRoom.setGuestEmail(request.getGuestEmail());
+                    break;
+                }
+            }
+        }
+        mySqlService.saveBookingByHotelManager(booking);
     }
 }

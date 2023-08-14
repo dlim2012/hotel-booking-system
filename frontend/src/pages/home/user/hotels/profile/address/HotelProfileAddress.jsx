@@ -1,3 +1,4 @@
+import './hotelProfileAddress.css'
 import React, {useEffect, useRef, useState} from 'react';
 import Navbar from "../../../../../../components/navbar/Navbar";
 import HotelProfileSidebar from "../HotelProfileSidebar";
@@ -7,6 +8,7 @@ import {getWithJwt, putWithJwt} from "../../../../../../clients";
 import {useParams} from "react-router-dom";
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 const mapApiJs = "https://maps.googleapis.com/maps/api/js"
 
@@ -25,6 +27,7 @@ function HotelProfileAddress(props) {
     const [center, setCenter] = useState({});
     const [marker, setMarker] = useState(null);
     const [fetching, setFetching] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     var defaultOpenInputWarnings = {
         noAddressLine1: false,
@@ -60,7 +63,16 @@ function HotelProfileAddress(props) {
 
     function onSave(){
         var payload = {...address, ["latitude"]: coordinates.lat, ["longitude"]: coordinates.lng}
-        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`, payload);
+        putWithJwt(`/api/v1/hotel/hotel/${hotelId}/address`, payload)
+            .then(() => {
+                setSaved(true)
+            })
+            .catch(e => {
+                console.error(e)
+            })
+            .finally(() => {
+
+            })
     }
 
     const handleFullAddress = (value) =>{
@@ -139,13 +151,29 @@ function HotelProfileAddress(props) {
     //     return;
     // }
 
-    if (fetching || marker == null){
+    if (fetching || marker==null){
         return (
             <div>
-                <Navbar/>
+                <Navbar />
+                <div className="profileContainer">
+                    <HotelProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
             </div>
         )
     }
+
 
     return (
         <div>
@@ -168,12 +196,30 @@ function HotelProfileAddress(props) {
                                 type="text"
                                 value={address.addressLine1}
                                 onChange={e => {setAddress({...address, addressLine1: e.target.value})}}></input></p>
-                            <p>Address Line 2: <input value={address.addressLine2} onChange={e=>setAddress({...address, addressLine2: e.target.value})}></input></p>
-                            <p>Neighborhood: <input value={address.neighborhood} onChange={e=>setAddress({...address, neighborhood: e.target.value})}></input></p>
-                            <p>City: <input value={address.city} onChange={e => {setAddress({...address, city: e.target.value})}}/></p>
-                            <p>State: <input value={address.state} onChange={e => {setAddress({...address, state: e.target.value})}} /></p>
-                            <p>Country: <input value={address.country} onChange={e => {setAddress({...address, country: e.target.value})}} /></p>
-                            <p>Zipcode: <input value={address.zipcode} onChange={e => {setAddress({...address, zipcode: e.target.value})}} /></p>
+                            <p>Address Line 2: <input value={address.addressLine2} onChange={e=>{
+                                setSaved(false);
+                                setAddress({...address, addressLine2: e.target.value})
+                            }}></input></p>
+                            <p>Neighborhood: <input value={address.neighborhood} onChange={e=>{
+                                setSaved(false);
+                                setAddress({...address, neighborhood: e.target.value})
+                            }}></input></p>
+                            <p>City: <input value={address.city} onChange={e => {
+                                setSaved(false);
+                                setAddress({...address, city: e.target.value})
+                            }}/></p>
+                            <p>State: <input value={address.state} onChange={e => {
+                                setSaved(false);
+                                setAddress({...address, state: e.target.value})
+                            }} /></p>
+                            <p>Country: <input value={address.country} onChange={e => {
+                                setSaved(false);
+                                setAddress({...address, country: e.target.value})
+                            }} /></p>
+                            <p>Zipcode: <input value={address.zipcode} onChange={e => {
+                                setSaved(false);
+                                setAddress({...address, zipcode: e.target.value})
+                            }} /></p>
                         </div>
                         <GoogleMap
                             mapContainerStyle={containerStyle}
@@ -188,6 +234,7 @@ function HotelProfileAddress(props) {
                                     position={coordinates}
                                     draggable={true}
                                     onDrag={(coord, index)=> {
+                                        setSaved(false);
                                         const {latLng} = coord;
                                         setCoordinates({lat: latLng.lat(), lng: latLng.lng()})
                                     }}
@@ -201,6 +248,9 @@ function HotelProfileAddress(props) {
                         </div>
                     </div>
                     <button onClick={onSave}>Save</button>
+                    {
+                        saved && <p className="hotelProfileAddressSaved">Saved!</p>
+                    }
                 </div>
             </div>
             <MailList/>

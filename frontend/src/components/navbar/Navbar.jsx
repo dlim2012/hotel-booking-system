@@ -35,7 +35,13 @@ const Navbar = () => {
 
     localStorage.removeItem('jwt');
     localStorage.removeItem("firstname");
-    navigate(location?.state?.from === undefined ? '/' : location.state.from, {state: location.state});
+
+    if (location.pathname.startsWith("/user/")){
+      navigate("/");
+    } else{
+      window.location.reload();
+    }
+    // navigate(location?.state?.from === undefined ? '/' : location.state.from, {state: location.state});
     // window.location.reload(false);
     // navigate(location.state == null || location.state.from == null ? '/' : location.state.from)
   }

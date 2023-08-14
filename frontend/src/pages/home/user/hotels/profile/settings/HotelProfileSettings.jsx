@@ -2,12 +2,13 @@
 import './hotelProfileSettings.css'
 import HotelProfileSidebar from "../HotelProfileSidebar";
 import Navbar from "../../../../../../components/navbar/Navbar";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {deleteWithJwt, getWithJwt, putWithJwt} from "../../../../../../clients";
 import {useNavigate, useParams} from "react-router-dom";
 import {put} from "axios";
 import MailList from "../../../../../../components/mailList/MailList";
 import Footer from "../../../../../../components/footer/Footer";
+import {TailSpin} from "react-loader-spinner";
 
 function HotelProfileSettings(props) {
 
@@ -15,10 +16,9 @@ function HotelProfileSettings(props) {
 
     const { hotelId } = useParams();
 
-    const [fetching, setFetching] = useState(false);
     const [isActiveInfo, setIsActiveInfo] = useState({});
-
     const [openConfirm, setOpenConfirm] = useState(false);
+    const [fetching, setFetching] = useState(false);
 
     function fetchIsActive(){
         setFetching(true);
@@ -77,10 +77,26 @@ function HotelProfileSettings(props) {
     if (fetching){
         return (
             <div>
-                <Navbar/>
+                <Navbar />
+                <div className="profileContainer">
+                    <HotelProfileSidebar />
+                    <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                    </div>
+                </div>
             </div>
         )
     }
+
 
     return (
         <div>

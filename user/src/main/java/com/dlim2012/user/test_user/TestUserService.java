@@ -118,7 +118,7 @@ public class TestUserService {
                 .fax("12345-67890")
                 .website("website@website.com")
                 .email("email@email.com")
-                .propertyRating(3)
+                .propertyRating(4)
                 .facilityDisplayNameList(Arrays.asList(
                         "Conference Hall",
                         "Dry cleaning",

@@ -14,6 +14,7 @@ import java.util.List;
 public class PriceUpdateDetails {
     Integer hotelId;
     Integer roomsId;
+    Long version;
     List<PriceDto> priceDtoList;
 
 }

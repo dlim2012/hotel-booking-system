@@ -33,7 +33,10 @@ public interface RoomsRepository extends JpaRepository<Rooms, Integer> {
     )
     List<Rooms> findByHotelIdWithLock(Integer hotelId);
 
+
     Set<Rooms> findByHotelId(Integer hotelId);
+
+
 //    @Lock(LockModeType.PESSIMISTIC_READ)
 //    @Transactional
 //    @Query("SELECT ra FROM Room ra")

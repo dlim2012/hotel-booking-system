@@ -5,7 +5,7 @@ metadata:
   labels:
     app: hb-search-consumer
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: hb-search-consumer

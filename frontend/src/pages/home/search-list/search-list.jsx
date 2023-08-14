@@ -24,6 +24,7 @@ import {
 import Slider from "@mui/material/Slider";
 import MailList from "../../../components/mailList/MailList";
 import Footer from "../../../components/footer/Footer";
+import {TailSpin, ThreeDots} from "react-loader-spinner";
 
 const searchListPath = "/hotels"
 
@@ -236,6 +237,40 @@ const SearchList = () => {
         <div>
           <Navbar />
           <Header type="list" attrs={headerAttr}/>
+
+            <div className="listContainer">
+                <div className="listWrapper">
+                    <SearchCriteriaSideBar
+                        openCriteria={openCriteria}
+                        onPriceRangeChange={onPriceRangeChange}
+                        priceRange={priceRange}
+                        priceMaxRange={priceMaxRange}
+                        propertyType={propertyType}
+                        setPropertyType={setPropertyType}
+                        propertyRating={propertyRating}
+                        setPropertyRating={setPropertyRating}
+                        hotelFacility={hotelFacility}
+                        setHotelFacility={setHotelFacility}
+                        roomAmenity={roomAmenity}
+                        setRoomAmenity={setRoomAmenity}
+                        requestSearch={requestSearch}
+                    />
+                    <div className="listResult">
+                      <div className="loading">
+                        <TailSpin
+                            height="80"
+                            width="80"
+                            color="#0071c2"
+                            ariaLabel="tail-spin-loading"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                            visible={true}
+                        />
+                      </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
   }
@@ -246,156 +281,21 @@ const SearchList = () => {
       <Header type="list" attrs={headerAttr}/>
       <div className="listContainer">
         <div className="listWrapper">
-          <div className="listSearch">
-            <h1 className="lsTitle">Search criteria</h1>
-            {/*<div className="lsItem">*/}
-            {/*  <label>Destination</label>*/}
-            {/*  <input ref={addressSearchInput} value={destination} onChange={event => {*/}
-            {/*    setDestination(event.target.value)}} type="text" />*/}
-            {/*</div>*/}
-            {/*<div className="lsItem">*/}
-            {/*  <label>Check-in Date</label>*/}
-            {/*  <span onClick={() => setOpenDate(!openDate)}>{`${format(*/}
-            {/*    date[0].startDate,*/}
-            {/*    "MM/dd/yyyy"*/}
-            {/*  )} to ${format(date[0].endDate, "MM/dd/yyyy")}`}</span>*/}
-            {/*  {openDate && (*/}
-            {/*    <DateRange*/}
-            {/*      onChange={(item) => setDate([item.selection])}*/}
-            {/*      minDate={new Date()}*/}
-            {/*      ranges={date}*/}
-            {/*    />*/}
-            {/*  )}*/}
-            {/*</div>*/}
-            <div className="lsItem">
-              <label
-                  // onClick={() => {setOpenCriteria({...openCriteria, ["priceRange"]: !openCriteria.priceRange})}}
-              >Price Range</label>
-              { openCriteria.priceRange &&
-              <div className="lsPriceRange">
-                  <Slider
-                      value={priceRange}
-                      onChange={onPriceRangeChange}
-                      min={priceMaxRange[0]}
-                      max={priceMaxRange[1]}
-                      step={0.0001}
-                  />
-                  <span className="lsPriceRangeText">Selected range: $ {Math.floor(Math.exp(priceRange[0]) /100)} ~ {Math.ceil(Math.exp(priceRange[1])/100)}</span>
-              </div>
-              }
-            </div>
-            <div className="lsItem">
-              <label
-                // onClick={() => setOpenCriteria({...openCriteria, ["propertyType"]: !openCriteria.propertyType})}
-              >Property Type</label>
-              { openCriteria.propertyType && Object.keys(propertyTypesMap).map((item, index) => {
-                return <div className="lsOptions">
-                          <div className="lsOptionItem">
-                                <span className="lsOptionText">
-                                  <input
-                                      type="checkbox"
-                                      checked = {propertyType[item]}
-                                      onChange={(e) => {
-                                        var newPropertyType = {...propertyType, [item]: e.target.checked}
-                                        setPropertyType(newPropertyType);
-                                        requestSearch({propertyType: newPropertyType});
-                                      }}
-                                  />
-                                  {item}
-                                </span>
-                          </div>
-                      </div>
-                  })}
-            </div>
-            {/*<div className="lsItem">*/}
-            {/*  <label>Cancellation Policy</label>*/}
-            {/*  { cancellationPolicies.map((item, index) => {*/}
-            {/*    return <div className="lsOptions">*/}
-            {/*      <div className="lsOptionItem">*/}
-            {/*        <span className="lsOptionText">*/}
-            {/*          <input*/}
-            {/*              type="checkbox"*/}
-            {/*              onChange={(e) => {*/}
-            {/*                setCancellationPolicy({...cancellationPolicy, [item]: e.target.checked});*/}
-            {/*              }}*/}
-            {/*          />*/}
-            {/*          {item}*/}
-            {/*        </span>*/}
-            {/*      </div>*/}
-            {/*    </div>*/}
-            {/*  })}*/}
-            {/*</div>*/}
-            <div className="lsItem">
-              <label
-                // onClick={() => {setOpenCriteria({...openCriteria, ["propertyRating"]: !openCriteria.propertyRating})}}
-              >Property rating</label>
-              { openCriteria.propertyRating && propertyRatings.map((item, index) => {
-                return <div className="lsOptions">
-                  <div className="lsOptionItem">
-                    <span className="lsOptionText">
-                      <input
-                          type="checkbox"
-                          checked = {propertyRating[item['value']]}
-                          onChange={(e) => {
-                            var newPropertyRating = {...propertyRating, [item['value']]: e.target.checked}
-                            setPropertyRating(newPropertyRating);
-                            requestSearch({propertyRating: newPropertyRating});
-                          }}
-                      />
-                      {item['label']}
-                    </span>
-                  </div>
-                </div>
-              })}
-            </div>
-            <div className="lsItem">
-              <label
-                // onClick={() => {setOpenCriteria({...openCriteria, ["hotelFacility"]: !openCriteria.hotelFacility})}}
-              >Hotel Facilities</label>
-              { openCriteria.hotelFacility && hotelFacilities.map((item, index) => {
-                return <div className="lsOptions">
-                  <div className="lsOptionItem">
-                      <span className="lsOptionText">
-                        <input
-                            type="checkbox"
-                            checked = {hotelFacility[item]}
-                            onChange={(e) => {
-                              var newHotelFacility = {...hotelFacility, [item]: e.target.checked}
-                              setHotelFacility(newHotelFacility);
-                              requestSearch({hotelFacility: newHotelFacility});
-                            }}
-                        />
-                        {item}
-                      </span>
-                  </div>
-                </div>
-              })}
-            </div>
-            <div className="lsItem">
-              <label
-                  // onClick={() => {setOpenCriteria({...openCriteria, ["roomAmenity"]: !openCriteria.roomAmenity})}}
-              >Room Amenities</label>
-              { openCriteria.roomAmenity && roomFacilities.map((item, index) => {
-                return <div className="lsOptions">
-                  <div className="lsOptionItem">
-                      <span className="lsOptionText">
-                        <input
-                            type="checkbox"
-                            checked={roomAmenity[item]}
-                            onChange={(e) => {
-                              var newRoomAmenity = {...roomAmenity, [item]: e.target.checked}
-                              setRoomAmenity(newRoomAmenity);
-                              requestSearch({roomAmenity: newRoomAmenity});
-                            }}
-                        />
-                        {item}
-                      </span>
-                  </div>
-                </div>
-              })}
-            </div>
-            {/*<button>Search</button>*/}
-          </div>
+          <SearchCriteriaSideBar
+              openCriteria={openCriteria}
+              onPriceRangeChange={onPriceRangeChange}
+              priceRange={priceRange}
+              priceMaxRange={priceMaxRange}
+              propertyType={propertyType}
+              setPropertyType={setPropertyType}
+              propertyRating={propertyRating}
+              setPropertyRating={setPropertyRating}
+              hotelFacility={hotelFacility}
+              setHotelFacility={setHotelFacility}
+              roomAmenity={roomAmenity}
+              setRoomAmenity={setRoomAmenity}
+              requestSearch={requestSearch}
+          />
           <div className="listResult">
             { address.city != null && address.city !=="" &&
               <div className="searchResult">
@@ -416,5 +316,170 @@ const SearchList = () => {
     </div>
   );
 };
+
+function SearchCriteriaSideBar(props){
+
+  const {openCriteria, priceRange, onPriceRangeChange,
+      priceMaxRange,
+      propertyType, setPropertyType,
+      propertyRating, setPropertyRating,
+      hotelFacility, setHotelFacility,
+      roomAmenity, setRoomAmenity,
+      requestSearch
+  } = props
+
+  return (
+      <div className="listSearch">
+        <h1 className="lsTitle">Search criteria</h1>
+        {/*<div className="lsItem">*/}
+        {/*  <label>Destination</label>*/}
+        {/*  <input ref={addressSearchInput} value={destination} onChange={event => {*/}
+        {/*    setDestination(event.target.value)}} type="text" />*/}
+        {/*</div>*/}
+        {/*<div className="lsItem">*/}
+        {/*  <label>Check-in Date</label>*/}
+        {/*  <span onClick={() => setOpenDate(!openDate)}>{`${format(*/}
+        {/*    date[0].startDate,*/}
+        {/*    "MM/dd/yyyy"*/}
+        {/*  )} to ${format(date[0].endDate, "MM/dd/yyyy")}`}</span>*/}
+        {/*  {openDate && (*/}
+        {/*    <DateRange*/}
+        {/*      onChange={(item) => setDate([item.selection])}*/}
+        {/*      minDate={new Date()}*/}
+        {/*      ranges={date}*/}
+        {/*    />*/}
+        {/*  )}*/}
+        {/*</div>*/}
+        <div className="lsItem">
+          <label
+              // onClick={() => {setOpenCriteria({...openCriteria, ["priceRange"]: !openCriteria.priceRange})}}
+          >Price Range</label>
+          { openCriteria.priceRange &&
+              <div className="lsPriceRange">
+                <Slider
+                    value={priceRange}
+                    onChange={onPriceRangeChange}
+                    min={priceMaxRange[0]}
+                    max={priceMaxRange[1]}
+                    step={0.0001}
+                />
+                <span className="lsPriceRangeText">Selected range: $ {Math.floor(Math.exp(priceRange[0]) /100)} ~ {Math.ceil(Math.exp(priceRange[1])/100)}</span>
+              </div>
+          }
+        </div>
+        <div className="lsItem">
+          <label
+              // onClick={() => setOpenCriteria({...openCriteria, ["propertyType"]: !openCriteria.propertyType})}
+          >Property Type</label>
+          { openCriteria.propertyType && Object.keys(propertyTypesMap).map((item, index) => {
+            return <div className="lsOptions">
+              <div className="lsOptionItem">
+                                <span className="lsOptionText">
+                                  <input
+                                      type="checkbox"
+                                      checked = {propertyType[item]}
+                                      onChange={(e) => {
+                                        var newPropertyType = {...propertyType, [item]: e.target.checked}
+                                        setPropertyType(newPropertyType);
+                                        requestSearch({propertyType: newPropertyType});
+                                      }}
+                                  />
+                                  {item}
+                                </span>
+              </div>
+            </div>
+          })}
+        </div>
+        {/*<div className="lsItem">*/}
+        {/*  <label>Cancellation Policy</label>*/}
+        {/*  { cancellationPolicies.map((item, index) => {*/}
+        {/*    return <div className="lsOptions">*/}
+        {/*      <div className="lsOptionItem">*/}
+        {/*        <span className="lsOptionText">*/}
+        {/*          <input*/}
+        {/*              type="checkbox"*/}
+        {/*              onChange={(e) => {*/}
+        {/*                setCancellationPolicy({...cancellationPolicy, [item]: e.target.checked});*/}
+        {/*              }}*/}
+        {/*          />*/}
+        {/*          {item}*/}
+        {/*        </span>*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*  })}*/}
+        {/*</div>*/}
+        <div className="lsItem">
+          <label
+              // onClick={() => {setOpenCriteria({...openCriteria, ["propertyRating"]: !openCriteria.propertyRating})}}
+          >Property rating</label>
+          { openCriteria.propertyRating && propertyRatings.map((item, index) => {
+            return <div className="lsOptions">
+              <div className="lsOptionItem">
+                    <span className="lsOptionText">
+                      <input
+                          type="checkbox"
+                          checked = {propertyRating[item['value']]}
+                          onChange={(e) => {
+                            var newPropertyRating = {...propertyRating, [item['value']]: e.target.checked}
+                            setPropertyRating(newPropertyRating);
+                            requestSearch({propertyRating: newPropertyRating});
+                          }}
+                      />
+                      {item['label']}
+                    </span>
+              </div>
+            </div>
+          })}
+        </div>
+        <div className="lsItem">
+          <label
+              // onClick={() => {setOpenCriteria({...openCriteria, ["hotelFacility"]: !openCriteria.hotelFacility})}}
+          >Hotel Facilities</label>
+          { openCriteria.hotelFacility && hotelFacilities.map((item, index) => {
+            return <div className="lsOptions">
+              <div className="lsOptionItem">
+                      <span className="lsOptionText">
+                        <input
+                            type="checkbox"
+                            checked = {hotelFacility[item]}
+                            onChange={(e) => {
+                              var newHotelFacility = {...hotelFacility, [item]: e.target.checked}
+                              setHotelFacility(newHotelFacility);
+                              requestSearch({hotelFacility: newHotelFacility});
+                            }}
+                        />
+                        {item}
+                      </span>
+              </div>
+            </div>
+          })}
+        </div>
+        <div className="lsItem">
+          <label
+              // onClick={() => {setOpenCriteria({...openCriteria, ["roomAmenity"]: !openCriteria.roomAmenity})}}
+          >Room Amenities</label>
+          { openCriteria.roomAmenity && roomFacilities.map((item, index) => {
+            return <div className="lsOptions">
+              <div className="lsOptionItem">
+                      <span className="lsOptionText">
+                        <input
+                            type="checkbox"
+                            checked={roomAmenity[item]}
+                            onChange={(e) => {
+                              var newRoomAmenity = {...roomAmenity, [item]: e.target.checked}
+                              setRoomAmenity(newRoomAmenity);
+                              requestSearch({roomAmenity: newRoomAmenity});
+                            }}
+                        />
+                        {item}
+                      </span>
+              </div>
+            </div>
+          })}
+        </div>
+        {/*<button>Search</button>*/}
+      </div>
+  );
+}
 
 export default SearchList;

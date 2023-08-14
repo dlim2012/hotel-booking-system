@@ -23,7 +23,7 @@ function HotelBookingCard(props) {
             {/*<span>Location: {item.address}</span> <br/>*/}
             <span>Hotel: {item.hotelName}</span> <br/>
             <span>Number of rooms: {item.quantity}</span> <br />
-            <span>price: {item.priceInCents}</span> <br/>
+            <span>price: ${(item.priceInCents/100).toFixed(2)}</span> <br/>
             <button onClick={() => {onClickDetails(item)}}>Details</button>
         </div>
     );

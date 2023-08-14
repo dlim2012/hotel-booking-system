@@ -121,8 +121,20 @@ public class BookingService {
             roomsIdMap.put(room.getId(), room.getRooms().getId());
         }
 
+
+        Map<Integer, Rooms> roomsMap = new HashMap<>();
+        for (Rooms rooms: roomsSet){
+            roomsMap.put(rooms.getId(), rooms);
+        }
+
         // validate request
-        if (!roomsEntityService.validateBookingRequest(roomNumMap, request, roomsSet, roomsIdMap, datesSet, priceSet, roomsPrice)){
+        Set<Integer> invalidRoomsId = roomsEntityService.validateBookingRequest(roomNumMap, request, roomsMap, roomsIdMap, datesSet, priceSet, roomsPrice);
+        System.out.println("invalidRoomsIds " + invalidRoomsId);
+        if (invalidRoomsId != null){
+            // release lock
+            datesRepository.saveAll(datesSet);
+            // update data in elasticsearch for possible inconsistencies
+            roomsEntityService.roomsVersionUp(hotelId, invalidRoomsId, roomsMap);
             return null;
         }
 
@@ -296,9 +308,9 @@ public class BookingService {
             }
         } catch (PayPalRESTException e){
             log.error(e.getMessage());
-            return new BookingResponse(booking.getId(), false, "");
+            return new BookingResponse(booking.getId(), true, "");
         }
-        return new BookingResponse(booking.getId(), false, "");
+        return new BookingResponse(booking.getId(), true, "");
     }
 
     public BookingResponse bookHotel(Integer hotelId, Integer userId, BookingRequest request) {
@@ -306,9 +318,11 @@ public class BookingService {
         if (!booking.getStatus().equals(BookingStatus.RESERVED)){
             return new BookingResponse(-1L, false, "");
         }
-        booking.setStatus(BookingStatus.RESERVED_FOR_TIMEOUT);
         String description = String.format("Booking rooms from hotel %d.", booking.getHotelId());
         BookingResponse bookingResponse = createBookingPayment(booking, description);
+        if (!bookingResponse.getRedirectUrl().isEmpty()) {
+            booking.setStatus(BookingStatus.RESERVED_FOR_TIMEOUT);
+        }
         bookingRepository.save(booking);
         cacheService.cacheBookingIdForTTL(booking.getId());
         System.out.println(bookingResponse);
@@ -322,14 +336,15 @@ public class BookingService {
             return false;
         }
         Booking booking = optionalBooking.get();
-        if (!booking.getMainStatus().equals(BookingMainStatus.RESERVED)){
-            paypalService.cancelPayment(booking.getInvoiceId());
-            return false;
-        }
+//        if (!booking.getMainStatus().equals(BookingMainStatus.RESERVED)){
+//            paypalService.cancelPayment(booking.getInvoiceId());
+//            return false;
+//        }
 
         try {
             Payment payment = paypalService.executePayment(paymentId, payerId);
         } catch(PayPalRESTException e){
+            log.error(e.getMessage());
             return false;
         }
 
@@ -419,6 +434,7 @@ public class BookingService {
 
         booking.setMainStatus(BookingMainStatus.CANCELLED);
         booking.setStatus(status);
+        cacheService.putBooking(booking);
         bookingRepository.save(booking);
 
         unReserveHotelRooms(booking);

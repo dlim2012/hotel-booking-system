@@ -1,8 +1,10 @@
 package com.dlim2012.booking.service;
 
+import com.dlim2012.booking.service.booking_entity.DatesService;
 import com.dlim2012.booking.service.booking_entity.PriceService;
 import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.entity.BookingStatus;
+import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.kafka.dto.archive.BookingIdArchiveRequest;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelsNewDayDetails;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CronService {
     private final PriceService priceService;
+    private final DatesService datesService;
 
     private final HotelRepository hotelRepository;
     private final RoomsRepository roomsRepository;
@@ -41,7 +44,7 @@ public class CronService {
 
     private final EntityManager entityManager;
 
-    private final Integer MAX_BOOKING_DAYS = 30;
+    private final Integer MAX_BOOKING_DAYS = 90;
     private final Integer CRON_MAX_HOTELS_FETCH = 100;
 
 
@@ -74,23 +77,22 @@ public class CronService {
 
 
 //            System.out.println("reading entities..." + ((System.currentTimeMillis() - start)));
-            Set<Rooms> roomsSet = roomsRepository.findByHotelIdRangeWithLock(hotelStartId, hotelEndId);
-            log.info("Cron job - new Day. Processing {} rooms with hotel id between {} and {}",
-                    roomsSet.size(), hotelStartId, hotelEndId-1);
-            Map<Integer, List<Rooms>> roomsMap = new HashMap<>();
-
-
+            List<Hotel> hotels = hotelRepository.findByIdGreaterThanEqualAndIdLessThanWithLock(hotelStartId, hotelEndId);
+//            Set<Rooms> roomsSet = roomsRepository.findByHotelIdRangeWithLock(hotelStartId, hotelEndId);
+            log.info("Cron job - new Day. Processing {} hotels with hotel id between {} and {}",
+                    hotels.size(), hotelStartId, hotelEndId-1);
+            Map<Integer, Long> hotelVersions = new HashMap<>();
 
             Set<Dates> datesSet = datesRepository.findByHotelIdRangeWithLock(
                     hotelStartId, hotelEndId);
 
 //            System.out.println("mapping entities..." + ((System.currentTimeMillis() - start)));
-            for (Rooms rooms : roomsSet) {
-                Integer hotelId = rooms.getHotel().getId();
-                List<Rooms> roomsList = roomsMap.getOrDefault(hotelId, new ArrayList<>());
-                roomsList.add(rooms);
-                roomsMap.put(hotelId, roomsList);
-            }
+//            for (Rooms rooms : roomsSet) {
+//                Integer hotelId = rooms.getHotel().getId();
+//                List<Rooms> roomsList = roomsMap.getOrDefault(hotelId, new ArrayList<>());
+//                roomsList.add(rooms);
+//                roomsMap.put(hotelId, roomsList);
+//            }
 
             Map<Long, List<Dates>> datesMap = new HashMap<>();
             for (Dates dates : datesSet) {
@@ -111,8 +113,12 @@ public class CronService {
 
             // Get all dates to update or delete for each hotel
             System.out.println("updating entities..." + ((System.currentTimeMillis() - start)));
-            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
-                for (Rooms rooms : entry.getValue()) {
+            for (Hotel hotel: hotels){
+//            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
+                hotel.setVersion(hotel.getVersion()+1L);
+                hotelVersions.put(hotel.getId(), hotel.getVersion());
+
+                for (Rooms rooms : hotel.getRoomsSet()) {
                     if (!rooms.getIsActive()){
                         continue;
                     }
@@ -195,7 +201,7 @@ public class CronService {
                 }
             }
 
-            System.out.println("updating respository..." + ((System.currentTimeMillis() - start)));
+            System.out.println("updating repository..." + ((System.currentTimeMillis() - start)));
             //  update repository
 //            Set<Long> datesIdToKeep = new HashSet<>(datesSet.stream().map(Dates::getId).toList());
 
@@ -204,7 +210,7 @@ public class CronService {
             List<Dates> updatedDates = datesRepository.saveAll(datesToUpdate);
             datesRepository.deleteAll(datesToDelete);
             List<Price> updatedPrices = priceRepository.saveAll(priceList);
-            roomsRepository.saveAll(roomsSet);
+            hotelRepository.saveAll(hotels);
 
 
             // Map entities to generate Kafka message
@@ -234,13 +240,14 @@ public class CronService {
 
             Map<Integer, DatesUpdateDetails> datesUpdateDetailsMap = new HashMap<>();
             Map<Integer, Map<Integer, List<PriceDto>>> priceUpdateDetailsMap = new HashMap<>();
-            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
-                Integer hotelId = entry.getKey();
+//            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
+            for (Hotel hotel: hotels){
+                Integer hotelId = hotel.getId();
 
                 // Map dates
                 Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> EsDatesToUpdate = new HashMap<>();
                 Map<Long, Set<Long>> EsDatesToDelete = new HashMap<>();
-                for (Rooms rooms : entry.getValue()) {
+                for (Rooms rooms : hotel.getRoomsSet()) {
                     for (Room room : rooms.getRoomSet()) {
                         Long roomId = room.getId();
                         List<Dates> roomUpdatedDates = roomUpdatedDatesMap.getOrDefault(roomId, null);
@@ -260,17 +267,14 @@ public class CronService {
                         }
                     }
                 }
-                DatesUpdateDetails datesUpdateDetails = DatesUpdateDetails.builder()
-                        .hotelId(hotelId)
-                        .datesToUpdate(EsDatesToUpdate)
-                        .datesIdsToDelete(EsDatesToDelete)
-                        .build();
+                DatesUpdateDetails datesUpdateDetails = datesService.getDatesUpdateDetailsWithOutVersion(hotelId, datesToUpdate, datesToDelete);
+                datesUpdateDetails.setHotelVersion(hotel.getVersion());
                 datesUpdateDetailsMap.put(hotelId, datesUpdateDetails);
 //                System.out.println(datesUpdateDetailsMap);
 
                 // Map prices
                 Map<Integer, List<PriceDto>> hotelPriceUpdateDetailsMap = new HashMap<>();
-                for (Rooms rooms: entry.getValue()){
+                for (Rooms rooms: hotel.getRoomsSet()){
                     Integer roomsId = rooms.getId();
                     List<Price> roomsUpdatedPrice = roomsUpdatedPriceMap.getOrDefault(roomsId, null);
                     if (roomsUpdatedPrice != null) {
@@ -290,6 +294,7 @@ public class CronService {
             HotelsNewDayDetails hotelsNewDayDetails = HotelsNewDayDetails.builder()
                     .startId(hotelStartId)
                     .endId(hotelEndId)
+                    .hotelVersionMap(hotelVersions)
                     .datesUpdateDetailsMap(datesUpdateDetailsMap)
                     .priceUpdateDetailsMap(priceUpdateDetailsMap)
                     .build();
@@ -299,7 +304,6 @@ public class CronService {
             hotelNewDayKafkaTemplate.send("hotel-new-day", hotelsNewDayDetails);
             System.out.println("sent message..." + ((System.currentTimeMillis() - start)));
         }
-
     }
 
 //    @Scheduled(cron = "0 0 4 * * ?")
@@ -330,17 +334,16 @@ public class CronService {
                 roomsMap.put(rooms.getId(), rooms);
             }
 
-
             log.info("Cron job - processing no prepayments. found {} bookings with hotel ids in {} ~ {}",
                     bookingList.size(), hotelStartId, hotelEndId - 1);
 
-            List<Dates> datesToAdd = new ArrayList<>();
 
             for (Booking booking: bookingList){
                 boolean allCancelled = true;
                 Long priceInCents = booking.getPriceInCents();
                 for (BookingRooms bookingRooms: booking.getBookingRooms()){
                     Rooms rooms = roomsMap.getOrDefault(bookingRooms.getRoomsId(), null);
+
                     if (bookingRooms.getPrepayUntil() != null && bookingRooms.getPrepayUntil().isBefore(today)){
                         for (BookingRoom bookingRoom : bookingRooms.getBookingRoomList()) {
                             if (bookingRoom.getStatus().equals(BookingStatus.RESERVED)){
@@ -348,6 +351,7 @@ public class CronService {
                                         booking.getId(), bookingRoom.getId(), booking.getHotelId(), bookingRooms.getRoomsId());
                                 bookingRoom.setStatus(BookingStatus.CANCELLED_NO_PREPAYMENT);
                                 priceInCents -= bookingRooms.getPricePerRoomInCents();
+
                                 if (rooms != null){
                                     rooms.setDatesReserved(rooms.getDatesReserved() -
                                             (int) ChronoUnit.DAYS.between(
@@ -356,8 +360,14 @@ public class CronService {
                                     Long roomId = bookingRoom.getRoomId();
                                     for (Room room: rooms.getRoomSet()){
                                         if (room.getId().equals(roomId)){
-                                            datesToAdd.add(Dates.builder().room(room).startDate(bookingRoom.getStartDateTime().toLocalDate())
-                                                    .endDate(bookingRoom.getEndDateTime().toLocalDate()).build());
+
+                                            datesService.addDates(
+                                                    UserRole.ADMIN, null, booking.getHotelId(),
+                                                    bookingRoom.getRoomId(), bookingRoom.getStartDateTime().toLocalDate(),
+                                                    bookingRoom.getEndDateTime().toLocalDate()
+                                            );
+//                                            datesToAdd.add(Dates.builder().room(room).startDate(bookingRoom.getStartDateTime().toLocalDate())
+//                                                    .endDate(bookingRoom.getEndDateTime().toLocalDate()).build());
                                             break;
                                         }
                                     }
@@ -383,12 +393,11 @@ public class CronService {
                 }
             }
 
-            datesRepository.saveAll(datesToAdd);
+//            datesRepository.saveAll(datesToAdd);
             bookingRepository.saveAll(bookingList);
             roomsRepository.saveAll(roomsSet);
             bookingIdArchiveKafkaTemplate.send("booking-archive", BookingIdArchiveRequest.builder()
                     .bookingIds(bookingIdsToCancel).build());
-
 
 
         }

@@ -25,6 +25,7 @@ public class HotelEntityService {
         Hotel hotel = Hotel.builder()
                 .id(hotelBookingDetails.getHotelId())
                 .hotelManagerId(hotelBookingDetails.getHotelManagerId())
+                .version(0L)
                 .build();
         hotelRepository.save(hotel);
     }
@@ -48,6 +49,14 @@ public class HotelEntityService {
         hotelRepository.save(hotel);
         datesRepository.deleteByHotelId(request.getHotelId());
         priceRepository.deleteByHotelId(request.getHotelId());
+    }
+
+    public Long getNewHotelVersion(Integer hotelId) {
+        Hotel hotel = hotelRepository.findByIdWithLock(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        hotel.setVersion(hotel.getVersion()+1L);
+        hotelRepository.save(hotel);
+        return hotel.getVersion();
     }
 //    private LocalDate testDay = LocalDate.now();
 //    private LocalDate criteria = LocalDate.of(1970, 1, 1);

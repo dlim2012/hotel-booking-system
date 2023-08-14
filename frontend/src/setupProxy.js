@@ -8,13 +8,13 @@ module.exports = function(app) {
     //         changeOrigin: true,
     //     })
     // );
-    app.use(
-        '/api/v1/**',
-        createProxyMiddleware({
-            target: 'http://73.253.48.199:8001',
-            changeOrigin: true,
-        })
-    );
+    // app.use(
+    //     '/api/v1/**',
+    //     createProxyMiddleware({
+    //         target: 'http://73.253.48.199:8001',
+    //         changeOrigin: true,
+    //     })
+    // );
     // app.use(
     //     '/api/v1/**',
     //     createProxyMiddleware({
@@ -22,13 +22,13 @@ module.exports = function(app) {
     //         changeOrigin: true,
     //     })
     // );
-    // app.use(
-    //     '/api/v1/**',
-    //     createProxyMiddleware({
-    //         target: 'http://10.0.0.110:9000',
-    //         changeOrigin: true,
-    //     })
-    // );
+    app.use(
+        '/api/v1/**',
+        createProxyMiddleware({
+            target: 'http://10.0.0.110:9000',
+            changeOrigin: true,
+        })
+    );
     // app.use(
     //     '/api/v1/user',
     //     createProxyMiddleware({

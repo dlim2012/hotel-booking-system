@@ -41,6 +41,8 @@ spring:
     type: redis
     cache-names:
       - bookingId
+      - hotel-booking
+      - user-booking
     redis:
       time-to-live: 300000
       cache-null-values: true

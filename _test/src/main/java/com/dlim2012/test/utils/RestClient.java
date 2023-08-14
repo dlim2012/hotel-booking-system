@@ -17,7 +17,11 @@ import org.springframework.web.client.RestTemplate;
 @Setter
 @Component
 public class RestClient {
-    private String gatewayAddress = "http://10.0.0.110:8001";
+//    private String gatewayAddress = "http://10.0.0.110:8001";
+//    @Value("${custom.gatewayAddress}")
+//    private String gatewayAddress;
+        private String gatewayAddress = "http://10.0.0.110:9000";
+
     private String jwt;
 
     public Object get(String path, Class<?> s) {

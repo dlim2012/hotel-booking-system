@@ -1,5 +1,6 @@
 package com.dlim2012.booking.controller.rest_controller;
 
+import com.dlim2012.booking.dto.cancel.CancelBookingRoomResponse;
 import com.dlim2012.booking.dto.dates.availability.AddAvailabilityRequest;
 import com.dlim2012.booking.dto.dates.availability.DeleteAvailabilityRequest;
 import com.dlim2012.booking.dto.dates.availability.EditAvailabilityRequest;
@@ -24,7 +25,9 @@ public class HotelController {
     private final HotelService hotelService;
     private final PriceService priceService;
 
-
+    /*
+    Hotel dates page && booking records
+     */
     @PostMapping("/hotel/{hotelId}/dates/available")
     public void addAvailability(
             @PathVariable("hotelId") Integer hotelId,
@@ -80,7 +83,7 @@ public class HotelController {
     }
 
     @PutMapping("/hotel/{hotelId}/booking/{bookingId}/dates/cancel")
-    public void cancelReserved(
+    public void cancelBookingRoomByHotelManager(
             @PathVariable("bookingId") Long bookingId,
             @RequestBody DeleteBookingRoomRequest request
             ){

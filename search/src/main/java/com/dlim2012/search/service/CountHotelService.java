@@ -19,8 +19,10 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.stereotype.Service;
 
@@ -47,13 +49,13 @@ public class CountHotelService {
 
         // match location
         if (request.getCountry() != null && !request.getCountry().isEmpty()) {
-            hotelBool.must(QueryBuilders.matchQuery("country", request.getCountry()));
+            hotelBool.must(QueryBuilders.matchQuery("country", request.getCountry()).fuzziness(Fuzziness.ZERO).operator(Operator.AND));
         }
         if (request.getState() != null && !request.getState().isEmpty()) {
-            hotelBool.must(QueryBuilders.matchQuery("state", request.getState()));
+            hotelBool.must(QueryBuilders.matchQuery("state", request.getState()).fuzziness(Fuzziness.ZERO).operator(Operator.AND));
         }
         if (request.getCity() != null && !request.getCity().isEmpty()){
-            hotelBool.must(QueryBuilders.matchQuery("city", request.getCity()));
+            hotelBool.must(QueryBuilders.matchQuery("city", request.getCity()).fuzziness(Fuzziness.ZERO).operator(Operator.AND));
         }
         countRequest.query(hotelBool);
         CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
