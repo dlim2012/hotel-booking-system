@@ -8,7 +8,7 @@ import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.kafka.dto.archive.BookingIdArchiveRequest;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelsNewDayDetails;
-import com.dlim2012.clients.kafka.dto.search.price.PriceDto;
+import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
 import com.dlim2012.clients.mysql_booking.entity.*;
 import com.dlim2012.clients.mysql_booking.repository.*;
 import jakarta.persistence.EntityManager;
@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -113,10 +111,9 @@ public class CronService {
 
             // Get all dates to update or delete for each hotel
             System.out.println("updating entities..." + ((System.currentTimeMillis() - start)));
+
             for (Hotel hotel: hotels){
 //            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
-                hotel.setVersion(hotel.getVersion()+1L);
-                hotelVersions.put(hotel.getId(), hotel.getVersion());
 
                 for (Rooms rooms : hotel.getRoomsSet()) {
                     if (!rooms.getIsActive()){
@@ -210,91 +207,160 @@ public class CronService {
             List<Dates> updatedDates = datesRepository.saveAll(datesToUpdate);
             datesRepository.deleteAll(datesToDelete);
             List<Price> updatedPrices = priceRepository.saveAll(priceList);
-            hotelRepository.saveAll(hotels);
 
 
-            // Map entities to generate Kafka message
-            Map<Long, List<Dates>> roomUpdatedDatesMap = new HashMap<>();
-            for (Dates datesAfterUpdate : updatedDates) {
-                Long roomId = datesAfterUpdate.getRoom().getId();
-                List<Dates> roomDatesToUpdate = datesToUpdateMap.getOrDefault(roomId, null);
-                List<Dates> roomUpdatedDates = roomUpdatedDatesMap.getOrDefault(roomId, new ArrayList<>());
-                if (roomDatesToUpdate != null) {
-                    // there will be at most two dates in the roomDatesToUpdate list
-                    for (Dates datesBeforeUpdate : roomDatesToUpdate) {
-                        if (datesBeforeUpdate.getStartDate().isEqual(datesAfterUpdate.getStartDate())) {
-                            roomUpdatedDates.add(datesAfterUpdate);
-                        }
-                    }
-                }
-                roomUpdatedDatesMap.put(roomId, roomUpdatedDates);
+
+            List<Dates> newDates = datesRepository.findByHotelIdRange(hotelStartId, hotelEndId);
+            List<Price> newPrices = priceRepository.findByHotelIdRange(hotelStartId, hotelEndId);
+            Map<Long, List<Dates>> newDatesMap = new HashMap<>();
+            Map<Integer, List<Price>> newPriceMap = new HashMap<>();
+            for (Dates dates: newDates){
+                Long roomId = dates.getRoom().getId();
+                List<Dates> roomDatesList = newDatesMap.getOrDefault(roomId, new ArrayList<>());
+                roomDatesList.add(dates);
+                newDatesMap.put(roomId, roomDatesList);
             }
 
-            Map<Integer, List<Price>> roomsUpdatedPriceMap = new HashMap<>();
-            for (Price price: updatedPrices){
+            for (Price price: newPrices){
                 Integer roomsId = price.getRooms().getId();
-                List<Price> roomsUpdatedPrice = roomsUpdatedPriceMap.getOrDefault(roomsId, new ArrayList<>());
-                roomsUpdatedPrice.add(price);
-                roomsUpdatedPriceMap.put(roomsId, roomsUpdatedPrice);
+                List<Price> roomPriceList = newPriceMap.getOrDefault(roomsId, new ArrayList<>());
+                roomPriceList.add(price);
+                newPriceMap.put(roomsId, roomPriceList);
             }
+
 
             Map<Integer, DatesUpdateDetails> datesUpdateDetailsMap = new HashMap<>();
-            Map<Integer, Map<Integer, List<PriceDto>>> priceUpdateDetailsMap = new HashMap<>();
-//            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
+            Map<Integer, List<PriceUpdateDetails>> priceUpdateDetailsMap = new HashMap<>();
             for (Hotel hotel: hotels){
-                Integer hotelId = hotel.getId();
-
-                // Map dates
-                Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> EsDatesToUpdate = new HashMap<>();
-                Map<Long, Set<Long>> EsDatesToDelete = new HashMap<>();
-                for (Rooms rooms : hotel.getRoomsSet()) {
-                    for (Room room : rooms.getRoomSet()) {
-                        Long roomId = room.getId();
-                        List<Dates> roomUpdatedDates = roomUpdatedDatesMap.getOrDefault(roomId, null);
-                        if (roomUpdatedDates != null) {
-                            Map<Long, DatesUpdateDetails.DatesDto> EsRoomDatesToUpdateMap = new HashMap<>();
-                            for (Dates dates : roomUpdatedDates) {
-                                EsRoomDatesToUpdateMap.put(dates.getId(), DatesUpdateDetails.DatesDto.builder()
-                                        .startDate(dates.getStartDate())
-                                        .endDate(dates.getEndDate())
-                                        .build());
-                            }
-                            EsDatesToUpdate.put(roomId, EsRoomDatesToUpdateMap);
-                        }
-                        List<Dates> roomDeletedDates = datesToDeleteMap.getOrDefault(roomId, null);
-                        if (roomDeletedDates != null) {
-                            EsDatesToDelete.put(roomId, roomDeletedDates.stream().map(Dates::getId).collect(Collectors.toSet()));
-                        }
-                    }
-                }
-                DatesUpdateDetails datesUpdateDetails = datesService.getDatesUpdateDetailsWithOutVersion(hotelId, datesToUpdate, datesToDelete);
-                datesUpdateDetails.setHotelVersion(hotel.getVersion());
-                datesUpdateDetailsMap.put(hotelId, datesUpdateDetails);
-//                System.out.println(datesUpdateDetailsMap);
-
-                // Map prices
-                Map<Integer, List<PriceDto>> hotelPriceUpdateDetailsMap = new HashMap<>();
+                Map<Long, Long> datesVersions = new HashMap<>();
+                Map<Long, List<DatesUpdateDetails.DatesDto>> datesDtoMap = new HashMap<>();
+                List<PriceUpdateDetails> priceUpdateDetailsList = new ArrayList<>();
                 for (Rooms rooms: hotel.getRoomsSet()){
-                    Integer roomsId = rooms.getId();
-                    List<Price> roomsUpdatedPrice = roomsUpdatedPriceMap.getOrDefault(roomsId, null);
-                    if (roomsUpdatedPrice != null) {
-                        hotelPriceUpdateDetailsMap.put(roomsId,
-                                roomsUpdatedPrice.stream().map(price -> PriceDto.builder()
-                                        .priceId(price.getId())
-                                        .date(price.getDate())
-                                        .priceInCents(price.getPriceInCents())
-                                        .build()).toList()
-                        );
+                    for (Room room: rooms.getRoomSet()){
+                        List<Dates> roomDatesList = newDatesMap.getOrDefault(room.getId(), null);
+                        if (roomDatesList == null){
+                            continue;
+                        }
+
+                        room.setDatesVersion(room.getDatesVersion()+1);
+                        datesVersions.put(room.getId(), room.getDatesVersion());
+                        datesDtoMap.put(room.getId(), roomDatesList.stream()
+                                        .map(dates -> DatesUpdateDetails.DatesDto.builder()
+                                                .Id(dates.getId())
+                                                .startDate(dates.getStartDate())
+                                                .endDate(dates.getEndDate())
+                                                .build())
+                                .toList());
                     }
+
+                    List<Price> roomPriceList = newPriceMap.getOrDefault(rooms.getId(), null);
+                    rooms.setPriceVersion(rooms.getPriceVersion()+1);
+                    priceUpdateDetailsList.add(
+                            PriceUpdateDetails.builder()
+                                    .hotelId(hotel.getId())
+                                    .roomsId(rooms.getId())
+                                    .priceVersion(rooms.getPriceVersion())
+                                    .priceDtoList(rooms.getPriceList().stream()
+                                            .map(price -> PriceUpdateDetails.PriceDto.builder()
+                                                    .priceId(price.getId())
+                                                    .date(price.getDate())
+                                                    .priceInCents(price.getPriceInCents())
+                                                    .build())
+                                            .toList())
+                                    .build()
+                    );
                 }
-                priceUpdateDetailsMap.put(hotelId, hotelPriceUpdateDetailsMap);
+
+                datesUpdateDetailsMap.put(hotel.getId(), DatesUpdateDetails.builder()
+                                .hotelId(hotel.getId())
+                                .datesVersions(datesVersions)
+                                .datesMap(datesDtoMap)
+                                .build());
+                priceUpdateDetailsMap.put(hotel.getId(), priceUpdateDetailsList);
             }
+
+            hotelRepository.saveAll(hotels);
+//
+//            // Map entities to generate Kafka message
+//            Map<Long, List<Dates>> roomUpdatedDatesMap = new HashMap<>();
+//            for (Dates datesAfterUpdate : updatedDates) {
+//                Long roomId = datesAfterUpdate.getRoom().getId();
+//                List<Dates> roomDatesToUpdate = datesToUpdateMap.getOrDefault(roomId, null);
+//                List<Dates> roomUpdatedDates = roomUpdatedDatesMap.getOrDefault(roomId, new ArrayList<>());
+//                if (roomDatesToUpdate != null) {
+//                    // there will be at most two dates in the roomDatesToUpdate list
+//                    for (Dates datesBeforeUpdate : roomDatesToUpdate) {
+//                        if (datesBeforeUpdate.getStartDate().isEqual(datesAfterUpdate.getStartDate())) {
+//                            roomUpdatedDates.add(datesAfterUpdate);
+//                        }
+//                    }
+//                }
+//                roomUpdatedDatesMap.put(roomId, roomUpdatedDates);
+//            }
+//
+//            Map<Integer, List<Price>> roomsUpdatedPriceMap = new HashMap<>();
+//            for (Price price: updatedPrices){
+//                Integer roomsId = price.getRooms().getId();
+//                List<Price> roomsUpdatedPrice = roomsUpdatedPriceMap.getOrDefault(roomsId, new ArrayList<>());
+//                roomsUpdatedPrice.add(price);
+//                roomsUpdatedPriceMap.put(roomsId, roomsUpdatedPrice);
+//            }
+//
+//            Map<Integer, DatesUpdateDetails> datesUpdateDetailsMap = new HashMap<>();
+//            Map<Integer, Map<Integer, List<PriceDto>>> priceUpdateDetailsMap = new HashMap<>();
+////            for (Map.Entry<Integer, List<Rooms>> entry : roomsMap.entrySet()) {
+//            for (Hotel hotel: hotels){
+//                Integer hotelId = hotel.getId();
+//
+//                // Map dates
+//                Map<Long, Map<Long, DatesUpdateDetails.DatesDto>> EsDatesToUpdate = new HashMap<>();
+//                Map<Long, Set<Long>> EsDatesToDelete = new HashMap<>();
+//                for (Rooms rooms : hotel.getRoomsSet()) {
+//                    for (Room room : rooms.getRoomSet()) {
+//                        Long roomId = room.getId();
+//                        List<Dates> roomUpdatedDates = roomUpdatedDatesMap.getOrDefault(roomId, null);
+//                        if (roomUpdatedDates != null) {
+//                            Map<Long, DatesUpdateDetails.DatesDto> EsRoomDatesToUpdateMap = new HashMap<>();
+//                            for (Dates dates : roomUpdatedDates) {
+//                                EsRoomDatesToUpdateMap.put(dates.getId(), DatesUpdateDetails.DatesDto.builder()
+//                                        .startDate(dates.getStartDate())
+//                                        .endDate(dates.getEndDate())
+//                                        .build());
+//                            }
+//                            EsDatesToUpdate.put(roomId, EsRoomDatesToUpdateMap);
+//                        }
+//                        List<Dates> roomDeletedDates = datesToDeleteMap.getOrDefault(roomId, null);
+//                        if (roomDeletedDates != null) {
+//                            EsDatesToDelete.put(roomId, roomDeletedDates.stream().map(Dates::getId).collect(Collectors.toSet()));
+//                        }
+//                    }
+//                }
+//                DatesUpdateDetails datesUpdateDetails = datesService.getDatesUpdateDetailsWithOutVersion(hotelId, datesToUpdate, datesToDelete);
+//                datesUpdateDetailsMap.put(hotelId, datesUpdateDetails);
+////                System.out.println(datesUpdateDetailsMap);
+//
+//                // Map prices
+//                Map<Integer, List<PriceDto>> hotelPriceUpdateDetailsMap = new HashMap<>();
+//                for (Rooms rooms: hotel.getRoomsSet()){
+//                    Integer roomsId = rooms.getId();
+//                    List<Price> roomsUpdatedPrice = roomsUpdatedPriceMap.getOrDefault(roomsId, null);
+//                    if (roomsUpdatedPrice != null) {
+//                        hotelPriceUpdateDetailsMap.put(roomsId,
+//                                roomsUpdatedPrice.stream().map(price -> PriceDto.builder()
+//                                        .priceId(price.getId())
+//                                        .date(price.getDate())
+//                                        .priceInCents(price.getPriceInCents())
+//                                        .build()).toList()
+//                        );
+//                    }
+//                }
+//                priceUpdateDetailsMap.put(hotelId, hotelPriceUpdateDetailsMap);
+//            }
 
 
             HotelsNewDayDetails hotelsNewDayDetails = HotelsNewDayDetails.builder()
                     .startId(hotelStartId)
                     .endId(hotelEndId)
-                    .hotelVersionMap(hotelVersions)
                     .datesUpdateDetailsMap(datesUpdateDetailsMap)
                     .priceUpdateDetailsMap(priceUpdateDetailsMap)
                     .build();

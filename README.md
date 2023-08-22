@@ -31,13 +31,11 @@
 - Compile and deployment: Maven, Docker, Kubernetes
 - Frontend: React, HTML, CSS
 
-
 ## System
 
 <p align="center">
-  <img src="_design/images/hotel-booking-system.drawio.png" width="900" title="hover text">
+  <img src="_images/design/hotel-booking-system.drawio.png" width="900" title="hover text">
 </p>
-
 
 1. apigw: Spring Cloud API Gateway to route and load-balance requests 
 2. eureka-server: Spring Eureka Server
@@ -53,6 +51,13 @@
 
 For system design specifications, please refer to the [design documentation](https://github.com/dlim2012/hotel-booking-system/blob/main/Design%20doc.pdf).
 
+## Frontend
+
+Screenshots:
+[home](https://github.com/dlim2012/hotel-booking-system/blob/main/_images/screenshots/home.png), 
+[search](https://github.com/dlim2012/hotel-booking-system/blob/main/_images/screenshots/search.png),
+[hotel](https://github.com/dlim2012/hotel-booking-system/blob/main/_images/screenshots/hotel.png), 
+[dates](https://github.com/dlim2012/hotel-booking-system/blob/main/_images/screenshots/dates.png)
 
 ## To build run this project
 

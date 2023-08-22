@@ -2,6 +2,7 @@ package com.dlim2012.searchconsumer.controller;
 
 
 //import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
+
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDetails;
@@ -17,7 +18,6 @@ import com.dlim2012.searchconsumer.service.IndexingService;
 import com.dlim2012.searchconsumer.service.PriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 

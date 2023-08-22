@@ -1,6 +1,5 @@
 package com.dlim2012.clients.kafka.dto.search.dates;
 
-import com.dlim2012.clients.mysql_booking.entity.Dates;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class DatesUpdateDetails {
     Integer hotelId;
-    Long hotelVersion;
+    Map<Long, Long> datesVersions;
 //    Map<Integer, Long> roomsVersions; // { roomsID: room version }
 //    Map<Long, Map<Long, DatesDto>> datesToUpdate; // { room ID : { dates ID: dates } }
 //    Map<Long, Set<Long>> datesIdsToDelete; // { room ID: { dates ID } }

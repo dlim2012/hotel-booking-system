@@ -27,6 +27,28 @@ public class PriceService {
 
     private final Random random = new Random();
 
+    public void updateHotelPrices(Hotel hotel, PriceUpdateDetails priceUpdateDetails) {
+
+        for (Rooms rooms: hotel.getRooms()){
+            if (rooms.getRoomsId().equals(priceUpdateDetails.getRoomsId())){
+                if (rooms.getPriceVersion() <= priceUpdateDetails.getPriceVersion()){
+                    rooms.setPriceVersion(priceUpdateDetails.getPriceVersion());
+                    rooms.setPrice(priceUpdateDetails.getPriceDtoList().stream()
+                            .map(priceDto -> Price.builder()
+                                    .id(priceDto.getPriceId().toString())
+                                    .date(elasticSearchUtils.toInteger(priceDto.getDate()))
+                                    .roomsId(priceUpdateDetails.getRoomsId())
+                                    .priceInCents(priceDto.getPriceInCents())
+                                    .build()
+                            )
+                            .toList()
+                    );
+                }
+            }
+        }
+
+
+    }
 
 
     public void updatePrices(PriceUpdateDetails details) throws InterruptedException {
@@ -37,29 +59,12 @@ public class PriceService {
                 Hotel hotel = hotelRepository.findById(details.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
 
-                if (hotel.getVersion() > details.getVersion()){
-                    return;
-                }
 
                 if (hotel.getSeqNoPrimaryTerm() == null){
                     throw new ResourceNotFoundException("Hotel found without SeqNoPrimaryTerm");
                 }
 
-                if (hotel.getRooms() != null){
-                    for (Rooms rooms: hotel.getRooms()){
-                        if (rooms.getRoomsId().equals(details.getRoomsId())){
-                            rooms.setPrice(details.getPriceDtoList().stream()
-                                    .map(priceDto -> Price.builder()
-                                            .id(priceDto.getPriceId().toString())
-                                            .date(elasticSearchUtils.toInteger(priceDto.getDate()))
-                                            .priceInCents(priceDto.getPriceInCents())
-                                            .build())
-                                    .toList()
-                            );
-                        }
-                    }
-                }
-
+                updateHotelPrices(hotel, details);
                 hotelRepository.save(hotel);
                 return;
             } catch (OptimisticLockingFailureException | ResourceNotFoundException e){

@@ -1,7 +1,6 @@
 package com.dlim2012.notification.config;
 
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
-import com.dlim2012.clients.kafka.dto.notification.BookingNotification;
 import com.dlim2012.clients.kafka.dto.notification.PaymentNotification;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;

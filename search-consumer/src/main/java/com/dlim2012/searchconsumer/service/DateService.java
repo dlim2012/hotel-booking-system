@@ -91,7 +91,7 @@ public class DateService {
         rooms.setRoom(details.getRoomDto().stream()
                 .map(room -> Room.builder()
                         .roomId(room.getRoomId().toString())
-//                        .version(room.getVersion())
+                        .datesVersion(room.getDatesVersion())
                         .dates(room.getDatesDtoList().stream()
                                 .map(datesDto -> Dates.builder()
                                         .id(datesDto.getDatesId().toString())
@@ -128,6 +128,7 @@ public class DateService {
         rooms.setNumBeds(details.getBedDto().stream()
                 .map(RoomsSearchDetails.BedInfoDto::getQuantity).reduce(0, Integer::sum));
         rooms.setBreakfast(breakfast);
+        rooms.setPriceVersion(details.getPriceVersion());
         return rooms;
     }
 
@@ -144,11 +145,7 @@ public class DateService {
                 Hotel hotel = hotelRepository.findById(details.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
 
-                if (hotel.getVersion() > details.getVersion()){
-                    TimeUnit.MILLISECONDS.sleep((long) (random.nextDouble() * 10));
-                    continue;
-                }
-                hotel.setVersion(details.getVersion());
+
 
                 if (hotel.getSeqNoPrimaryTerm() == null){
                     throw new ResourceNotFoundException("Hotel {} found without SeqNoPrimaryTerm");
@@ -161,6 +158,9 @@ public class DateService {
                     List<Rooms> roomsList = hotel.getRooms();
                     for (Rooms rooms: roomsList){
                         if (rooms.getRoomsId().equals(details.getRoomsId())){
+                            if (rooms.getPriceVersion() > details.getPriceVersion()){
+                                newRooms.setPrice(rooms.getPrice());
+                            }
                             continue;
                         }
                         newRoomsList.add(rooms);
@@ -194,11 +194,6 @@ public class DateService {
                 Hotel hotel = hotelRepository.findById(newVersionDetails.getHotelId().toString())
                         .orElseThrow(() -> new ResourceNotFoundException("Hotel {} not found while updating."));
 
-                if (hotel.getVersion() > newVersionDetails.getVersion()){
-                    return;
-                }
-                hotel.setVersion(newVersionDetails.getVersion());
-
                 if (hotel.getSeqNoPrimaryTerm() == null){
                     throw new ResourceNotFoundException("Hotel {} found without SeqNoPrimaryTerm");
                 }
@@ -210,15 +205,28 @@ public class DateService {
                         if (rooms.getRoomsId().equals(newVersionDetails.getRoomsId())){
                             rooms.setFreeCancellationDays(newVersionDetails.getFreeCancellationDays());
                             rooms.setNoPrepaymentDays(rooms.getNoPrepaymentDays());
-                            rooms.setRoom(newVersionDetails.getRoomDto().stream()
-                                    .map(room -> Room.builder()
-                                                    .roomId(room.getRoomId().toString())
-                                                    .dates(room.getDatesDtoList().stream()
+
+                            Map<Long, Room> roomMap = new HashMap<>();
+                            for (Room room: rooms.getRoom()){
+                                roomMap.put(Long.valueOf(room.getRoomId()), room);
+                            }
+
+                            List<Room> roomList = new ArrayList<>();
+                            for (RoomsSearchVersion.RoomDto roomDto: newVersionDetails.getRoomDto()){
+                                Room prevRoom = roomMap.getOrDefault(roomDto.getRoomId(), null);
+                                if (prevRoom != null && prevRoom.getDatesVersion() > roomDto.getDatesVersion()){
+                                    roomList.add(prevRoom);
+                                } else {
+                                    roomList.add(
+                                            Room.builder()
+                                                    .roomId(roomDto.getRoomId().toString())
+                                                    .datesVersion(roomDto.getDatesVersion())
+                                                    .dates(roomDto.getDatesDtoList().stream()
                                                             .map(datesDto -> Dates.builder()
                                                                     .id(datesDto.getDatesId().toString())
                                                                     .hotelId(newVersionDetails.getHotelId())
                                                                     .roomsId(newVersionDetails.getRoomsId())
-                                                                    .roomId(room.getRoomId())
+                                                                    .roomId(roomDto.getRoomId())
                                                                     .maxAdult(rooms.getMaxAdult())
                                                                     .maxChild(rooms.getMaxChild())
                                                                     .numBed(rooms.getNumBeds())
@@ -230,8 +238,37 @@ public class DateService {
                                                             .collect(Collectors.toSet())
                                                     )
                                                     .build()
-                                    )
-                                    .toList());
+                                    );
+                                }
+                            }
+                            rooms.setRoom(roomList);
+//                            rooms.setRoom(newVersionDetails.getRoomDto().stream()
+//                                    .map(room -> Room.builder()
+//                                                    .roomId(room.getRoomId().toString())
+//                                                    .datesVersion(room.getDatesVersion())
+//                                                    .dates(room.getDatesDtoList().stream()
+//                                                            .map(datesDto -> Dates.builder()
+//                                                                    .id(datesDto.getDatesId().toString())
+//                                                                    .hotelId(newVersionDetails.getHotelId())
+//                                                                    .roomsId(newVersionDetails.getRoomsId())
+//                                                                    .roomId(room.getRoomId())
+//                                                                    .maxAdult(rooms.getMaxAdult())
+//                                                                    .maxChild(rooms.getMaxChild())
+//                                                                    .numBed(rooms.getNumBeds())
+//                                                                    .dateRange(Dates.DateRange.builder()
+//                                                                            .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
+//                                                                            .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
+//                                                                            .build())
+//                                                                    .build())
+//                                                            .collect(Collectors.toSet())
+//                                                    )
+//                                                    .build()
+//                                    )
+//                                    .toList());
+                            if (rooms.getPriceVersion() > newVersionDetails.getPriceVersion()){
+                                continue;
+                            }
+                            rooms.setPriceVersion(newVersionDetails.getPriceVersion());
                             rooms.setPrice(newVersionDetails.getPriceDto().stream()
                                     .map(priceDto -> Price.builder()
                                             .id(priceDto.getPriceId().toString())
@@ -302,13 +339,6 @@ public class DateService {
         }
 
 
-        if (hotel.getVersion() > details.getHotelVersion()){
-            log.error("Out-dated version provided.");
-            return;
-        }
-
-        hotel.setVersion(details.getHotelVersion());
-
         if (hotel.getSeqNoPrimaryTerm() == null){
             log.error("Hotel {} found without SeqNoPrimaryTerm", hotel.getId());
         }
@@ -317,10 +347,17 @@ public class DateService {
         for (Rooms rooms: hotel.getRooms()){
             for (Room room: rooms.getRoom()){
                 Long roomId = Long.valueOf(room.getRoomId());
+                Long datesVersion = details.getDatesVersions().getOrDefault(Long.valueOf(room.getRoomId()), null);
+                if (datesVersion == null || datesVersion < room.getDatesVersion()){
+                    continue;
+                }
+                room.setDatesVersion(datesVersion);
+
                 List<DatesUpdateDetails.DatesDto> datesList = details.getDatesMap().getOrDefault(roomId, null);
                 if (datesList == null){
                     continue;
                 }
+
                 room.setDates(datesList.stream().map(
                         datesDto -> Dates.builder()
                                 .id(datesDto.getId().toString())

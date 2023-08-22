@@ -9,7 +9,7 @@ import com.dlim2012.clients.entity.BookingStatus;
 import com.dlim2012.clients.entity.UserRole;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.mysql_booking.entity.Booking;
-import com.dlim2012.clients.mysql_booking.repository.*;
+import com.dlim2012.clients.mysql_booking.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

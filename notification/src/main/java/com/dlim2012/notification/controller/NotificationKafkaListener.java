@@ -1,6 +1,5 @@
 package com.dlim2012.notification.controller;
 
-import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDetails;
 import com.dlim2012.clients.kafka.dto.notification.BookingNotification;
 import com.dlim2012.clients.kafka.dto.notification.PaymentNotification;
 import com.dlim2012.notification.service.NotificationService;

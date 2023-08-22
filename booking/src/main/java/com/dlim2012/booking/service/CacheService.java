@@ -3,10 +3,8 @@ package com.dlim2012.booking.service;
 import com.dlim2012.clients.mysql_booking.entity.Booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Cache;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import static com.dlim2012.clients.cache.CacheConfig.bookingIdKeyName;

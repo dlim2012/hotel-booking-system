@@ -1,7 +1,6 @@
 package com.dlim2012.search;
 
 import com.dlim2012.clients.advice.ApplicationExceptionHandler;
-import com.dlim2012.clients.elasticsearch.config.ElasticSearchClientConfiguration;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

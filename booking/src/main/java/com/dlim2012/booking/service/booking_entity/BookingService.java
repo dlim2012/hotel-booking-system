@@ -134,7 +134,7 @@ public class BookingService {
             // release lock
             datesRepository.saveAll(datesSet);
             // update data in elasticsearch for possible inconsistencies
-            roomsEntityService.roomsVersionUp(hotelId, invalidRoomsId, roomsMap);
+            roomsEntityService.roomsVersionUp(hotelId, invalidRoomsId);
             return null;
         }
 

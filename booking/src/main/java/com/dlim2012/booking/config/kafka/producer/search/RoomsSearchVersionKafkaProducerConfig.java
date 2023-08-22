@@ -1,6 +1,5 @@
 package com.dlim2012.booking.config.kafka.producer.search;
 
-import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchVersion;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;

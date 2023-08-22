@@ -36,6 +36,7 @@ public class DatesService {
     private final RoomsEntityService roomsEntityService;
     private final CacheService cacheService;
 
+    private final HotelRepository hotelRepository;
     private final RoomsRepository roomsRepository;
     private final DatesRepository datesRepository;
     private final BookingRepository bookingRepository;
@@ -748,6 +749,8 @@ public class DatesService {
             List<Dates> updatedDates,
             List<Dates> deletedDates
     ){
+
+
         Set<Long> roomIds = new HashSet<>();
         for (Dates dates: updatedDates){
             roomIds.add(dates.getRoom().getId());
@@ -757,6 +760,20 @@ public class DatesService {
         }
 
         List<Dates> datesList = datesRepository.findByRoomIds(roomIds);
+
+
+        Hotel hotel = hotelRepository.findByIdWithLock(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+
+        Map<Long, Long> datesVersions = new HashMap<>();
+        for (Rooms rooms: hotel.getRoomsSet()){
+            for (Room room: rooms.getRoomSet()){
+                if (roomIds.contains(room.getId())){
+                    room.setDatesVersion(room.getDatesVersion()+1);
+                    datesVersions.put(room.getId(), room.getDatesVersion());
+                }
+            }
+        }
 
         Map<Long, List<DatesUpdateDetails.DatesDto>> datesMap = new HashMap<>();
         for (Dates dates: datesList){
@@ -772,6 +789,7 @@ public class DatesService {
 
         return DatesUpdateDetails.builder()
                 .hotelId(hotelId)
+                .datesVersions(datesVersions)
                 .datesMap(datesMap)
                 .build();
 
@@ -801,7 +819,7 @@ public class DatesService {
                 updatedDates,
                 datesToDelete
         );
-        datesUpdateDetails.setHotelVersion(hotelEntityService.getNewHotelVersion(hotelId));
+
         roomsSearchDatesUpdateKafkaTemplate.send("rooms-search-dates-update", datesUpdateDetails);
 
 

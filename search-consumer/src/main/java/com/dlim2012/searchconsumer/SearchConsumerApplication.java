@@ -2,7 +2,6 @@ package com.dlim2012.searchconsumer;
 
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchClientConfiguration;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
-//import com.dlim2012.clients.elasticsearch.service.ElasticSearchQuery;
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
 import com.dlim2012.clients.utils.PriceService;
 import org.springframework.boot.SpringApplication;

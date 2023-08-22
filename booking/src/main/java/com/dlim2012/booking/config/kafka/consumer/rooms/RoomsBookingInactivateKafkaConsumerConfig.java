@@ -1,7 +1,6 @@
 package com.dlim2012.booking.config.kafka.consumer.rooms;
 
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
-import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;

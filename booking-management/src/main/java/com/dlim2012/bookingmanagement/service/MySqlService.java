@@ -3,7 +3,6 @@ package com.dlim2012.bookingmanagement.service;
 import com.dlim2012.clients.entity.BookingMainStatus;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.mysql_booking.entity.Booking;
-import com.dlim2012.clients.mysql_booking.entity.BookingRoom;
 import com.dlim2012.clients.mysql_booking.entity.Dates;
 import com.dlim2012.clients.mysql_booking.entity.Hotel;
 import com.dlim2012.clients.mysql_booking.repository.BookingRepository;

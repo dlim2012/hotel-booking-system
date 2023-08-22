@@ -176,6 +176,9 @@ const SearchList = () => {
               return 0;
             }
           })
+            if (list.length > 10){
+                list = list.slice(0, 10)
+            }
           var newMaxPriceRange = [Math.log(data.minPrice / 1.1), Math.log(data.maxPrice * 1.1)]
           console.log(newMaxPriceRange)
           setPriceMaxRange(newMaxPriceRange)

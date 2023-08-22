@@ -3,14 +3,12 @@ package com.dlim2012.searchconsumer.service;
 import com.dlim2012.clients.elasticsearch.config.ElasticSearchUtils;
 import com.dlim2012.clients.elasticsearch.document.Facility;
 import com.dlim2012.clients.elasticsearch.document.Hotel;
-import com.dlim2012.clients.elasticsearch.document.Price;
-import com.dlim2012.clients.elasticsearch.document.Rooms;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDeleteRequest;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelSearchDetails;
 import com.dlim2012.clients.kafka.dto.search.hotel.HotelsNewDayDetails;
-import com.dlim2012.clients.kafka.dto.search.price.PriceDto;
+import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
 import com.dlim2012.searchconsumer.repository.HotelRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class IndexingService {
 
     private final DateService dateService;
+    private final PriceService priceService;
 
     private final HotelRepository hotelRepository;
 
@@ -59,7 +61,6 @@ public class IndexingService {
 
             hotel.setRooms(new ArrayList<>());
             hotel.setGeoPoint(new GeoPoint(hotelDetails.getLatitude(), hotelDetails.getLongitude()));
-            hotel.setVersion(0L);
 
             hotel = hotelRepository.save(hotel);
 
@@ -123,60 +124,27 @@ public class IndexingService {
         for (int i=0; i<NUM_RETRY_UPDATE; i++){
             try{
                 for (Hotel hotel: hotelList){
-                    Long newVersion = request.getHotelVersionMap().getOrDefault(Integer.valueOf(hotel.getId()), null);
-                    if (newVersion == null){
-                        log.error("Hotel {} new version not found.", hotel.getId());
-                        continue;
-                    }
-
-                    if (hotel.getVersion() > newVersion){
-                        continue;
-                    }
-                    hotel.setVersion(newVersion);
 
                     if (hotel.getSeqNoPrimaryTerm() == null){
                         log.error("Hotel {} found without SeqNoPrimaryTerm", hotel.getId());
                     }
 
+                    Integer hotelId = Integer.valueOf(hotel.getId());
+
                     DatesUpdateDetails details = request
                             .getDatesUpdateDetailsMap()
-                            .getOrDefault(Integer.valueOf(hotel.getId()), null);
+                            .getOrDefault(hotelId, null);
                     if (details != null){
                         dateService.updateHotelDates(hotel, details);
                     }
 
-
-                    Map<Integer, List<PriceDto>> hotelPriceUpdateDetailsMap = request
-                            .getPriceUpdateDetailsMap()
-                            .getOrDefault(Integer.valueOf(hotel.getId()), null);
-
-                    for (Rooms rooms: hotel.getRooms()) {
-                        List<Price> newPrice = new ArrayList<>();
-                        Set<Integer> dates = new HashSet<>();
-                        if (hotelPriceUpdateDetailsMap != null){
-                            List<PriceDto> priceDtoList = hotelPriceUpdateDetailsMap.getOrDefault(rooms.getRoomsId(), null);
-                            if (priceDtoList != null) {
-                                newPrice.addAll(priceDtoList.stream()
-                                        .map(priceDto -> Price.builder()
-                                                .id(priceDto.getPriceId().toString())
-                                                .date(elasticSearchUtils.toInteger(priceDto.getDate()))
-                                                .priceInCents(priceDto.getPriceInCents())
-                                                .build())
-                                        .toList()
-                                );
-                                dates.addAll(priceDtoList.stream().map(
-                                        price->elasticSearchUtils.toInteger(price.getDate())).toList());
-                            }
+                    List<PriceUpdateDetails> priceUpdateDetailsList = request.getPriceUpdateDetailsMap().getOrDefault(hotelId, null);
+                    if (priceUpdateDetailsList == null){
+                        for (PriceUpdateDetails priceUpdateDetails: priceUpdateDetailsList) {
+                            priceService.updateHotelPrices(hotel, priceUpdateDetails);
                         }
-                        for (Price price: rooms.getPrice()){
-                            if (price.getDate() >= today && !dates.contains(price.getDate())){
-                                newPrice.add(price);
-                            }
-                        }
-                        rooms.setPrice(newPrice);
                     }
 
-                    System.out.println(hotel.getSeqNoPrimaryTerm());
 
                 }
                 hotelRepository.saveAll(hotelList);

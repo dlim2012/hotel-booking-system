@@ -1,7 +1,6 @@
 package com.dlim2012.searchconsumer.config.kafka.consumer.rooms;
 
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
-import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchDetails;
 import com.dlim2012.clients.kafka.dto.search.rooms.RoomsSearchVersion;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
