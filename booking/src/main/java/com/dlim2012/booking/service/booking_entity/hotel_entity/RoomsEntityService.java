@@ -31,6 +31,7 @@ public class RoomsEntityService {
     private final PriceService priceService;
     private final HotelEntityService hotelEntityService;
 
+    private final HotelRepository hotelRepository;
     private final RoomsRepository roomsRepository;
     private final RoomRepository roomRepository;
     private final DatesRepository datesRepository;
@@ -77,6 +78,7 @@ public class RoomsEntityService {
                 .noPrepaymentDays(details.getNoPrepaymentDays())
                 .datesReserved(0)
                 .datesBooked(0)
+                .priceVersion(0L)
                 .build();
         roomsRepository.save(rooms);
 
@@ -87,6 +89,7 @@ public class RoomsEntityService {
             Room room = Room.builder()
                     .rooms(entityManager.getReference(Rooms.class, details.getRoomsId()))
                     .roomNumber(i+1)
+                    .datesVersion(0L)
                     .build();
             roomList.add(room);
         }
@@ -141,6 +144,7 @@ public class RoomsEntityService {
         rooms.setAvailableFrom(details.getAvailableFrom());
         rooms.setAvailableUntil(details.getAvailableUntil());
         rooms.setDatesAddedUntil(addedUntil);
+        rooms.setPriceVersion(rooms.getPriceVersion()+1);
 
         // gather rooms to delete
         if (prevRooms.getQuantity() > details.getQuantity()) {
@@ -353,6 +357,12 @@ public class RoomsEntityService {
 
         Rooms rooms = roomsRepository.findById(details.getRoomsId())
                 .orElseThrow(() -> new RuntimeException("Rooms not found."));
+        rooms.setPriceVersion(rooms.getPriceVersion()+1);
+        roomsRepository.save(rooms);
+        for (Room room: rooms.getRoomSet()){
+            room.setDatesVersion(room.getDatesVersion()+1);
+        }
+
         List<Price> priceList = priceRepository.findByRoomsId(details.getRoomsId());
         List<Dates> datesList = datesRepository.findByRoomsId(details.getRoomsId());
 
@@ -370,7 +380,7 @@ public class RoomsEntityService {
         RoomsSearchDetails roomsSearchDetails = RoomsSearchDetails.builder()
                 .roomsId(details.getRoomsId())
                 .hotelId(details.getHotelId())
-                .version(hotelEntityService.getNewHotelVersion(details.getHotelId()))
+                .priceVersion(rooms.getPriceVersion())
                 .displayName(details.getDisplayName())
                 .maxAdult(details.getMaxAdult())
                 .maxChild(details.getMaxChild())
@@ -402,11 +412,13 @@ public class RoomsEntityService {
                                                 .map(dates -> modelMapper.map(dates, RoomsSearchDetails.DatesDto.class))
                                                 .toList()
                                 )
+                                .datesVersion(0L)
                                 .build())
                         .toList())
                 .priceDto(priceList.stream()
                         .map(price -> modelMapper.map(price, RoomsSearchDetails.PriceDto.class))
                         .toList())
+                .priceVersion(0L)
                 .build();
 
         roomsSearchKafkaTemplate.send("rooms-search", roomsSearchDetails);
@@ -503,8 +515,13 @@ public class RoomsEntityService {
         roomsRepository.deleteById(request.getRoomsId());
     }
 
-    public void roomsVersionUp(Integer hotelId, Set<Integer> roomsIds, Map<Integer, Rooms> roomsMap){
-        Long hotelVersion = hotelEntityService.getNewHotelVersion(hotelId);
+    public void roomsVersionUp(Integer hotelId, Set<Integer> roomsIds){
+        Hotel hotel = hotelRepository.findByIdWithLock(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        Map<Integer, Rooms> roomsMap = new HashMap<>();
+        for (Rooms rooms: hotel.getRoomsSet()){
+            roomsMap.put(rooms.getId(), rooms);
+        }
 
         List<Dates> datesList = datesRepository.findByHotelIdWithLock(hotelId);
         Map<Long, List<Dates>> roomDatesMap = new HashMap<>();
@@ -522,11 +539,12 @@ public class RoomsEntityService {
             if (rooms == null){
                 log.error("Rooms not found during roomsVersionUp. (hotel {}, rooms {})", hotelId, roomsId);
             }
+            rooms.setPriceVersion(rooms.getPriceVersion()+1);
             roomsToUpdate.add(rooms);
             RoomsSearchVersion roomsSearchVersion = RoomsSearchVersion.builder()
                     .roomsId(roomsId)
                     .hotelId(hotelId)
-                    .version(hotelVersion)
+                    .priceVersion(rooms.getPriceVersion())
                     .freeCancellationDays(rooms.getFreeCancellationDays())
                     .noPrepaymentDays(rooms.getNoPrepaymentDays())
                     .priceDto(priceRepository.findByRoomsId(roomsId)
@@ -541,6 +559,7 @@ public class RoomsEntityService {
                     .roomDto(rooms.getRoomSet().stream()
                             .map(room -> RoomsSearchVersion.RoomDto.builder()
                                     .roomId(room.getId())
+                                    .datesVersion(room.getDatesVersion())
                                     .datesDtoList(
                                             roomDatesMap.get(room.getId()).stream()
                                                     .map(dates -> modelMapper.map(dates, RoomsSearchDetails.DatesDto.class))

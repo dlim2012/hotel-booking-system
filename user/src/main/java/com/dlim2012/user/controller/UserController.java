@@ -6,6 +6,7 @@ import com.dlim2012.user.dto.AuthenticationToken;
 import com.dlim2012.user.dto.UserRegisterRequest;
 import com.dlim2012.user.dto.profile.NewPasswordRequest;
 import com.dlim2012.user.dto.profile.NewPasswordResponse;
+import com.dlim2012.user.dto.profile.UserProfileEditResponse;
 import com.dlim2012.user.dto.profile.UserProfileItem;
 import com.dlim2012.user.service.TokenService;
 import com.dlim2012.user.service.UserService;
@@ -75,18 +76,17 @@ public class UserController {
     public UserProfileItem getProfile(){
         log.info("Get profile requested.");
         Jwt jwt = jwtService.getJwt();
-        String userEmail = jwt.getSubject();
+//        String userEmail = jwt.getSubject();
         Integer userId = jwtService.getId(jwt);
-        return userService.getProfile(userId, userEmail);
+        return userService.getProfile(userId);
     }
 
     @PostMapping("/profile/edit")
-    public void editProfile(@RequestBody UserProfileItem userProfileItem){
+    public UserProfileEditResponse editProfile(@RequestBody UserProfileItem userProfileItem){
         Integer userId = jwtService.getId();
         log.info("Profile edit request from user '{}'", userId);
 
-
-        userService.editProfile(userProfileItem, userId);
+        return userService.editProfile(userProfileItem, userId);
     }
 
     @DeleteMapping("/delete")

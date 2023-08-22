@@ -9,6 +9,7 @@ import com.dlim2012.user.dto.UserContactInfoResponse;
 import com.dlim2012.user.dto.UserRegisterRequest;
 import com.dlim2012.user.dto.profile.NewPasswordRequest;
 import com.dlim2012.user.dto.profile.NewPasswordResponse;
+import com.dlim2012.user.dto.profile.UserProfileEditResponse;
 import com.dlim2012.user.dto.profile.UserProfileItem;
 import com.dlim2012.user.entity.Gender;
 import com.dlim2012.user.entity.User;
@@ -78,7 +79,7 @@ public class UserService {
         return tokenService.generateToken(user);
     }
 
-    public void editProfile(UserProfileItem userProfileItem, Integer userId) {
+    public UserProfileEditResponse editProfile(UserProfileItem userProfileItem, Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         log.info(userProfileItem.toString());
@@ -91,7 +92,12 @@ public class UserService {
         if (userProfileItem.getDisplayName() != null){
             user.setDisplayName(userProfileItem.getDisplayName());
         }
-        if (userProfileItem.getEmail() != null){
+        if (userProfileItem.getEmail() != null && !userProfileItem.getEmail().equals(user.getEmail())){
+            if (userRepository.existsByEmail(userProfileItem.getEmail())){
+                return UserProfileEditResponse.builder()
+                        .message("Email exists.")
+                        .build();
+            }
             user.setEmail(userProfileItem.getEmail());
         }
         if (userProfileItem.getPhoneNumber() != null){
@@ -114,11 +120,12 @@ public class UserService {
             user.setGender(Gender.valueOf(userProfileItem.getGender()));
         }
         userRepository.save(user);
-        System.out.println(userRepository.findById(userId));
+//        System.out.println(userRepository.findById(userId));
+        return UserProfileEditResponse.builder().message("").build();
     }
 
-    public UserProfileItem getProfile(Integer userId, String userEmail) {
-        User user = userRepository.findByIdAndEmail(userId, userEmail)
+    public UserProfileItem getProfile(Integer userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         return UserProfileItem.builder()
                 .firstName(user.getFirstName())

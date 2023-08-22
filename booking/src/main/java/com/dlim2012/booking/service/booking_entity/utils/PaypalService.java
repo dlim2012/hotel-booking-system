@@ -1,12 +1,10 @@
 package com.dlim2012.booking.service.booking_entity.utils;
 
-import com.dlim2012.clients.kafka.dto.notification.PaymentNotification;
 import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

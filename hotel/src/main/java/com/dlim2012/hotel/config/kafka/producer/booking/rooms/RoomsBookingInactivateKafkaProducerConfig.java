@@ -1,6 +1,5 @@
 package com.dlim2012.hotel.config.kafka.producer.booking.rooms;
 
-import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;

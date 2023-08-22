@@ -1,7 +1,7 @@
 package com.dlim2012.clients.kafka.dto.search.hotel;
 
 import com.dlim2012.clients.kafka.dto.search.dates.DatesUpdateDetails;
-import com.dlim2012.clients.kafka.dto.search.price.PriceDto;
+import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +18,8 @@ public class HotelsNewDayDetails {
 
     Integer startId;
     Integer endId;
-    Map<Integer, Long> hotelVersionMap;
     Map<Integer, DatesUpdateDetails> datesUpdateDetailsMap; // { hotelId: datesUpdateDetails }
-    Map<Integer, Map<Integer, List<PriceDto>>> priceUpdateDetailsMap; // { hotelId: { roomsId: [price] } }
+    Map<Integer, List<PriceUpdateDetails>> priceUpdateDetailsMap; // { hotelId: { roomsId: [price] } }
 //    Map<Integer, >
 
 //

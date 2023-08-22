@@ -1,6 +1,5 @@
 package com.dlim2012.user.config.kafka;
 
-import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.user.DeleteUserRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;

@@ -3,10 +3,11 @@ package com.dlim2012.booking.service.booking_entity;
 import com.dlim2012.booking.dto.profile.RoomsPriceItem;
 import com.dlim2012.booking.service.booking_entity.hotel_entity.HotelEntityService;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
-import com.dlim2012.clients.kafka.dto.search.price.PriceDto;
 import com.dlim2012.clients.kafka.dto.search.price.PriceUpdateDetails;
+import com.dlim2012.clients.mysql_booking.entity.Hotel;
 import com.dlim2012.clients.mysql_booking.entity.Price;
 import com.dlim2012.clients.mysql_booking.entity.Rooms;
+import com.dlim2012.clients.mysql_booking.repository.HotelRepository;
 import com.dlim2012.clients.mysql_booking.repository.PriceRepository;
 import com.dlim2012.clients.mysql_booking.repository.RoomsRepository;
 import jakarta.persistence.EntityManager;
@@ -28,6 +29,7 @@ public class PriceService {
 
     private HotelEntityService hotelEntityService;
 
+    private final HotelRepository hotelRepository;
     private final PriceRepository priceRepository;
     private final RoomsRepository roomsRepository;
 
@@ -133,18 +135,29 @@ public class PriceService {
                         .toList()
         );
 
-        PriceUpdateDetails priceUpdateDetails = PriceUpdateDetails.builder()
-                .hotelId(hotelId)
-                .roomsId(roomsId)
-                .version(hotelEntityService.getNewHotelVersion(hotelId))
-                .priceDtoList(priceList.stream()
-                        .map(price -> PriceDto.builder()
-                                .priceId(price.getId())
-                                .date(price.getDate())
-                                .priceInCents(price.getPriceInCents())
-                                .build()).toList())
-                .build();
-        roomsSearchPriceUpdateKafkaTemplate.send("rooms-search-price-update", priceUpdateDetails);
+
+        Hotel hotel = hotelRepository.findByIdWithLock(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        Long roomsVersion = -1L;
+        for (Rooms rooms: hotel.getRoomsSet()){
+            if (rooms.getId().equals(roomsId)){
+                roomsVersion = rooms.getPriceVersion() + 1;
+                rooms.setPriceVersion(roomsVersion);
+            }
+        }
+
+//        PriceUpdateDetails priceUpdateDetails = PriceUpdateDetails.builder()
+//                .hotelId(hotelId)
+//                .roomsId(roomsId)
+//                .priceVersion(roomsVersion)
+//                .priceDtoList(priceList.stream()
+//                        .map(price -> PriceDto.builder()
+//                                .priceId(price.getId())
+//                                .date(price.getDate())
+//                                .priceInCents(price.getPriceInCents())
+//                                .build()).toList())
+//                .build();
+//        roomsSearchPriceUpdateKafkaTemplate.send("rooms-search-price-update", priceUpdateDetails);
     }
 
 

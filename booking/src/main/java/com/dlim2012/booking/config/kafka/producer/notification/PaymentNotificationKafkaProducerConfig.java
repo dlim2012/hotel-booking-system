@@ -1,6 +1,5 @@
 package com.dlim2012.booking.config.kafka.producer.notification;
 
-import com.dlim2012.clients.kafka.dto.notification.BookingNotification;
 import com.dlim2012.clients.kafka.dto.notification.PaymentNotification;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;

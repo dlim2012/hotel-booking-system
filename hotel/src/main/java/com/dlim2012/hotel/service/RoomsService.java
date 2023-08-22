@@ -2,7 +2,6 @@ package com.dlim2012.hotel.service;
 
 import com.dlim2012.clients.entity.Bed;
 import com.dlim2012.clients.exception.ResourceNotFoundException;
-import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingActivateRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;
@@ -25,7 +24,6 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 

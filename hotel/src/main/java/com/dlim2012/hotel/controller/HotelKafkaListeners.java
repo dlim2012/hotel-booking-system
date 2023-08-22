@@ -1,6 +1,5 @@
 package com.dlim2012.hotel.controller;
 
-import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDetails;
 import com.dlim2012.clients.kafka.dto.user.DeleteUserRequest;
 import com.dlim2012.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;

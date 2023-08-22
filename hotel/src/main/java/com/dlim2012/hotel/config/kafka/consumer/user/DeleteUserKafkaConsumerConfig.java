@@ -1,7 +1,6 @@
 package com.dlim2012.hotel.config.kafka.consumer.user;
 
 import com.dlim2012.clients.kafka.config.KafkaConsumerConfig;
-import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.user.DeleteUserRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;

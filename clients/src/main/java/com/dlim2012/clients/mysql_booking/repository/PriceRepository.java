@@ -34,6 +34,15 @@ public interface PriceRepository  extends JpaRepository<Price, Long> {
     )
     List<Price> findByRoomsId(Integer roomsId);
 
+
+
+    @Query(
+            value = "SELECT p FROM Price p " +
+                    "JOIN Rooms rs on p.rooms = rs " +
+                    "WHERE rs.hotel.id >= ?1 AND rs.hotel.id <= ?2"
+    )
+    List<Price> findByHotelIdRange(int hotelStartId, int hotelEndId);
+
     @Transactional
     @Modifying
     @Query(

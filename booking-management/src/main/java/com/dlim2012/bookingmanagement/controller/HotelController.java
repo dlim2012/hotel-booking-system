@@ -12,7 +12,6 @@ import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelDatesInfoResponse;
 import com.dlim2012.bookingmanagement.dto.hotelInfo.HotelMainInfoResponse;
 import com.dlim2012.bookingmanagement.service.HotelService;
 import com.dlim2012.clients.cassandra.entity.BookingArchiveByHotelId;
-import com.dlim2012.clients.cassandra.entity.BookingArchiveByUserId;
 import com.dlim2012.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

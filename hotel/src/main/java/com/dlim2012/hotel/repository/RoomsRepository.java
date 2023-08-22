@@ -1,6 +1,5 @@
 package com.dlim2012.hotel.repository;
 
-import com.dlim2012.hotel.dto.hotel.profile.RoomsNameItem;
 import com.dlim2012.hotel.entity.Rooms;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

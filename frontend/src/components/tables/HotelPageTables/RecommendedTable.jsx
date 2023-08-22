@@ -1,5 +1,4 @@
-import React from 'react';
-import login from "../../../pages/home/user/user/login/Login";
+import './recommendedTable.css'
 import {useNavigate} from "react-router-dom";
 
 function RecommendedTable(props) {
@@ -75,39 +74,47 @@ function RecommendedTable(props) {
                         className="recommendedTableCol1"
                         colSpan={3}>Recommended for {options.adult} adult{options.adult > 1 && "s"}{ options.children > 0 && " and " + (options.children + " child" + (options.children > 1 && "ren"))}</td>
                 </tr>
+
+                <tr className="recommendedTableRow">
+                    <td className={"recommendedTableCol2"}>
                 {
                     hotelInfo.roomsList.map((room, index) => {
                         if (room.recommended < 1){
                             return;
                         }
                         return (
-                                <tr className="recommendedTableRow">
-                                    <td className={"recommendedTableCol2"}>
+                            <div className={"recommendedTableCol"}>
                                         {room.recommended} x {room.displayName}: {room.bedInfoList.map((bedInfo, i) => {
                                                 return [bedInfo.quantity + " " + bedNameMap[bedInfo.size]]
                                             }).join(', ')}
 
                                         {   paymentDate.length > 0 &&  (
-                                            <tr><td>No prepayment required until {startDate} {hotelInfo.noPrepaymentDays === 0 && "11:59 PM"}</td></tr>
+                                                <td>
+                                                No prepayment required until {startDate} {hotelInfo.noPrepaymentDays === 0 && "11:59 PM"}
+                                                </td>
                                         )
                                         }
                                         { ( cancelDate.length > 0 && hotelInfo.maxFreeCancellationDays > 0 &&
                                             <tr><td>Free cancellation before {cancelDate}</td></tr>
                                         )
                                         }
-                                    </td>
-                                    <td
-                                        className="recommendedTableCol"
-                                        rowSpan={(hotelInfo.roomsList.length )}>
-                                        <span>{optionString}</span> <br/>
-                                        <span>${hotelInfo.totalPrice / 100}</span><br/>
-                                        <button onClick={onReserveSelection}>Reserve your selections</button> <br/>
-                                        <span className="recommendedNote">Don't worry - clicking this button won't charge you anything!</span>
-                                    </td>
-                                </tr>
+                            </div>
                         );
                     }
                 )}
+                    </td>
+                {
+
+                        <td
+                            className="recommendedTableCol"
+                            rowSpan={(hotelInfo.roomsList.length )}>
+                            <span>{optionString}</span> <br/>
+                            <span>${hotelInfo.totalPrice / 100}</span><br/>
+                            <button onClick={onReserveSelection}>Reserve your selections</button> <br/>
+                            <span className="recommendedNote">Don't worry - clicking this button won't charge you anything!</span>
+                        </td>
+                }
+                </tr>
 
             </table>
         </div>

@@ -1,6 +1,5 @@
 package com.dlim2012.booking.controller.rest_controller;
 
-import com.dlim2012.booking.dto.cancel.CancelBookingRoomResponse;
 import com.dlim2012.booking.dto.dates.availability.AddAvailabilityRequest;
 import com.dlim2012.booking.dto.dates.availability.DeleteAvailabilityRequest;
 import com.dlim2012.booking.dto.dates.availability.EditAvailabilityRequest;

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -14,7 +15,17 @@ import java.util.List;
 public class PriceUpdateDetails {
     Integer hotelId;
     Integer roomsId;
-    Long version;
+    Long priceVersion;
     List<PriceDto> priceDtoList;
+
+    @Builder
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PriceDto {
+        Long priceId;
+        LocalDate date;
+        Long priceInCents;
+    }
 
 }

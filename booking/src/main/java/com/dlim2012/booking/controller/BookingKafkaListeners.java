@@ -8,7 +8,6 @@ import com.dlim2012.booking.service.booking_entity.utils.PaypalService;
 import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingDetails;
 import com.dlim2012.clients.kafka.dto.booking.hotel.HotelBookingInActivateRequest;
-import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingActivateRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDeleteRequest;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingDetails;
 import com.dlim2012.clients.kafka.dto.booking.rooms.RoomsBookingInActivateRequest;

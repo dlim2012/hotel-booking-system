@@ -183,6 +183,17 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
             @Param("hotelManagerId") Integer hotelManagerId);
 
 
+
+    @Query(
+            value = "SELECT d.id as id, d.room_id as room_id, d.start_date as start_date, d.end_date as end_date " +
+                    "FROM dates d " +
+                    "JOIN room r ON d.room_id = r.id " +
+                    "JOIN rooms rs ON r.rooms_id = rs.id " +
+                    "WHERE rs.hotel_id >= :i1 AND rs.hotel_id <= :i2 ",
+            nativeQuery = true
+    )
+    List<Dates> findByHotelIdRange(int hotelStartId, int hotelEndId);
+
 //    @Transactional
 //    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
@@ -217,6 +228,7 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
                     "WHERE d.room.id in ?1 "
     )
     List<Dates> findByRoomIds(Set<Long> roomIds);
+
 
 
 //    @Transactional

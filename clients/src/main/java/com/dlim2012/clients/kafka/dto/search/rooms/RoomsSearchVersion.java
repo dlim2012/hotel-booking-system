@@ -17,7 +17,7 @@ public class RoomsSearchVersion {
     Integer hotelId;
     Integer freeCancellationDays;
     Integer noPrepaymentDays;
-    Long version;
+    Long priceVersion;
     List<RoomDto> roomDto;
     List<PriceDto> priceDto;
 
@@ -28,7 +28,7 @@ public class RoomsSearchVersion {
     @AllArgsConstructor
     public static class RoomDto {
         Long roomId;
-        Long version;
+        Long datesVersion;
         List<RoomsSearchDetails.DatesDto> datesDtoList;
     }
 

@@ -5,11 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
-public class NewPasswordRequest {
-    String prevPassword;
-    String newPassword;
+@NoArgsConstructor
+public class UserProfileEditResponse {
+    String message;
 }
