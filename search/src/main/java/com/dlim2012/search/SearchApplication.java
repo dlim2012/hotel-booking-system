@@ -14,7 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 		// advice
 		ApplicationExceptionHandler.class,
 		// elastic search
-//		ElasticSearchClientConfiguration.class,
 		ElasticSearchUtils.class
 })
 @PropertySource("classpath:application-${spring.profiles.active}.yaml")

@@ -64,7 +64,7 @@ public interface RoomsRepository extends JpaRepository<Rooms, Integer> {
             value = "SELECT r FROM Rooms r " +
                     "WHERE r.hotel.id >= :i1 AND r.hotel.id < :i2"
     )
-    Set<Rooms> findByHotelIdRangeWithLock(
+    List<Rooms> findByHotelIdRangeWithLock(
             @Param("i1") int i1,
             @Param("i2") int i2
     );
@@ -77,4 +77,6 @@ public interface RoomsRepository extends JpaRepository<Rooms, Integer> {
     Rooms findByRoomId(
             @Param("roomId") Long roomId
     );
+
+
 }

@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
@@ -23,6 +22,15 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     )
     Optional<Room> findByIdWithLock(Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query(
+            value = "SELECT r FROM Room r " +
+                    "JOIN Rooms rs ON r.rooms = rs " +
+                    "JOIN Hotel h ON rs.hotel = h " +
+                    "WHERE h.id = :hotelId AND h.hotelManagerId = :hotelManagerId"
+    )
+    Optional<Room> findByIdAndHotelIdAndHotelManagerIdWithLock(Long id, Integer hotelId, Integer hotelMangaerId);
 
     @Query(
             value = "SELECT r.id, r.rooms_id FROM room r " +
@@ -30,7 +38,19 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                     "WHERE rs.hotel_id = ?1",
             nativeQuery = true
     )
-    Set<Room> findByHotelId(Integer hotelId);
+    List<Room> findByHotelId(Integer hotelId);
+
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query(
+            value = "SELECT r FROM Room r " +
+                    "JOIN Rooms rs ON r.rooms = rs " +
+                    "WHERE rs.hotel.id = ?1"
+    )
+    List<Room> findByHotelIdWithLock(Integer hotelId);
+
 
     List<Room> findByRoomsId(Integer roomsId);
 

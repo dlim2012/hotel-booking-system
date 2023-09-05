@@ -32,6 +32,7 @@ public class PriceSearchKafkaProducer {
     public ProducerFactory<String, PriceUpdateDetails> roomsSearchPriceUpdateProducerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
+
     @Bean
     public KafkaTemplate<String, PriceUpdateDetails> roomsSearchPriceUpdateKafkaTemplate(
     ) {

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @Getter
 @Setter
@@ -69,14 +69,12 @@ public class Rooms implements Serializable {
     @Column(name = "dates_added_until", nullable = false)
     private LocalDate datesAddedUntil;
 
-    @OneToMany(mappedBy = "rooms", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "rooms", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Room> roomSet;
 
-    @OneToMany(mappedBy = "rooms", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "rooms", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Price> priceList;
 
-    @Column(name = "price_version", nullable = false)
-    private Long priceVersion; // version for prices update to ElasticSearch
 
     @Override
     public String toString() {
@@ -97,7 +95,6 @@ public class Rooms implements Serializable {
                 ", datesAddedUntil=" + datesAddedUntil +
                 ", roomSet=" + roomSet +
                 ", priceList=" + "?" +
-                ", priceVersion=" + priceVersion +
                 '}';
     }
 }

@@ -31,6 +31,7 @@ public class RoomSearchKafkaProducerConfig {
     public ProducerFactory<String, RoomsSearchDetails> roomsSearchProducerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
+
     @Bean
     public KafkaTemplate<String, RoomsSearchDetails> roomsSearchKafkaTemplate(
     ) {

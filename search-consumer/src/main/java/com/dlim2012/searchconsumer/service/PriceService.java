@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -27,22 +29,35 @@ public class PriceService {
 
     private final Random random = new Random();
 
+    public Price mapPriceFromDto(Integer roomsId, PriceUpdateDetails.PriceDto priceDto){
+        return Price.builder()
+                .id(priceDto.getPriceId().toString())
+                .roomsId(roomsId)
+                .date(elasticSearchUtils.toInteger(priceDto.getDate()))
+                .priceInCents(priceDto.getPriceInCents())
+                .version(priceDto.getVersion())
+                .build();
+    }
+
     public void updateHotelPrices(Hotel hotel, PriceUpdateDetails priceUpdateDetails) {
 
         for (Rooms rooms: hotel.getRooms()){
             if (rooms.getRoomsId().equals(priceUpdateDetails.getRoomsId())){
-                if (rooms.getPriceVersion() <= priceUpdateDetails.getPriceVersion()){
-                    rooms.setPriceVersion(priceUpdateDetails.getPriceVersion());
-                    rooms.setPrice(priceUpdateDetails.getPriceDtoList().stream()
-                            .map(priceDto -> Price.builder()
-                                    .id(priceDto.getPriceId().toString())
-                                    .date(elasticSearchUtils.toInteger(priceDto.getDate()))
-                                    .roomsId(priceUpdateDetails.getRoomsId())
-                                    .priceInCents(priceDto.getPriceInCents())
-                                    .build()
-                            )
-                            .toList()
-                    );
+                Map<String, PriceUpdateDetails.PriceDto> priceDtoMap = new HashMap<>();
+                for (PriceUpdateDetails.PriceDto priceDto: priceUpdateDetails.getPriceDtoList()){
+                    if (priceDto.getVersion().equals(0)){
+                        rooms.getPrice().add(mapPriceFromDto(priceUpdateDetails.getRoomsId(), priceDto));
+                    } else {
+                        priceDtoMap.put(priceDto.getPriceId().toString(), priceDto);
+                    }
+                }
+                for (Price price: rooms.getPrice()){
+                    PriceUpdateDetails.PriceDto priceDto = priceDtoMap.get(price.getId());
+                    if (priceDto != null){
+                        price.setDate(elasticSearchUtils.toInteger(priceDto.getDate()));
+                        price.setPriceInCents(priceDto.getPriceInCents());
+                        price.setVersion(priceDto.getVersion());
+                    }
                 }
             }
         }

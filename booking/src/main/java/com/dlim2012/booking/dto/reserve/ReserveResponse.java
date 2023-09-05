@@ -11,5 +11,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReserveResponse {
     Long bookingId;
-    Boolean success;
 }

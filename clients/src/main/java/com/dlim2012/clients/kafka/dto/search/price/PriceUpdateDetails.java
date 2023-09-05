@@ -15,7 +15,6 @@ import java.util.List;
 public class PriceUpdateDetails {
     Integer hotelId;
     Integer roomsId;
-    Long priceVersion;
     List<PriceDto> priceDtoList;
 
     @Builder
@@ -26,6 +25,7 @@ public class PriceUpdateDetails {
         Long priceId;
         LocalDate date;
         Long priceInCents;
+        Integer version;
     }
 
 }

@@ -44,7 +44,7 @@ public class BookingRooms implements Serializable {
     private Long pricePerRoomInCents;
 
     @OneToMany(mappedBy = "bookingRooms", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<BookingRoom> bookingRoomList;
+    private Set<BookingRoom> bookingRoomSet;
 
 
     @Override
@@ -58,7 +58,7 @@ public class BookingRooms implements Serializable {
                 ", prepayUntil=" + prepayUntil +
                 ", freeCancellationUntil=" + freeCancellationUntil +
                 ", pricePerRoomInCents=" + pricePerRoomInCents +
-                ", bookingRoomList=" + bookingRoomList +
+                ", bookingRoomList=" + bookingRoomSet +
                 '}';
     }
 }

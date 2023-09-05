@@ -4,6 +4,7 @@ import com.dlim2012.clients.mysql_booking.entity.Hotel;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +14,20 @@ import java.util.Optional;
 
 public interface HotelRepository extends JpaRepository<Hotel, Integer> {
     @Transactional
+    @Modifying
     void deleteByHotelManagerId(Integer hotelManagerId);
 
     Optional<Hotel> findByIdAndHotelManagerId(Integer hotelId, Integer userId);
+
+
+
+    @Transactional
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            value = "SELECT h FROM Hotel h " +
+                    "WHERE h.id = :hotelId AND h.hotelManagerId = :hotelManagerId"
+    )
+    Optional<Hotel> findByIdAndHotelManagerIdWithLock(Integer hotelId, Integer hotelManagerId);
 
     @Query(
             value = "SELECT max(id) FROM hotel h",

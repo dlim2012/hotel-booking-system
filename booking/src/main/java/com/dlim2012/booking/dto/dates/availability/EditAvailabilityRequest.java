@@ -12,8 +12,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EditAvailabilityRequest {
-    Long roomId;
     Long datesId;
-    LocalDate startDate;
-    LocalDate endDate;
+    Long roomId;
+    LocalDate newStartDate;
+    LocalDate newEndDate;
 }

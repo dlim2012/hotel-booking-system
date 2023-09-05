@@ -117,7 +117,7 @@ public class HotelService {
         for (Booking booking: bookingList){
             for (BookingRooms bookingRooms: booking.getBookingRooms()){
                 Rooms rooms = roomsMap.getOrDefault(bookingRooms.getRoomsId(), null);
-                for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+                for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                     LocalDate startDate = bookingRoom.getStartDateTime().toLocalDate().isBefore(today)
                             ? today : bookingRoom.getStartDateTime().toLocalDate();
                     int dates = (int) ChronoUnit.DAYS.between(startDate,
@@ -195,7 +195,7 @@ public class HotelService {
 
         for (Booking booking: bookingList){
             for (BookingRooms bookingRooms: booking.getBookingRooms()){
-                for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+                for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                     Long roomId = bookingRoom.getRoomId();
                     if (!bookingRoom.getStatus().equals(BookingStatus.RESERVED)
                             && !bookingRoom.getStatus().equals(BookingStatus.RESERVED_FOR_TIMEOUT)
@@ -274,7 +274,7 @@ public class HotelService {
     public void putGuestInfo(Long bookingId, Long bookingRoomId, Integer userId, BookingRoomGuestInfo request) {
         Booking booking = mySqlService.getBookingByHotel(bookingId, userId);
         for (BookingRooms bookingRooms: booking.getBookingRooms()){
-            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                 if (bookingRoom.getId().equals(bookingRoomId)){
                     bookingRoom.setGuestName(request.getGuestName());
                     bookingRoom.setGuestEmail(request.getGuestEmail());

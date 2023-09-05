@@ -12,27 +12,22 @@ import java.util.Map;
 
 @Configuration
 public class PayPalConfig {
-    @Value("${custom.paypal.client.id}")
-    private String clientId;
-
-    @Value("${custom.paypal.client.secret}")
-    private String clientSecret;
-
-    @Value("${custom.paypal.mode}")
-    private String mode;
-
-    @Value("${custom.paypal.host}")
-    public String HOST;
-
-    @Value("${custom.paypal.frontend}")
-    public String FRONTEND;
-
-    public static String PATH = "/api/v1/booking";
     public static final String INTENT = "sale";
     public static final String CONCURRENCY = "USD";
     public static final String METHOD = "paypal";
     public static final String SUCCESS_URL = "/payment/success";
     public static final String CANCEL_URL = "/payment/cancel";
+    public static String PATH = "/api/v1/booking";
+    @Value("${custom.paypal.host}")
+    public String HOST;
+    @Value("${custom.paypal.frontend}")
+    public String FRONTEND;
+    @Value("${custom.paypal.client.id}")
+    private String clientId;
+    @Value("${custom.paypal.client.secret}")
+    private String clientSecret;
+    @Value("${custom.paypal.mode}")
+    private String mode;
 
 //    @Value("${custom.paypal.success-redirect-url}")
 //    public String SUCCESS_REDIRECT_URL;
@@ -41,14 +36,14 @@ public class PayPalConfig {
 //    public static final String ERROR_URL = "/hotels/booking/payment/error";
 
     @Bean
-    public Map<String, String> paypalSdkConfig(){
+    public Map<String, String> paypalSdkConfig() {
         Map<String, String> configMap = new HashMap<>();
         configMap.put("mode", mode);
         return configMap;
     }
 
     @Bean
-    public OAuthTokenCredential oAuthTokenCredential(){
+    public OAuthTokenCredential oAuthTokenCredential() {
         return new OAuthTokenCredential(clientId, clientSecret, paypalSdkConfig());
     }
 
@@ -59,11 +54,11 @@ public class PayPalConfig {
         return context;
     }
 
-    public String getCancelUrl(Long bookingId){
+    public String getCancelUrl(Long bookingId) {
         return HOST + PATH + CANCEL_URL + "/" + bookingId.toString();
     }
 
-    public String getSuccessUrl(Long bookingId){
+    public String getSuccessUrl(Long bookingId) {
         return HOST + PATH + SUCCESS_URL + "/" + bookingId.toString();
 
 //        return HOST + SUCCESS_URL + "/" + bookingId.toString();

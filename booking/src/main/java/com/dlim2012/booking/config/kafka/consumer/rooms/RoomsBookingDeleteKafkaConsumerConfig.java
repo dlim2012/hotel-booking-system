@@ -25,7 +25,7 @@ public class RoomsBookingDeleteKafkaConsumerConfig {
     private final KafkaConsumerConfig kafkaConsumerConfig;
 
     @Bean
-    public NewTopic roomsBookingDeleteTopic(){
+    public NewTopic roomsBookingDeleteTopic() {
         return TopicBuilder.name("rooms-booking-delete").build();
     }
 

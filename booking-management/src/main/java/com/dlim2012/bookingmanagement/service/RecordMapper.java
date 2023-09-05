@@ -112,7 +112,7 @@ public class RecordMapper {
 
         List<ActiveBookingItem.Room> roomList = new ArrayList<>();
         for (BookingRooms bookingRooms: booking.getBookingRooms()){
-            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                 ActiveBookingItem.Room room = ActiveBookingItem.Room.builder()
                         .bookingRoomsId(bookingRooms.getId())
                         .bookingRoomId(bookingRoom.getId())

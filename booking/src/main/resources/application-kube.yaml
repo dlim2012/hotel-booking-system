@@ -31,8 +31,8 @@ spring:
       host: redis
       port: 6379
 
-#  zipkin:
-#    base-url: http://hb-zipkin:9411
+  #  zipkin:
+  #    base-url: http://hb-zipkin:9411
 
   kafka:
     bootstrap-servers: hb-kafka-service:9092

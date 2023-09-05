@@ -30,6 +30,9 @@ public class Price implements Serializable {
     @Column(name = "price_in_cents", nullable = false)
     private Long priceInCents;
 
+    @Column(name = "version", nullable = false)
+    private Integer version; // version for prices update to ElasticSearch
+
     @Override
     public String toString() {
         return "Price{" +
@@ -37,6 +40,7 @@ public class Price implements Serializable {
                 ", rooms=" + (rooms == null ? null : rooms.getId()) +
                 ", date=" + date +
                 ", priceInCents=" + priceInCents +
+                ", version=" + version +
                 '}';
     }
 }

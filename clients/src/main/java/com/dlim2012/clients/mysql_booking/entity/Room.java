@@ -27,7 +27,7 @@ public class Room implements Serializable {
     @Column(name = "room_number", nullable = false)
     private Integer roomNumber;
 
-    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Dates> datesSet;
 
     @Column(name = "dates_version", nullable = false)

@@ -119,7 +119,7 @@ public interface DatesRepository extends JpaRepository<Dates, Long> {
                     "WHERE r.rooms_id = ?1",
             nativeQuery = true
     )
-    void deleteByRoomsId(Integer roomsId);
+    void deleteAllByRoomsId(Integer roomsId);
 
 
     @Query(

@@ -27,4 +27,7 @@ public class Price {
     @Field(type = FieldType.Long)
     private Long priceInCents;
 
+    @Field(type = FieldType.Integer)
+    private Integer version;
+
 }

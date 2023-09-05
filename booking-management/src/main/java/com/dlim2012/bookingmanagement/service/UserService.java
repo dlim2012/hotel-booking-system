@@ -128,7 +128,7 @@ public class UserService {
     public void putGuestInfo(Long bookingId, Long bookingRoomId, Integer userId, BookingRoomGuestInfo request) {
         Booking booking = mySqlService.getBookingByAppUser(bookingId, userId);
         for (BookingRooms bookingRooms: booking.getBookingRooms()){
-            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                 if (bookingRoom.getId().equals(bookingRoomId)){
                     bookingRoom.setGuestName(request.getGuestName());
                     bookingRoom.setGuestEmail(request.getGuestEmail());

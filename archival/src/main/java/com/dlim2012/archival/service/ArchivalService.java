@@ -58,7 +58,7 @@ public class ArchivalService {
         BookingArchiveByUserId bookingArchiveByUserId = modelMapper.map(booking, BookingArchiveByUserId.class);
         List<BookingArchiveRoom> bookingArchiveRoomList = new ArrayList<>();
         for (BookingRooms bookingRooms: booking.getBookingRooms()){
-            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                 BookingArchiveRoom bookingArchiveRoom = BookingArchiveRoom.builder()
                         .roomsId(bookingRooms.getRoomsId())
                         .roomsName(bookingRooms.getRoomsDisplayName())
@@ -78,7 +78,7 @@ public class ArchivalService {
         BookingArchiveByHotelId bookingArchiveByHotelId = modelMapper.map(booking, BookingArchiveByHotelId.class);
         List<BookingArchiveRoom> bookingArchiveRoomList = new ArrayList<>();
         for (BookingRooms bookingRooms: booking.getBookingRooms()){
-            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomList()){
+            for (BookingRoom bookingRoom: bookingRooms.getBookingRoomSet()){
                 BookingArchiveRoom bookingArchiveRoom = BookingArchiveRoom.builder()
                         .roomsId(bookingRooms.getRoomsId())
                         .roomsName(bookingRooms.getRoomsDisplayName())

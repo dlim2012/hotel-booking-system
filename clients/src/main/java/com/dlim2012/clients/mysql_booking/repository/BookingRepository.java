@@ -50,6 +50,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     /* BOOKING  */
     Optional<Booking> findByIdAndUserId(Long bookingId, Integer userId);
 
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query("SELECT b FROM Booking b WHERE b.id = ?1 AND b.userId = ?2")
+    Optional<Booking> findByIdAndUserIdWithLock(Long bookingId, Integer userId);
+
 //    @Lock(LockModeType.PESSIMISTIC_WRITE)
 //    @Transactional
 //    Optional<Booking> findByIdAndUserIdWithLock(Long bookingId, Integer userId);

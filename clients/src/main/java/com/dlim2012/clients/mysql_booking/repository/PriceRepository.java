@@ -2,7 +2,9 @@ package com.dlim2012.clients.mysql_booking.repository;
 
 import com.dlim2012.clients.mysql_booking.entity.Price;
 import com.dlim2012.clients.mysql_booking.entity.Rooms;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface PriceRepository  extends JpaRepository<Price, Long> {
     Optional<Price> findByRoomsAndDate(Rooms rooms, LocalDate date);
@@ -22,17 +23,41 @@ public interface PriceRepository  extends JpaRepository<Price, Long> {
                     "WHERE rs.hotel_id = ?1 AND p.date >= ?2 AND p.date < ?3",
             nativeQuery = true
     )
-    Set<Price> findByHotelIdAndDates(Integer hotelId, LocalDate startDate, LocalDate endDate);
+    List<Price> findByHotelIdAndDates(Integer hotelId, LocalDate startDate, LocalDate endDate);
+
+    @Query(
+            value = "SELECT p FROM Price p " +
+                    "JOIN Rooms rs ON p.rooms = rs " +
+                    "JOIN Hotel h ON rs.hotel = h " +
+                    "WHERE h.id = :hotelId AND h.hotelManagerId = :hotelManagerId AND " +
+                    "    p.date >= :startDate AND p.date < :endDate"
+    )
+    List<Price> findByHotelIdAndHotelManagerAndDates(Integer hotelId, Integer hotelManagerId, LocalDate startDate, LocalDate endDate);
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query(
+            value = "SELECT p FROM Price p "+
+                    "WHERE p.rooms.id = ?1"
+    )
+    List<Price> findByRoomsIdWithLock(Integer roomsId);
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional
+    @Query(
+            value = "SELECT p FROM Price p " +
+                    "JOIN Rooms rs ON p.rooms = rs " +
+                    "JOIN Hotel h ON rs.hotel = h " +
+                    "WHERE rs.id = :roomsId AND h.hotelManagerId = :hotelManagerId"
+    )
+    List<Price> getByRoomsIdAndHotelManagerIdWithLock(Integer roomsId, Integer hotelManagerId);
 
     @Transactional
     @Modifying
     void deleteAllByRoomsId(Integer roomsId);
 
-    @Query(
-            value = "SELECT p FROM Price p "+
-                    "WHERE p.rooms.id = ?1"
-    )
-    List<Price> findByRoomsId(Integer roomsId);
 
 
 
@@ -93,4 +118,11 @@ public interface PriceRepository  extends JpaRepository<Price, Long> {
             nativeQuery = true
     )
     void deleteByHotelId(Integer hotelId);
+
+    @Query(
+            value = "SELECT p FROM Price p " +
+                    "JOIN Rooms rs ON p.rooms = rs " +
+                    "WHERE rs.hotel.id = :hotelId"
+    )
+    List<Price> findByHotelId(Integer hotelId);
 }

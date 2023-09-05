@@ -31,6 +31,7 @@ public class RoomSearchDatesUpdateKafkaProducerConfig {
     public ProducerFactory<String, DatesUpdateDetails> roomsSearchDatesUpdateProducerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
+
     @Bean
     public KafkaTemplate<String, DatesUpdateDetails> roomsSearchDatesUpdateKafkaTemplate(
     ) {

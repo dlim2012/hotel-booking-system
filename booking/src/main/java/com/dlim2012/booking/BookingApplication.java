@@ -24,41 +24,36 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication
 @EnableKafka
 @EnableConfigurationProperties({
-		PublicKey.class,
-		Roles.class
+        PublicKey.class,
+        Roles.class
 })
 @Import(value = {
-		// advice
-		ApplicationExceptionHandler.class,
-		// security
-		AuthenticationConfig.class,
-		JwtAuthenticationFilter.class,
-		JwtService.class,
-		SecurityConfig.class,
+        // advice
+        ApplicationExceptionHandler.class,
+        // security
+        AuthenticationConfig.class,
+        JwtAuthenticationFilter.class,
+        JwtService.class,
+        SecurityConfig.class,
 //		//kafka
-		KafkaConsumerConfig.class,
+        KafkaConsumerConfig.class,
 //		//cache
-		CacheConfig.class,
-		BookingKeyGenerator.class,
-		BookingCacheConfig.class,
-		//mysql
-//		AvailableRoom.class,
-//		Booking.class,
-//		Room.class,
-//		Invoice.class
-		//utils
-		PriceService.class
+        CacheConfig.class,
+        BookingKeyGenerator.class,
+        BookingCacheConfig.class,
+        //utils
+        PriceService.class
 })
 @EnableJpaRepositories({
-		"com.dlim2012.clients.mysql_booking.repository"
+        "com.dlim2012.clients.mysql_booking.repository"
 })
 @EntityScan({
-		"com.dlim2012.clients.cassandra.entity",
-		"com.dlim2012.clients.mysql_booking.entity"
+        "com.dlim2012.clients.cassandra.entity",
+        "com.dlim2012.clients.mysql_booking.entity"
 })
 @PropertySource("classpath:application-${spring.profiles.active}.yaml")
 public class BookingApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(BookingApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BookingApplication.class, args);
+    }
 }

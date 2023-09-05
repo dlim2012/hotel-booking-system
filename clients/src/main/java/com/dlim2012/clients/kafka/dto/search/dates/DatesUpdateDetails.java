@@ -16,9 +16,6 @@ import java.util.Map;
 public class DatesUpdateDetails {
     Integer hotelId;
     Map<Long, Long> datesVersions;
-//    Map<Integer, Long> roomsVersions; // { roomsID: room version }
-//    Map<Long, Map<Long, DatesDto>> datesToUpdate; // { room ID : { dates ID: dates } }
-//    Map<Long, Set<Long>> datesIdsToDelete; // { room ID: { dates ID } }
     Map<Long, List<DatesDto>> datesMap; // { room ID : { dates ID: dates } }
 
     @Data

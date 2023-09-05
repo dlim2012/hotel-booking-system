@@ -13,11 +13,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class AddBookingRoomRequest {
     Long bookingId;
-    Long bookingRoomsId;
+    //    Long bookingRoomsId;
+    Integer roomsId;
     Long roomId;
     LocalDate startDate;
     LocalDate endDate;
     String checkInTime;
     String checkOutTime;
     Boolean payed;
+    String guestName;
+    String guestEmail;
 }

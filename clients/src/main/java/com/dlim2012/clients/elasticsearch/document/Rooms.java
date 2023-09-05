@@ -81,9 +81,6 @@ public class Rooms {
     @Field(type =  FieldType.Boolean)
     private Boolean breakfast;
 
-    @Field(type = FieldType.Long)
-    private Long priceVersion;
-
     @Data
     @Builder
     @AllArgsConstructor

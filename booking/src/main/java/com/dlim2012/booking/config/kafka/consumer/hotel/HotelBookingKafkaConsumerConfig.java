@@ -26,7 +26,7 @@ public class HotelBookingKafkaConsumerConfig {
     private final KafkaConsumerConfig kafkaConsumerConfig;
 
     @Bean
-    public NewTopic hotelBookingTopic(){
+    public NewTopic hotelBookingTopic() {
         return TopicBuilder.name("hotel-booking").build();
     }
 

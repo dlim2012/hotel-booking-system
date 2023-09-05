@@ -28,15 +28,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class DateService {
-    //
-
-//    private final ElasticSearchQuery elasticSearchQuery;
-//    private final ElasticsearchTemplate elasticsearchTemplate;
-//    private final RestHighLevelClient client = new RestHighLevelClient(
-//            RestClient.builder(
-//                    new HttpHost("10.0.0.110", 9103, "http")
-//            )
-//    );
 
     private final RoomsRepository roomsRepository;
     private final DateRepository dateRepository;
@@ -128,16 +119,12 @@ public class DateService {
         rooms.setNumBeds(details.getBedDto().stream()
                 .map(RoomsSearchDetails.BedInfoDto::getQuantity).reduce(0, Integer::sum));
         rooms.setBreakfast(breakfast);
-        rooms.setPriceVersion(details.getPriceVersion());
         return rooms;
     }
 
 
 
     public void updateRooms(RoomsSearchDetails details) throws IOException, InterruptedException {
-
-//        GetRequest getRequest = new GetRequest("hotel", details.getHotelId().toString());
-//        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
 
         for (int i=0; i<NUM_RETRY_UPDATE; i++){
             try {
@@ -158,10 +145,7 @@ public class DateService {
                     List<Rooms> roomsList = hotel.getRooms();
                     for (Rooms rooms: roomsList){
                         if (rooms.getRoomsId().equals(details.getRoomsId())){
-                            if (rooms.getPriceVersion() > details.getPriceVersion()){
-                                newRooms.setPrice(rooms.getPrice());
-                            }
-                            continue;
+                            newRooms.setPrice(rooms.getPrice());
                         }
                         newRoomsList.add(rooms);
                     }
@@ -242,33 +226,7 @@ public class DateService {
                                 }
                             }
                             rooms.setRoom(roomList);
-//                            rooms.setRoom(newVersionDetails.getRoomDto().stream()
-//                                    .map(room -> Room.builder()
-//                                                    .roomId(room.getRoomId().toString())
-//                                                    .datesVersion(room.getDatesVersion())
-//                                                    .dates(room.getDatesDtoList().stream()
-//                                                            .map(datesDto -> Dates.builder()
-//                                                                    .id(datesDto.getDatesId().toString())
-//                                                                    .hotelId(newVersionDetails.getHotelId())
-//                                                                    .roomsId(newVersionDetails.getRoomsId())
-//                                                                    .roomId(room.getRoomId())
-//                                                                    .maxAdult(rooms.getMaxAdult())
-//                                                                    .maxChild(rooms.getMaxChild())
-//                                                                    .numBed(rooms.getNumBeds())
-//                                                                    .dateRange(Dates.DateRange.builder()
-//                                                                            .gte(elasticSearchUtils.toInteger(datesDto.getStartDate()))
-//                                                                            .lte(elasticSearchUtils.toInteger(datesDto.getEndDate()))
-//                                                                            .build())
-//                                                                    .build())
-//                                                            .collect(Collectors.toSet())
-//                                                    )
-//                                                    .build()
-//                                    )
-//                                    .toList());
-                            if (rooms.getPriceVersion() > newVersionDetails.getPriceVersion()){
-                                continue;
-                            }
-                            rooms.setPriceVersion(newVersionDetails.getPriceVersion());
+
                             rooms.setPrice(newVersionDetails.getPriceDto().stream()
                                     .map(priceDto -> Price.builder()
                                             .id(priceDto.getPriceId().toString())

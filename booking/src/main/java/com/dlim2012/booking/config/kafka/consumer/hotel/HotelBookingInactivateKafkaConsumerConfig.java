@@ -26,7 +26,7 @@ public class HotelBookingInactivateKafkaConsumerConfig {
     private final KafkaConsumerConfig kafkaConsumerConfig;
 
     @Bean
-    public NewTopic hotelBookingInactivateTopic(){
+    public NewTopic hotelBookingInactivateTopic() {
         return TopicBuilder.name("hotel-booking-inactivate").build();
     }
 

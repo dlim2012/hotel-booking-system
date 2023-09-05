@@ -20,7 +20,6 @@ public class RoomsSearchDetails {
     private Integer roomsId;
     private Integer hotelId;
     private Long priceVersion;
-//    private HotelSearchDetails hotelSearchDetails;
     private String displayName;
     private Integer maxAdult;
     private Integer maxChild;

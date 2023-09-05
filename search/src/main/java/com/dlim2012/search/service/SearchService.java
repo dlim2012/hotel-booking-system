@@ -83,66 +83,6 @@ public class SearchService {
         return QueryBuilders.nestedQuery("rooms.facility", matchQueryBuilder, ScoreMode.Total);
     }
 
-//    public NestedQueryBuilder nestDates(HotelSearchRequest request){
-//        BoolQueryBuilder datesBool = QueryBuilders.boolQuery();
-//        if (request.getStartDate() != null && request.getEndDate() != null){
-//            datesBool.must(QueryBuilders.rangeQuery("rooms.room.dates.term")
-//                    .relation("contains")
-//                    .gte(elasticSearchUtils.toInteger(request.getStartDate()))
-//                    .lte(elasticSearchUtils.toInteger(request.getEndDate()))
-//            );
-//        }
-//        return QueryBuilders.nestedQuery("rooms.room.dates", datesBool, ScoreMode.None);
-//    }
-//
-//    public NestedQueryBuilder nestRooms(HotelSearchRequest request) throws IOException {
-//
-//        BoolQueryBuilder roomsBool = QueryBuilders.boolQuery();
-//        if (request.getPriceMax() != null && request.getPriceMin() != null){
-//            roomsBool.must(QueryBuilders.rangeQuery("rooms.price_range")
-//                    .relation("within")
-//                    .gte(request.getPriceMin()).lte(request.getPriceMax())
-//            );
-//        } else if (request.getPriceMin() != null){
-//            roomsBool.must(QueryBuilders.rangeQuery("rooms.price_range")
-//                    .relation("within")
-//                    .gte(request.getPriceMin())
-//            );
-//        } else if (request.getPriceMax() != null){
-//            roomsBool.must(QueryBuilders.rangeQuery("rooms.price_range")
-//                    .relation("within")
-//                    .lte(request.getPriceMax())
-//            );
-//
-//        }
-//
-//        roomsBool.must(nestDates(request));
-//
-//        XContentParser xContentParser = XContentFactory.xContent(XContentType.JSON)
-//                .createParser(
-//                        NamedXContentRegistry.EMPTY,
-//                        DeprecationHandler.IGNORE_DEPRECATIONS,
-//                        "{\"fields\": \"rooms.rooms_id\"}");
-//        System.out.println(xContentParser);
-//        System.out.println(xContentParser.currentToken());
-//        NestedQueryBuilder nestRoomsBuilder = QueryBuilders
-//                .nestedQuery("rooms", roomsBool, ScoreMode.Total)
-//                .innerHit(
-//                    new InnerHitBuilder("rooms_inner_hits")
-//                            .setSize(10)
-//                            .setFetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE)
-//                            .addFetchField("rooms.id")
-//                            .addFetchField("rooms.display_name")
-//                            .addFetchField("rooms.max_adult")
-//                            .addFetchField("rooms.max_child")
-//                            .addFetchField("rooms.number_of_beds")
-//                            .addFetchField("rooms.free_cancellation_days")
-//                            .addFetchField("rooms.payment_option")
-//                            .addFetchField("rooms.bed.*")
-//        );
-//        return nestRoomsBuilder;
-//    }
-
 
     public SearchResponse fetchFromES(HotelSearchRequest request) throws IOException {
         Integer startDateInteger = elasticSearchUtils.toInteger(request.getStartDate());
@@ -175,9 +115,7 @@ public class SearchService {
             propertyBool.minimumShouldMatch(1);
             for (String propertyType: request.getPropertyTypes()){
                 propertyBool.should(QueryBuilders.matchQuery("propertyTypeOrdinal", PropertyType.valueOf(propertyType).ordinal()));
-//                propertyBool.should(QueryBuilders.matchQuery("propertyTypeOrdinal", propertyType));
             }
-//            System.out.println(propertyBool);
             hotelBool.must(propertyBool);
 
         }
@@ -196,9 +134,6 @@ public class SearchService {
         if (request.getHotelFacility() != null){
             for (String facility: request.getHotelFacility()){
                 Integer facilityId = sharedIds.getFacilityId(facility);
-//                System.out.println("facilityId " + facilityId + " " + facility);
-//                System.out.println(facilityId);
-//                System.out.println(nestHotelFacility(facilityId));
                 hotelBool.must(nestHotelFacility(facilityId));
             }
         }
@@ -223,7 +158,6 @@ public class SearchService {
         if (request.getRoomsFacility() != null){
             for (String facility: request.getRoomsFacility()){
                 Integer facilityId = sharedIds.getFacilityId(facility);
-//                System.out.println("roomFacilities " + facility + " "  + facilityId);
                 roomFacilitiesNestedMatch.must(nestRoomsFacility(facilityId));
             }
         }
@@ -282,8 +216,6 @@ public class SearchService {
                 )
             );
 
-//        System.out.println(hotelBool);
-
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(hotelBool);
         searchSourceBuilder.aggregation(aggregationBuilder);
@@ -299,15 +231,6 @@ public class SearchService {
         long start = System.currentTimeMillis();
         System.out.println(request);
 
-//        SearchRequest searchRequest = new SearchRequest("hotel");
-//        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-//        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-//        searchRequest.source(searchSourceBuilder);
-//        SearchResponse searchResponse1 = client.search(searchRequest, RequestOptions.DEFAULT);
-//        System.out.println(searchResponse1);
-//        System.out.println(searchResponse1.getHits().getTotalHits());
-//        System.out.println(searchResponse1.getHits().getHits());
-
         if (request.getNumBed() == null){
             request.setNumBed(-1);
         }
@@ -320,20 +243,11 @@ public class SearchService {
                 searchResponse.getHits().getTotalHits().value
         );
 
-
-
         ParsedNested nestRooms = searchResponse.getAggregations().get("nest_rooms");
         ParsedFilter filterRoomFacilities = nestRooms.getAggregations().get("filter_room_facilities");
         ParsedNested nestDates = filterRoomFacilities.getAggregations().get("nest_dates");
         ParsedFilter filterByDates = nestDates.getAggregations().get("filter_by_dates");
         ParsedTerms termsHotelId = filterByDates.getAggregations().get("terms_hotel_id");
-
-//        System.out.println("searchResponse.getHits().getTotalHits(): " + searchResponse.getHits().getTotalHits());
-//        System.out.println("nestRooms.getDocCount(): " + nestRooms.getDocCount());
-//        System.out.println("filterRoomFacilities.getDocCount(): " + filterRoomFacilities.getDocCount());
-//        System.out.println("nestDates.getDocCount(): " + nestDates.getDocCount());
-//        System.out.println("filterByDates.getDocCount(): " + filterByDates.getDocCount());
-        System.out.println("termsHotelId.getBuckets().size(): " + termsHotelId.getBuckets().size());
 
 
         long minPrice = 100000000L;
@@ -370,9 +284,6 @@ public class SearchService {
                 continue;
             }
 
-//            System.out.println("====================================================");
-//            System.out.println(hotelMap);
-
             // Read rooms prices
             Map<Integer, Long> roomsPrice = new HashMap<>();
             for (Terms.Bucket roomsBucket: termsRoomsInPrice.getBuckets()){
@@ -386,8 +297,6 @@ public class SearchService {
                 }
                 roomsPrice.put(roomsId, priceSum);
             }
-
-
 
             // Read rooms
             Map<Integer, Map<String, Object>> roomsMap = new HashMap<>();
@@ -409,7 +318,6 @@ public class SearchService {
             }
 
             ParsedTerms termsRoomsInDates = hotelBucket.getAggregations().get("terms_rooms_in_dates");
-//            List<Long> priceList = new ArrayList<>();
             for (Terms.Bucket roomsBucket: termsRoomsInDates.getBuckets()) {
                 Integer roomsId = roomsBucket.getKeyAsNumber().intValue();
                 Map<String, Object> rooms = roomsMap.getOrDefault(roomsId, null);
@@ -423,20 +331,6 @@ public class SearchService {
                 roomMinPrice = min(roomMinPrice, priceSum);
                 roomMaxPrice = max(roomMaxPrice, priceSum);
             }
-
-//            System.out.println(roomsMap);
-//            // get minimal and maximal price
-//            priceList.sort(((o1, o2) -> Math.toIntExact(o1 - o2)));
-//            Long hotelMinPrice = 0L;
-//            Long hotelMaxPrice = 0L;
-//            for (int j=0; j<request.getNumRoom(); j++){
-//                hotelMinPrice += priceList.get(j);
-//                hotelMaxPrice += priceList.get(priceList.size()-1-j);
-//            }
-//            minPrice = min(minPrice, hotelMinPrice);
-//            maxPrice = max(maxPrice, hotelMaxPrice);
-
-
 
             // set up linear programming model
             Optimisation.Options options = new Optimisation.Options();
@@ -457,8 +351,6 @@ public class SearchService {
                     Long priceSum = (Long) rooms.get("priceSum");
                     Integer quantity = (Integer) rooms.get("quantity");
 
-//                System.out.println(maxAdult + " " + maxChild + " " + numBeds + " " + breakfast + " " + priceSum + " " + quantity);
-
                     Integer weight = 1;
                     Variable v = model
                             .addVariable(roomsId.toString())
@@ -473,11 +365,7 @@ public class SearchService {
 
                 // Run linear programming
                 Optimisation.Result result = model.minimise();
-//            System.out.println(result);
                 if (!result.getState().isSuccess()){
-//                log.error("Optimisation unsuccesful (state: {})", result.getState().name());
-//                System.out.println(hotelMap);
-//                System.out.println(roomsMap);
                     continue;
                 }
                 count++;
@@ -497,7 +385,6 @@ public class SearchService {
             Expression numPeople = model.addExpression("num_people").lower(request.getNumAdult() + request.getNumChild());
             Expression numBed = model.addExpression("num_bed").lower(request.getNumBed());
 
-//            System.out.println(request);
 
             // Set up linear programming equation
             Map<Integer, Integer> roomsOrderMap = new HashMap<>();
@@ -515,8 +402,6 @@ public class SearchService {
                 Boolean breakfast = (Boolean) rooms.get("breakfast");
                 Long priceSum = (Long) rooms.get("priceSum");
                 Integer quantity = (Integer) rooms.get("quantity");
-
-//                System.out.println(maxAdult + " " + maxChild + " " + numBeds + " " + breakfast + " " + priceSum + " " + quantity);
 
                 Integer weight = ((maxAdult + maxChild + 5 ) + (numBeds > 0 ? 3 * numBeds : 0)) * 2 + (breakfast ? 1 : 0);
                 Variable v = model
@@ -537,11 +422,7 @@ public class SearchService {
 
             // Run linear programming
             Optimisation.Result result = model.minimise();
-//            System.out.println(result);
             if (!result.getState().isSuccess()){
-//                log.error("Optimisation unsuccesful (state: {})", result.getState().name());
-//                System.out.println(hotelMap);
-//                System.out.println(roomsMap);
                 continue;
             }
 
@@ -638,14 +519,6 @@ public class SearchService {
                 }
             }
 
-
-//            BasicLogger.debug();
-//            BasicLogger.debug(result);
-//            BasicLogger.debug();
-//            BasicLogger.debug(model);
-//            BasicLogger.debug();
-//            System.out.println(hotelSearchResponseItem);
-
             hotelSearchResponseItemList.add(hotelSearchResponseItem);
 
         }
@@ -667,8 +540,6 @@ public class SearchService {
                 .minPrice(minPrice)
                 .build();
 
-
-//        System.out.println(hotelSearchResponse);
         return hotelSearchResponse;
     }
 

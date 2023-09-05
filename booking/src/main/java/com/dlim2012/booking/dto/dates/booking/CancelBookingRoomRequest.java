@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeleteBookingRoomRequest {
+public class CancelBookingRoomRequest {
     Long bookingId;
+    Long bookingRoomsId;
     Long bookingRoomId;
 }
